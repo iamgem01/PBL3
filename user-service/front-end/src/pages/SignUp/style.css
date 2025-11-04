@@ -1,0 +1,134 @@
+.create {
+    background-color: #ffffff;
+    min-height: 1080px;
+    min-width: 1920px;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+}
+
+.create .component-2 {
+    height: 1080px !important;
+    left: 421px !important;
+    position: absolute !important;
+    top: 292px !important;
+    width: 1920px !important;
+}
+
+.create .frame-125 {
+    left: 742px !important;
+    position: absolute !important;
+    top: 269px !important;
+}
+
+.create .text-wrapper {
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent;
+    align-items: center;
+    background: linear-gradient(
+            90deg,
+            rgba(65, 97, 251, 1) 43%,
+            rgba(141, 29, 251, 1) 60%
+    );
+    background-clip: text;
+    color: transparent;
+    display: flex;
+    font-family: "Gabarito-Bold", Helvetica;
+    font-size: 34px;
+    font-weight: 700;
+    height: 18px;
+    justify-content: center;
+    left: calc(50.00% - 165px);
+    letter-spacing: 0;
+    line-height: 16.7px;
+    position: absolute;
+    text-align: center;
+    text-fill-color: transparent;
+    top: 489px;
+    white-space: nowrap;
+    width: 330px;
+}
+
+.create .open-book {
+    height: 100px;
+    left: calc(50.00% - 50px);
+    position: absolute;
+    top: 317px;
+    width: 100px;
+}
+
+.create .group {
+    height: 61px;
+    left: calc(50.00% - 155px);
+    position: absolute;
+    top: 555px;
+    width: 313px;
+}
+
+.create .rectangle-2 {
+    background-color: #ffffff;
+    border: 1px solid;
+    border-color: #717171;
+    border-radius: 20px;
+    height: 61px;
+    left: calc(50.00% - 156px);
+    position: absolute;
+    top: 0;
+    width: 311px;
+}
+
+.create .text-wrapper-2 {
+    align-items: center;
+    color: #16131a;
+    display: flex;
+    font-family: "Gabarito-Bold", Helvetica;
+    font-size: 20px;
+    font-weight: 700;
+    height: 12px;
+    justify-content: center;
+    left: calc(50.00% - 98px);
+    letter-spacing: 0;
+    line-height: 16.7px;
+    position: absolute;
+    text-align: center;
+    top: 25px;
+    white-space: nowrap;
+    width: 205px;
+}
+
+.create .image {
+    aspect-ratio: 1;
+    height: 23px;
+    left: 35px;
+    object-fit: cover;
+    position: absolute;
+    top: 19px;
+    width: 23px;
+}
+
+.create .by-continuing-you {
+    align-items: center;
+    color: #717171;
+    display: flex;
+    font-family: "Gabarito-Regular", Helvetica;
+    font-size: 13px;
+    font-weight: 400;
+    height: 34px;
+    justify-content: center;
+    left: calc(50.00% - 168px);
+    letter-spacing: 0;
+    line-height: 16.7px;
+    position: absolute;
+    text-align: center;
+    top: 725px;
+    width: 337px;
+}
+
+.create .span {
+    color: #717171;
+    font-family: "Gabarito-Regular", Helvetica;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 16.7px;
+}
