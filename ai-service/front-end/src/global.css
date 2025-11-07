@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fix blur lớn */
+@layer utilities {
+    .blur-128 {
+        --tw-blur: blur(128px);
+    }
+    .blur-96 {
+        --tw-blur: blur(96px);
+    }
+}
+
+/* Ripple animation */
+@keyframes ripple {
+    to {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+.animate-ripple {
+    animation: ripple 1.5s infinite;
+    transform: scale(0.5);
+    opacity: 0.6;
+}

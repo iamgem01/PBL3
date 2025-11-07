@@ -7,6 +7,11 @@ export default {
     ],
     theme: {
     	extend: {
+            fontFamily: {
+                inter: ['Inter', 'sans-serif'],
+                gabarito: ["Gabarito", "sans-serif"],
+
+            },
     		colors: {
     			border: 'hsl(var(--border))',
     			input: 'hsl(var(--input))',

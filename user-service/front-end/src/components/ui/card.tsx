@@ -105,13 +105,13 @@ function Card({
                 )}
                 style={{ borderRadius: `calc(${borderRadius} * 0.96)` }}
 
-                // 👇 THÊM CÁC PROPS CỦA FRAMER MOTION VÀO ĐÂY 👇
+
                 whileHover={{
-                    scale: 1.03,        // Phóng to 3%
-                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)", // Tăng bóng đổ nhẹ
-                    transition: { duration: 0.2 } // Thời gian chuyển động khi hover
+                    scale: 1.03,
+                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",// Tăng bóng đổ nhẹ
+                    transition: { duration: 0.2 }
                 }}
-                whileTap={{ scale: 0.98 }} // Hiệu ứng khi click/tap
+                whileTap={{ scale: 0.98 }}
             >
                 {children}
             </motion.div>

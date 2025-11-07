@@ -1,9 +1,10 @@
-import React from 'react';
+import React  from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, Star, CheckCircle  , Menu, X, ShieldCheck, LockKeyhole, Fingerprint } from 'lucide-react';
+import { ArrowRight, BookOpen, Send, Star, CheckCircle  , Menu, X, ShieldCheck, LockKeyhole, Fingerprint } from 'lucide-react';
 import { FaPen, FaSyncAlt, FaUsers,FaUserCog,FaRobot } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import "./style.css";
 
 
 import { cn } from '@/lib/utils';
@@ -161,7 +162,7 @@ const LandingPage: React.FC = () => {
         {
             name: "Free",
             price: "$0",
-            period: "/ month",
+            period: "/forerver",
             features: ["Basic search", "Web access", "Community support"],
             buttonText: "Get Started"
         },
@@ -177,8 +178,8 @@ const LandingPage: React.FC = () => {
             name: "Team",
             price: "$29",
             period: "/ month",
-            features: ["Team collaboration", "Admin dashboard", "SSO integration", "24/7 support"],
-            buttonText: "Get Started"
+            features: ["Everything in Pro", "Admin dashboard", "SSO integration", "24/7 support"],
+            buttonText: "Get free trial"
         }
     ];
 
@@ -353,10 +354,10 @@ const LandingPage: React.FC = () => {
             </section>
 
             {/* Integration Section */}
-            <section className="py-10">
+            <section className="py-10 overflow-hidden">
                 <div className=" w-full place-content-center px-4">
                     <div aria-hidden="true" className={cn(
-                        "-top-1/2 -translate-x-1/2 pointer-events-none absolute left-1/2 h-[480vmin] w-[800vmin] rounded-b-full",
+                        "-top-1/2 -translate-x-1/2 pointer-events-none absolute left-1/2 h-[120vmin] w-[200vmin] rounded-b-full",
                         "bg-[radial-gradient(ellipse_at_center,--theme(--color-foreground/.1),transparent_50%)]",
                         "blur-[30px]"
                     )}
@@ -519,28 +520,31 @@ const LandingPage: React.FC = () => {
             </section>
 
             {/* Testimonials Section (Keep as is) */}
-            <section id="testimonials" className="py-20 bg-white">
+            <section className="py-20 bg-purple-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-4xl font-bold text-gray-900 mb-4">Loved by thousands of users</h2>
-                        <p className="text-xl text-gray-600">See what our users have to say about SmartNotes</p>
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Loved by thousands of users</h2>
+                        <p className="text-sm text-gray-700">See what our users have to say about Eternus</p>
                     </div>
-                    <div className="grid md:grid-cols-3 gap-8">
-                        {testimonials.map((testimonial, index) => (
-                            <Card key={index} className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
-                                <div className="flex items-center mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {testimonials.map((t, i) => (
+                            <Card
+                                key={i}
+                                className="p-6 bg-white border border-purple-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                            >
+                                <div className="flex items-center mb-4 space-x-1">
                                     {[...Array(5)].map((_, i) => (
-                                        <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                                        <Star key={i} className="h-5 w-5 text-purple-300 fill-current" />
                                     ))}
                                 </div>
-                                <p className="text-gray-700 mb-4 italic">"{testimonial.content}"</p>
+                                <p className="text-gray-800 mb-6 italic text-sm leading-relaxed">"{t.content}"</p>
                                 <div className="flex items-center">
-                                    <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium mr-3">
-                                        {testimonial.avatar}
+                                    <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-medium mr-3">
+                                        {t.avatar}
                                     </div>
                                     <div>
-                                        <div className="font-semibold">{testimonial.name}</div>
-                                        <div className="text-sm text-gray-600">{testimonial.role}</div>
+                                        <p className="font-semibold text-gray-900">{t.name}</p>
+                                        <p className="text-xs text-gray-700">{t.role}</p>
                                     </div>
                                 </div>
                             </Card>
@@ -549,30 +553,38 @@ const LandingPage: React.FC = () => {
                 </div>
             </section>
 
+
             {/* Pricing Section (Keep as is, adjusted button text) */}
-            <section id="pricing" className="py-20 bg-gray-50">
+            <section id="pricing" className="py-20 bg-purple-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
-                        <h2 className="text-4xl font-bold text-gray-900 mb-4">Simple, transparent pricing</h2>
-                        <p className="text-xl text-gray-600">Choose the plan that's right for you</p>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Simple, transparent pricing</h2>
+                        <p className="text-sm text-gray-700">Choose the plan that's right for you</p>
                     </div>
-                    <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-start"> {/* Use items-start */}
+                    <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-start">
                         {pricingPlans.map((plan, index) => (
-                            <Card key={index} className={`p-8 bg-white border border-gray-200 rounded-lg shadow-sm relative ${plan.popular ? 'border-blue-500 shadow-lg md:scale-105' : ''}`}>
+                            <Card
+                                key={index}
+                                className={`p-8 pt-12 bg-white border rounded-lg shadow-sm relative border-blue-200 ${
+                                    plan.popular ? "border-blue-500 shadow-lg md:scale-105" : ""
+                                }`}
+                            >
                                 {plan.popular && (
-                                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">
-                      Most Popular
-                    </span>
+                                    <div className="absolute -top-5 left-1/2 transform -translate-x-1/2">
+      <span className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider select-none whitespace-nowrap shadow-md">
+        Most Popular
+      </span>
                                     </div>
                                 )}
+
                                 <div className="text-center mb-8">
-                                    <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+                                    <h3 className="text-xl font-semibold mb-2">{plan.name}</h3>
                                     <div className="mb-4">
-                                        <span className="text-4xl font-bold">{plan.price}</span>
+                                        <span className="text-3xl font-bold">{plan.price}</span>
                                         <span className="text-gray-600">{plan.period}</span>
                                     </div>
                                 </div>
+
                                 <ul className="space-y-3 mb-8">
                                     {plan.features.map((feature, featureIndex) => (
                                         <li key={featureIndex} className="flex items-center text-sm">
@@ -581,14 +593,17 @@ const LandingPage: React.FC = () => {
                                         </li>
                                     ))}
                                 </ul>
-                                <Button className={`w-full ${plan.popular ? '' : 'variant-outline'}`}>
+
+                                <Button className="w-full bg-black border-black text-white hover:bg-gray-900">
                                     {plan.buttonText}
                                 </Button>
                             </Card>
+
                         ))}
                     </div>
                 </div>
             </section>
+
 
             {/* CTA Section (Keep as is) */}
             <section className="relative py-20 overflow-hidden">
@@ -606,62 +621,72 @@ const LandingPage: React.FC = () => {
                         Join thousands of users who have already upgraded their productivity with SmartNotes.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Button size="lg" variant="secondary" className="text-lg px-8 py-6">
+                        <Button size="lg" variant="secondary" className="bg-black text-white px-8 py-6">
                             Start Your Free Trial
                             <ArrowRight className="ml-2 h-5 w-5" />
                         </Button>
-                        {/* Removed Contact Sales button for simplicity, you can add it back */}
+
                     </div>
                 </div>
             </section>
 
             {/* Footer (Keep as is) */}
-            <footer className="bg-gray-900 text-white py-12">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid md:grid-cols-4 gap-8">
-                        <div>
-                            <div className="flex items-center gap-2 mb-4">
-                                <BookOpen className="h-6 w-6 text-blue-400" />
-                                <span className="text-xl font-bold">Aeternus</span>
-                            </div>
-                            <p className="text-gray-400 text-sm"> {/* Adjusted font size */}
-                                The smartest way to organize your thoughts and boost your productivity.
-                            </p>
-                        </div>
-                        <div>
-                            <h4 className="font-semibold mb-4 text-gray-300">Product</h4> {/* Adjusted color */}
-                            <ul className="space-y-2 text-gray-400 text-sm">
-                                <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
-                                <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
-                                <li><a href="#integration" className="hover:text-white transition-colors">Integration</a></li>
-                                <li><a href="#document" className="hover:text-white transition-colors">Document</a></li>
-                                <li><a href="#reviews" className="hover:text-white transition-colors">Reviews</a></li>
-                                {/* Removed API/Integrations for simplicity */}
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="font-semibold mb-4 text-gray-300">Company</h4>
-                            <ul className="space-y-2 text-gray-400 text-sm">
-                                <li><a href="#" className="hover:text-white transition-colors">About us</a></li>
-                                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-                                {/* Removed Careers/Contact */}
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="font-semibold mb-4 text-gray-300">Support</h4>
-                            <ul className="space-y-2 text-gray-400 text-sm">
-                                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-                                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
-                                {/* Removed Security */}
-                            </ul>
-                        </div>
-                    </div>
-                    <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-500 text-sm"> {/* Adjusted color/size */}
-                        <p>&copy; 2025 Aeternus. All rights reserved.</p>
+            <div className="footer-big">
+                <div className="company-info">
+                    <div className="text-wrapper">Aternus</div>
+
+                    <div className="copyright">
+                        <p className="div">
+                            The smartest way to organize your thoughts and boost your
+                            productivity.
+                        </p>
                     </div>
                 </div>
-            </footer>
+
+                <div className="links">
+                    <div className="col">
+                        <div className="text-wrapper-2">Product</div>
+
+                        <div className="list-items">
+                            <div className="text-wrapper-3">Features</div>
+
+                            <div className="text-wrapper-4">Pricing</div>
+
+                            <div className="text-wrapper-4">API</div>
+
+                            <div className="text-wrapper-4">Integrations</div>
+
+                            <div className="text-wrapper-4">{""}</div>
+                        </div>
+                    </div>
+
+                    <div className="col">
+                        <div className="text-wrapper-2">Support</div>
+
+                        <div className="list-items">
+                            <div className="text-wrapper-3">Help center</div>
+
+                            <div className="text-wrapper-4">Terms of service</div>
+
+                            <div className="text-wrapper-4">Security</div>
+
+                            <div className="text-wrapper-4">Privacy policy</div>
+                        </div>
+                    </div>
+
+                    <div className="col-2">
+                        <div className="text-wrapper-2">Stay up to date</div>
+
+                        <div className="email-input-field">
+                            <div className="input-field-BG" />
+
+                            <Send className="essential-icons-send" />
+                            <div className="text-wrapper-5">Your email address</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     );
 };

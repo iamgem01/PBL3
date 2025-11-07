@@ -94,3 +94,92 @@
     border-color: rgba(139, 92, 246, 0.5) !important;
     box-shadow: 0 0 8px 2px rgba(139, 92, 246, 0.4);
 }
+.button-hover-effect:hover, .button-hover-effect:focus {
+    background-color: #111827;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+.button-hover-effect {
+    transition: all 0.3s ease;
+}
+@keyframes border-move {
+    0% {
+        background-position: 0% 50%;
+    }
+    100% {
+        background-position: 200% 50%;
+    }
+}
+.animated-border {
+    position: relative;
+    border-radius: 9999px;
+    padding: 1px;
+    background: linear-gradient(270deg, #3b82f6, #8b5cf6, #3b82f6);
+    background-size: 200% 200%;
+    animation: border-move 3s linear infinite;
+    opacity: 0.9;
+}
+
+.animated-border > button {
+    position: relative;
+    z-index: 10;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1.15rem;
+    border-radius: 9999px;
+    border: none;
+    background-color: black;
+    font-weight: 700;
+    color: whitesmoke;
+    cursor: pointer;
+    width: 100%;
+    gap: 0.75rem;
+    transition: background-color 0.3s ease;
+}
+
+.animated-border > button:hover {
+    background-color: #111;
+    color: #f3f4f6;
+}
+
+@keyframes border-move {
+    0% {
+        background-position: 0% 50%;
+    }
+    100% {
+        background-position: 100% 50%;
+    }
+}
+
+/* Scrollbar nhỏ, ẩn khi không hover */
+::-webkit-scrollbar {
+    height: 6px;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.3);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.6);
+}
+/* Custom scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+    height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgba(129, 140, 248, 0.4);
+    border-radius: 8px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(99, 102, 241, 0.8);
+}
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
