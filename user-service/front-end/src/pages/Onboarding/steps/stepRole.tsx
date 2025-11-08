@@ -4,8 +4,13 @@ import { useState } from "react";
 
 const roles = ["Engineer", "Designer", "Manager", "Student", "Other"];
 
-export default function StepRole({ onNext }: { onNext: (data: object) => void }) {
-    const [role, setRole] = useState("");
+interface StepRoleProps {
+    onNext: (data: object) => void;
+    data?: object;
+}
+
+export default function StepRole({ onNext }: StepRoleProps) {
+    const [role, setRole] = useState<string>("");
 
     return (
         <div className="space-y-4">
@@ -20,6 +25,7 @@ export default function StepRole({ onNext }: { onNext: (data: object) => void })
                     {r}
                 </button>
             ))}
+
             <button
                 onClick={() => onNext({ role })}
                 disabled={!role}

@@ -4,112 +4,60 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="60ee78c4-c53c-489c-93ea-d0b3d36208b1" name="Changes" comment="first commit">
-      <change afterPath="$PROJECT_DIR$/ai-service/front-end/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/AiResult.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/Chatbox.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/button.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/sidebar.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/textarea.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ai-service/front-end/src/global.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ai-service/front-end/src/lib/utils.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ai-service/front-end/src/pages/Home/Home.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ai-service/front-end/src/pages/Home/HomeAI.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ai-service/front-end/tailwind.config.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/collaboration-service/front-end/.vite/deps/_metadata.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/collaboration-service/front-end/.vite/deps/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/collaboration-service/front-end/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/collaboration-service/front-end/eslint.config.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/collaboration-service/front-end/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/collaboration-service/front-end/package-lock.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/collaboration-service/front-end/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/collaboration-service/front-end/public/vite.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/collaboration-service/front-end/src/App.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/collaboration-service/front-end/src/App.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/collaboration-service/front-end/src/assets/react.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/collaboration-service/front-end/src/index.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/collaboration-service/front-end/src/main.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/collaboration-service/front-end/vite.config.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/collaboration-service/package-lock.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/common/MotalPortal.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/layout/dashboard/DocumentMotal.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/layout/dashboard/LearnSection.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/layout/dashboard/RecentlyVisited.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/layout/dashboard/template.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/layout/sidebar/sidebarfeatures.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/layout/sidebar/sidebarfooter.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/layout/sidebar/sidebarteamspace.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/layout/sidebar/userpopup.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/modals/CreateWorkspaceMotal.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/ui/InviteMemDialog.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/ui/Settings/BaseModal.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/ui/Settings/SettingModal.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/ui/Trash/TrashMotal.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/ui/documentBlock.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/ui/learnCard.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/ui/noteCard.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/ui/profileDropdown.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/ui/rainbow-button.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/ui/searchBox.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/components/ui/textarea.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/data/documentContent.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/data/learnResources.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/images/started.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/images/style.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/images/templates.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/DocumentPage.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/Homepage/HomePage.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/Landing/style.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/OnboardingForm.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepNeeds.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepReferral.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepRole.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepTemplate.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepWorkType.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/services/mockData.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/front-end/src/types/Item.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/server.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-service/user-service/src/main/java/com/smartnote/userservice/config/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+    <list default="true" id="60ee78c4-c53c-489c-93ea-d0b3d36208b1" name="Changes" comment="second commit">
+      <change afterPath="$PROJECT_DIR$/ai-service/front-end/postcss.config.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/Message.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/header.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/progressive-blur.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ai-service/front-end/src/pages/Home/ChatPage.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/note-service/front-end/dev/DataManage.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/note-service/front-end/output.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/note-service/front-end/service/apiService.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/note-service/front-end/src/components/blocks/BlockRenderer.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/note-service/front-end/src/components/layout/InlineToolbar.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/note-service/front-end/src/components/layout/PageEditor.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/note-service/front-end/src/components/layout/SlashMenu.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/note-service/front-end/src/components/layout/sidebar/sidebar.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/note-service/front-end/src/components/layout/sidebar/sidebarfeatures.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/note-service/front-end/src/components/layout/sidebar/sidebarfooter.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/note-service/front-end/src/components/layout/sidebar/sidebarteamspace.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/note-service/front-end/src/components/layout/sidebar/userpopup.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/note-service/front-end/src/components/modals/CreateWorkspaceModal.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/note-service/front-end/src/data/mockNotes.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/note-service/front-end/src/pages/note.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/note-service/front-end/src/stores/noteStores.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/note-service/front-end/src/types/note.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/note-service/front-end/src/utils/helpers.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ai-service/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/ai-service/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ai-service/front-end/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/ai-service/front-end/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/AiResult.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/Chatarea.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/sidebar.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ai-service/front-end/src/global.css" beforeDir="false" afterPath="$PROJECT_DIR$/ai-service/front-end/src/global.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ai-service/front-end/src/pages/Home/HomeAI.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ai-service/front-end/tailwind.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/ai-service/front-end/tailwind.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collaboration-service/pom.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/collaboration-service/src/main/java/com/example/collaborationservice/CollaborationServiceApplication.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/node_modules/.package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/vite/LICENSE.md" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/vite/LICENSE.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/vite/dist/client/client.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/vite/dist/client/client.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/vite/dist/node/chunks/moduleRunnerTransport.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/vite/dist/node/chunks/moduleRunnerTransport.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/vite/dist/node/chunks/optimizer.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/vite/dist/node/chunks/optimizer.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/vite/dist/node/chunks/postcss-import.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/vite/dist/node/chunks/postcss-import.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/vite/dist/node/chunks/preview.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/vite/dist/node/chunks/preview.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/vite/dist/node/chunks/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/vite/dist/node/chunks/server.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/vite/dist/node/index.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/vite/dist/node/index.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/vite/dist/node/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/vite/dist/node/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/vite/dist/node/module-runner.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/vite/dist/node/module-runner.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/vite/dist/node/module-runner.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/vite/dist/node/module-runner.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/node_modules/vite/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/vite/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/vite/types/customEvent.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/vite/types/customEvent.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/note-service/front-end/.vite/deps/_metadata.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/note-service/front-end/.vite/deps/package.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/note-service/front-end/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/note-service/front-end/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/note-service/front-end/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/note-service/front-end/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/note-service/front-end/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/note-service/front-end/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/note-service/front-end/src/App.css" beforeDir="false" afterPath="$PROJECT_DIR$/note-service/front-end/src/App.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/note-service/front-end/src/App.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/note-service/front-end/src/assets/react.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/note-service/front-end/src/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/note-service/front-end/src/index.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/note-service/front-end/src/main.jsx" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/user-service/front-end/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/components/ui/card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/src/components/ui/card.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/images/note.png" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/src/images/note.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/src/index.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/main.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/src/main.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/pages/Dashboard/DashboardPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ai-service/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/pages/Landing/LandingPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/Landing/LandingPage.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/pages/Login/LoginPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/Login/LoginPage.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/pages/SignUp/SignUpPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/SignUp/SignUpPage.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/pages/SignUp/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/SignUp/style.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/services/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/src/services/api.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/services/authService.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/tailwind.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/tailwind.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/tsconfig.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/vite.config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/yarn.lock" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/yarn.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/user-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/user-service/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/user-service/src/main/java/com/smartnote/userservice/UserServiceApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/user-service/src/main/java/com/smartnote/userservice/UserServiceApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepReferral.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepReferral.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepRole.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepRole.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepTemplate.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepTemplate.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepWorkType.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepWorkType.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-service/user-service/src/main/java/com/smartnote/userservice/config/MongoConfig.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -145,7 +93,7 @@
 }</component>
   <component name="ProblemsViewState">
     <option name="groupByToolId" value="true" />
-    <option name="selectedTabId" value="CurrentFile" />
+    <option name="selectedTabId" value="ProjectErrors" />
     <option name="sortByName" value="true" />
   </component>
   <component name="ProjectColorInfo">{
@@ -156,46 +104,47 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;full.screen.before.presentation.mode&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/LENOVO/IdeaProjects/PBL3 SmartNotes/collaboration-service&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;npm.dev.executor&quot;: &quot;Run&quot;,
-    &quot;npm.tailwind:init.executor&quot;: &quot;Run&quot;,
-    &quot;onboarding.tips.debug.path&quot;: &quot;C:/Users/LENOVO/IdeaProjects/PBL3 SmartNotes/src/Main.java&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;settings.sync&quot;,
-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;C:\\Program Files\\JetBrains\\IntelliJ IDEA 2025.2.1\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultHtmlFileTemplate": "HTML File",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "full.screen.before.presentation.mode": "false",
+    "git-widget-placeholder": "master",
+    "ignore.virus.scanning.warn.message": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/LENOVO/IdeaProjects/PBL3 SmartNotes/ai-service/front-end/src/components/ui",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "npm.dev.executor": "Run",
+    "npm.tailwind:init.executor": "Run",
+    "onboarding.tips.debug.path": "C:/Users/LENOVO/IdeaProjects/PBL3 SmartNotes/src/Main.java",
+    "settings.editor.selected.configurable": "settings.sync",
+    "to.speed.mode.migration.done": "true",
+    "ts.external.directory.path": "C:\\Program Files\\JetBrains\\IntelliJ IDEA 2025.2.1\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\LENOVO\IdeaProjects\PBL3 SmartNotes\ai-service\front-end\src\components\ui" />
+      <recent name="C:\Users\LENOVO\IdeaProjects\PBL3 SmartNotes\note-service\front-end\src\components" />
+      <recent name="C:\Users\LENOVO\IdeaProjects\PBL3 SmartNotes\note-service\front-end\src\components\layout" />
       <recent name="C:\Users\LENOVO\IdeaProjects\PBL3 SmartNotes\collaboration-service" />
       <recent name="C:\Users\LENOVO\IdeaProjects\PBL3 SmartNotes\user-service\front-end\src\images" />
-      <recent name="C:\Users\LENOVO\IdeaProjects\PBL3 SmartNotes\user-service\front-end\public" />
-      <recent name="C:\Users\LENOVO\IdeaProjects\PBL3 SmartNotes\user-service" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\LENOVO\IdeaProjects\PBL3 SmartNotes\ai-service\front-end" />
+      <recent name="C:\Users\LENOVO\IdeaProjects\PBL3 SmartNotes\note-service\front-end\src\components\blocks" />
+      <recent name="C:\Users\LENOVO\IdeaProjects\PBL3 SmartNotes\note-service\front-end\src" />
       <recent name="C:\Users\LENOVO\IdeaProjects\PBL3 SmartNotes\user-service\front-end\src\components\modals" />
       <recent name="C:\Users\LENOVO\IdeaProjects\PBL3 SmartNotes\user-service\front-end\src" />
-      <recent name="C:\Users\LENOVO\IdeaProjects\PBL3 SmartNotes\user-service\front-end\src\images" />
-      <recent name="C:\Users\LENOVO\IdeaProjects\PBL3 SmartNotes\user-service\front-end\src\components\layout\dashboard" />
-      <recent name="C:\Users\LENOVO\IdeaProjects\PBL3 SmartNotes\user-service\front-end\src\components\layout\sidebar" />
     </key>
   </component>
   <component name="RunManager" selected="npm.dev">
@@ -273,7 +222,10 @@
       <workItem from="1762482541305" duration="275000" />
       <workItem from="1762485278653" duration="134000" />
       <workItem from="1762485444710" duration="395000" />
-      <workItem from="1762485877815" duration="9167000" />
+      <workItem from="1762485877815" duration="10915000" />
+      <workItem from="1762489762394" duration="977000" />
+      <workItem from="1762491055212" duration="70000" />
+      <workItem from="1762491151412" duration="32323000" />
     </task>
     <task id="LOCAL-00001" summary="first commit">
       <option name="closed" value="true" />
@@ -283,19 +235,28 @@
       <option name="project" value="LOCAL" />
       <updated>1762264003745</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="second commit">
+      <option name="closed" value="true" />
+      <created>1762499631262</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1762499631262</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
     <option name="exactExcludedFiles">
       <list>
+        <option value="$PROJECT_DIR$/user-service/front-end/node_modules/@eslint/object-schema/dist/esm/types.d.ts" />
+        <option value="$PROJECT_DIR$/user-service/front-end/node_modules/@eslint/plugin-kit/dist/esm/types.d.ts" />
+        <option value="$PROJECT_DIR$/note-service/front-end/vite.config.js" />
         <option value="$PROJECT_DIR$/user-service/front-end/node_modules/tailwindcss/stubs/tailwind.config.js" />
+        <option value="$PROJECT_DIR$/user-service/front-end/node_modules/@eslint/config-helpers/dist/esm/types.d.ts" />
         <option value="$PROJECT_DIR$/user-service/front-end/node_modules/tailwindcss/stubs/tailwind.config.cjs" />
         <option value="$PROJECT_DIR$/user-service/front-end/node_modules/@eslint/config-array/dist/esm/types.d.ts" />
-        <option value="$PROJECT_DIR$/user-service/front-end/node_modules/@eslint/object-schema/dist/esm/types.d.ts" />
-        <option value="$PROJECT_DIR$/user-service/front-end/node_modules/@eslint/config-helpers/dist/esm/types.d.ts" />
-        <option value="$PROJECT_DIR$/user-service/front-end/node_modules/@eslint/plugin-kit/dist/esm/types.d.ts" />
       </list>
     </option>
   </component>
@@ -312,7 +273,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="first commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="first commit" />
+    <MESSAGE value="second commit" />
+    <option name="LAST_COMMIT_MESSAGE" value="second commit" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -334,7 +296,6 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/user-service/front-end/src/components/ui/button.tsx</url>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="9" />
         </line-breakpoint>
       </breakpoints>

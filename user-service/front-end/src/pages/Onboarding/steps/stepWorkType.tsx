@@ -1,10 +1,21 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const workTypes = ["Web Development", "Data Science", "AI", "Marketing", "Other"];
 
-export default function StepWorkType({ onNext }: { onNext: (data: object) => void }) {
-    const [work, setWork] = useState("");
+interface StepWorkTypeProps {
+    onNext: (data: object) => void;
+    data?: object;
+}
+
+export default function StepWorkType({ onNext, data }: StepWorkTypeProps) {
+    const [work, setWork] = useState<string>("");
+
+    useEffect(() => {
+        if (data && (data as any).work) {
+            setWork((data as any).work);
+        }
+    }, [data]);
 
     return (
         <div className="space-y-4">
@@ -19,6 +30,7 @@ export default function StepWorkType({ onNext }: { onNext: (data: object) => voi
                     {w}
                 </button>
             ))}
+
             <button
                 onClick={() => onNext({ work })}
                 disabled={!work}

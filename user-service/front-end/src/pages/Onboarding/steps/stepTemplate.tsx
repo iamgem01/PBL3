@@ -1,10 +1,22 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const templates = ["Team Workspace", "AI Assistant", "Project Planner", "Note Board"];
 
-export default function StepTemplate({ onNext }: { onNext: (data: object) => void }) {
-    const [selected, setSelected] = useState("");
+interface StepTemplateProps {
+    onNext: (data: object) => void;
+    data?: object;
+}
+
+export default function StepTemplate({ onNext, data }: StepTemplateProps) {
+    const [selected, setSelected] = useState<string>("");
+
+
+    useEffect(() => {
+        if (data && (data as any).template) {
+            setSelected((data as any).template);
+        }
+    }, [data]);
 
     return (
         <div className="space-y-4">
@@ -19,6 +31,7 @@ export default function StepTemplate({ onNext }: { onNext: (data: object) => voi
                     {t}
                 </button>
             ))}
+
             <button
                 onClick={() => onNext({ template: selected })}
                 disabled={!selected}

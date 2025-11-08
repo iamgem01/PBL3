@@ -1,10 +1,21 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const options = ["Friend", "Social Media", "Search", "Ad", "Other"];
 
-export default function StepReferral({ onNext }: { onNext: (data: object) => void }) {
-    const [ref, setRef] = useState("");
+interface StepReferralProps {
+    onNext: (data: object) => void;
+    data?: object;
+}
+
+export default function StepReferral({ onNext, data }: StepReferralProps) {
+    const [ref, setRef] = useState<string>("");
+
+    useEffect(() => {
+        if (data && (data as any).referral) {
+            setRef((data as any).referral);
+        }
+    }, [data]);
 
     return (
         <div className="space-y-4">
@@ -19,6 +30,7 @@ export default function StepReferral({ onNext }: { onNext: (data: object) => voi
                     {o}
                 </button>
             ))}
+
             <button
                 onClick={() => onNext({ referral: ref })}
                 disabled={!ref}
