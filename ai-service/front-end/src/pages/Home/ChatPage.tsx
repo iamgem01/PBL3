@@ -1,12 +1,15 @@
 import React, { useState } from "react";
-import Sidebar, { Chat } from "../../components/ui/sidebar";
+import { Chat } from "../../components/ui/sidebar";
+import Sidebar from "../../components/layout/sidebar/sidebar";
+import HistoryPanel from "../../components/ui/HistoryPanel";
 import Header from "../../components/ui/header";
 import ChatArea from "../../components/ui/Chatarea";
 import InputArea from "../../components/ui/InputArea";
 import { apiService, ApiError } from "../../services/api";
 
 const ChatPage: React.FC = () => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [chats, setChats] = useState<Chat[]>([
         { id: 1, title: "Xin chào", messages: [] },
     ]);
@@ -16,7 +19,11 @@ const ChatPage: React.FC = () => {
 
     const selectedChat = chats.find((chat) => chat.id === selectedChatId);
 
-    const handleSendMessage = async (text: string, action: 'chat' | 'summarize' | 'note' | 'explain' | 'improve' | 'translate' = 'chat') => {
+    const handleSendMessage = async (
+        text: string, 
+        action: 'chat' | 'summarize' | 'note' | 'explain' | 'improve' | 'translate' = 'chat',
+        notes?: Array<{ id: string; title: string; content?: string }>
+    ) => {
         
         const userMessage = {
             id: Date.now(),
@@ -24,6 +31,14 @@ const ChatPage: React.FC = () => {
             isUser: true,
             timestamp: new Date(),
         };
+
+        // Tạo context từ selected notes
+        const context = notes && notes.length > 0 
+            ? notes.map(note => {
+                const noteContent = note.content || '';
+                return `=== Note: ${note.title} ===\n${noteContent}`;
+            }).join('\n\n---\n\n')
+            : undefined;
 
        
         setChats((prev) => {
@@ -46,10 +61,11 @@ const ChatPage: React.FC = () => {
         setError(null);
 
         try {
-            // Gọi API
+            // Gọi API với context nếu có
             const response = await apiService.sendMessage({
                 message: text,
                 action,
+                context,
             });
 
             // Tạo phản hồi từ AI
@@ -97,7 +113,7 @@ const ChatPage: React.FC = () => {
     const handleNewChat = () => {
         const newChat: Chat = {
             id: Date.now(),
-            title: "Cuộc trò chuyện mới",
+            title: "New chat",
             messages: [],
         };
         setChats((prev) => [newChat, ...prev]);
@@ -113,32 +129,49 @@ const ChatPage: React.FC = () => {
         }
     };
 
+    const hasMessages = selectedChat && selectedChat.messages.length > 0;
+
     return (
-        <div className="h-screen flex flex-col bg-white">
-            <Sidebar
-                isOpen={isSidebarOpen}
+        <div className="h-screen flex bg-white relative">
+            <Sidebar 
+                collapsed={sidebarCollapsed} 
+                setCollapsed={setSidebarCollapsed} 
+            />
+            <HistoryPanel
+                isOpen={isHistoryOpen}
+                onClose={() => setIsHistoryOpen(false)}
                 chats={chats}
-                onSelectChat={setSelectedChatId}
+                onSelectChat={(id) => {
+                    setSelectedChatId(id);
+                    setIsHistoryOpen(false);
+                }}
                 onDeleteChat={handleDeleteChat}
                 onNewChat={handleNewChat}
                 selectedChatId={selectedChatId}
             />
             <div
-                className={`flex flex-col h-full transition-all duration-300 ${
-                    isSidebarOpen ? "ml-64" : "ml-0"
-                }`}
+                className={`flex flex-col flex-1 h-full transition-all duration-300 ${
+                    sidebarCollapsed ? "ml-16" : "ml-64"
+                } ${isHistoryOpen ? "mr-80" : ""}`}
             >
                 <Header
-                    onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+                    onToggleHistory={() => setIsHistoryOpen(!isHistoryOpen)}
+                    onTogglePersonalise={() => console.log("Open Personalise panel")}
                     currentChat={selectedChat?.title}
+                    hasMessages={hasMessages}
+                    collapsed={sidebarCollapsed}
                 />
-                {error && (
-                    <div className="mx-auto max-w-3xl w-full px-4 mt-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                        {error}
-                    </div>
-                )}
-                <ChatArea messages={selectedChat?.messages || []} isTyping={isTyping} />
-                <InputArea onSendMessage={(text, action) => handleSendMessage(text, action || 'chat')} disabled={isTyping} />
+               
+                <ChatArea 
+                    messages={selectedChat?.messages || []} 
+                    isTyping={isTyping}
+                    hasMessages={hasMessages}
+                />
+                <InputArea 
+                    onSendMessage={(text, action) => handleSendMessage(text, action || 'chat')} 
+                    disabled={isTyping}
+                    hasMessages={hasMessages}
+                />
             </div>
         </div>
     );

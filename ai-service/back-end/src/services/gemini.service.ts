@@ -17,11 +17,11 @@ export class GeminiService {
 
    
     async chat(message: string, context?: string): Promise<string> {
-        const systemInstruction = 'Bạn là một trợ lý AI thông minh và hữu ích. Bạn trả lời bằng tiếng Việt một cách tự nhiên và chuyên nghiệp.';
+        const systemInstruction = 'Bạn là một trợ lý AI thông minh và hữu ích. Bạn trả lời bằng tiếng Việt một cách tự nhiên và chuyên nghiệp. Khi được cung cấp context (thông tin từ các note), hãy sử dụng thông tin đó để trả lời câu hỏi một cách chính xác và chi tiết.';
         
         let prompt = message;
         if (context) {
-            prompt = `Context: ${context}\n\nCâu hỏi: ${message}`;
+            prompt = `Dưới đây là các thông tin context từ các note mà người dùng đã chọn:\n\n${context}\n\n---\n\nDựa trên context trên, hãy trả lời câu hỏi sau của người dùng:\n\n${message}`;
         }
 
         try {

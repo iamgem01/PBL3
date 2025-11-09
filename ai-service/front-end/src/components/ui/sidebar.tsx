@@ -14,6 +14,7 @@ export interface MessageItem {
     timestamp: Date;
 }
 
+
 interface SidebarProps {
     isOpen: boolean;
     chats: Chat[];
@@ -38,11 +39,9 @@ const Sidebar: React.FC<SidebarProps> = ({
     );
 
     return (
-        <div
-            className={`fixed left-0 top-0 h-full bg-white border-r border-gray-200 transition-all duration-300 z-50 ${
-                isOpen ? "w-64" : "w-0"
-            } overflow-hidden`}
-        >
+        <div className={`fixed left-0 top-0 h-full bg-white border-r border-gray-200 transition-[width] duration-300 z-50 ${
+          isOpen ? "w-64" : "w-0 pointer-events-none opacity-0"
+        } overflow-hidden`} >
             <div className="flex flex-col h-full">
                 <div className="p-4 border-b border-gray-200">
                     <h2 className="font-semibold text-gray-800 mb-3">Chat history</h2>
@@ -79,10 +78,15 @@ const Sidebar: React.FC<SidebarProps> = ({
                             }`}
                             onClick={() => onSelectChat(chat.id)}
                         >
-                            <div className="flex items-center gap-2 flex-1">
-                                <MessageSquare size={18} className="text-gray-400" />
-                                <span className="text-gray-700 truncate">{chat.title}</span>
-                            </div>
+                          <div className="flex flex-col flex-1 min-w-0">
+                            <span className="text-gray-800 font-medium truncate">{chat.title}</span>
+                            {chat.messages.length > 0 && (
+                                <span className="text-gray-400 text-xs truncate">
+                                {chat.messages[chat.messages.length - 1].text}
+                                </span>
+                            )}
+                            </div>      
+
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
