@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { chatController } from '../controllers/chat.controller.js';
-import { validate, chatMessageSchema, summarizeSchema, improveSchema, textProcessingSchema } from '../middleware/validation.js';
+import { validate, chatMessageSchema, summarizeSchema, improveSchema, textProcessingSchema, translateSchema } from '../middleware/validation.js';
 
 const router = Router();
 
@@ -18,6 +18,9 @@ router.post('/explain', validate(textProcessingSchema), chatController.explain);
 
 // Improve writing endpoint
 router.post('/improve', validate(improveSchema), chatController.improveWriting);
+
+// Translate endpoint
+router.post('/translate', validate(translateSchema), chatController.translate);
 
 export default router;
 

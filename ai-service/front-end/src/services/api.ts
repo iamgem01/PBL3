@@ -2,8 +2,9 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001
 
 export interface ChatMessageRequest {
     message: string;
-    action?: 'chat' | 'summarize' | 'note' | 'explain' | 'improve';
+    action?: 'chat' | 'summarize' | 'note' | 'explain' | 'improve' | 'translate';
     context?: string;
+    targetLanguage?: string;
 }
 
 export interface ChatMessageResponse {
@@ -63,6 +64,20 @@ export interface ImproveResponse {
         original: string;
         improved: string;
         style: string;
+    };
+}
+
+export interface TranslateRequest {
+    text: string;
+    targetLanguage?: string;
+}
+
+export interface TranslateResponse {
+    status: string;
+    data: {
+        original: string;
+        translated: string;
+        targetLanguage: string;
     };
 }
 
@@ -158,6 +173,16 @@ export const apiService = {
      */
     async improveWriting(request: ImproveRequest): Promise<ImproveResponse> {
         return fetchAPI<ImproveResponse>('/chat/improve', {
+            method: 'POST',
+            body: JSON.stringify(request),
+        });
+    },
+
+    /**
+     * Dịch thuật văn bản
+     */
+    async translate(request: TranslateRequest): Promise<TranslateResponse> {
+        return fetchAPI<TranslateResponse>('/chat/translate', {
             method: 'POST',
             body: JSON.stringify(request),
         });

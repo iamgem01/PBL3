@@ -6,10 +6,11 @@ export const chatMessageSchema = z.object({
     message: z.string()
         .min(1, 'Tin nhắn không được để trống')
         .max(5000, 'Tin nhắn không được vượt quá 5000 ký tự'),
-    action: z.enum(['chat', 'summarize', 'note', 'explain', 'improve'], {
-        errorMap: () => ({ message: 'Action phải là: chat, summarize, note, explain, hoặc improve' })
+    action: z.enum(['chat', 'summarize', 'note', 'explain', 'improve', 'translate'], {
+        errorMap: () => ({ message: 'Action phải là: chat, summarize, note, explain, improve, hoặc translate' })
     }).optional().default('chat'),
-    context: z.string().max(10000, 'Context không được vượt quá 10000 ký tự').optional()
+    context: z.string().max(10000, 'Context không được vượt quá 10000 ký tự').optional(),
+    targetLanguage: z.string().max(100, 'Ngôn ngữ đích không được vượt quá 100 ký tự').optional()
 });
 
 // Schema validation cho summarize, note, explain (dùng chung)
@@ -33,6 +34,14 @@ export const improveSchema = z.object({
         .min(10, 'Văn bản cần cải thiện phải có ít nhất 10 ký tự')
         .max(10000, 'Văn bản không được vượt quá 10000 ký tự'),
     style: z.enum(['formal', 'casual', 'academic', 'professional']).optional().default('professional')
+});
+
+// Schema validation cho translate
+export const translateSchema = z.object({
+    text: z.string()
+        .min(1, 'Văn bản cần dịch không được để trống')
+        .max(50000, 'Văn bản không được vượt quá 50000 ký tự'),
+    targetLanguage: z.string().max(100, 'Ngôn ngữ đích không được vượt quá 100 ký tự').optional().default('tiếng Anh')
 });
 
 export const validate = (schema: z.ZodSchema) => {

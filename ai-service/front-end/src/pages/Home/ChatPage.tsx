@@ -16,7 +16,7 @@ const ChatPage: React.FC = () => {
 
     const selectedChat = chats.find((chat) => chat.id === selectedChatId);
 
-    const handleSendMessage = async (text: string, action: 'chat' | 'summarize' | 'note' | 'explain' | 'improve' = 'chat') => {
+    const handleSendMessage = async (text: string, action: 'chat' | 'summarize' | 'note' | 'explain' | 'improve' | 'translate' = 'chat') => {
         
         const userMessage = {
             id: Date.now(),
@@ -25,7 +25,7 @@ const ChatPage: React.FC = () => {
             timestamp: new Date(),
         };
 
-        // Cập nhật title của chat nếu đây là tin nhắn đầu tiên
+       
         setChats((prev) => {
             const updated = prev.map((chat) => {
                 if (chat.id === selectedChatId) {
@@ -114,7 +114,7 @@ const ChatPage: React.FC = () => {
     };
 
     return (
-        <div className="h-screen flex flex-col bg-gray-50">
+        <div className="h-screen flex flex-col bg-white">
             <Sidebar
                 isOpen={isSidebarOpen}
                 chats={chats}
@@ -133,12 +133,12 @@ const ChatPage: React.FC = () => {
                     currentChat={selectedChat?.title}
                 />
                 {error && (
-                    <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                    <div className="mx-auto max-w-3xl w-full px-4 mt-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                         {error}
                     </div>
                 )}
                 <ChatArea messages={selectedChat?.messages || []} isTyping={isTyping} />
-                <InputArea onSendMessage={handleSendMessage} disabled={isTyping} />
+                <InputArea onSendMessage={(text, action) => handleSendMessage(text, action || 'chat')} disabled={isTyping} />
             </div>
         </div>
     );

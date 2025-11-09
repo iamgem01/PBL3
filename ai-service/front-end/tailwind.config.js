@@ -1,10 +1,19 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
     content: [
-        "./src/**/*.{ts,tsx}",
+      "./index.html",
+      "./src/**/*.{js,ts,jsx,tsx}",
     ],
     theme: {
-        extend: {},
+      extend: {
+        borderColor: {
+          'border': 'hsl(var(--border))',
+        },
+        fontFamily: {
+          inter: ['Inter', 'sans-serif'],
+          gabarito: ["Gabarito", "sans-serif"],
+        }
+      },
     },
     plugins: [],
-}
+  }

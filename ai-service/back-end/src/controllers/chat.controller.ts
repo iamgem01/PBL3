@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { openAIService } from '../services/openai.service.js';
+import { geminiService } from '../services/gemini.service.js';
 
 class ChatController {
     /**
@@ -13,20 +13,24 @@ class ChatController {
 
             switch (action) {
                 case 'summarize':
-                    response = await openAIService.summarize(message);
+                    response = await geminiService.summarize(message);
                     break;
                 case 'note':
-                    response = await openAIService.createNote(message);
+                    response = await geminiService.createNote(message);
                     break;
                 case 'explain':
-                    response = await openAIService.explain(message);
+                    response = await geminiService.explain(message);
                     break;
                 case 'improve':
-                    response = await openAIService.improveWriting(message);
+                    response = await geminiService.improveWriting(message);
+                    break;
+                case 'translate':
+                    const { targetLanguage = 'tiếng Anh' } = req.body;
+                    response = await geminiService.translate(message, targetLanguage);
                     break;
                 case 'chat':
                 default:
-                    response = await openAIService.chat(message, context);
+                    response = await geminiService.chat(message, context);
                     break;
             }
 
@@ -49,7 +53,7 @@ class ChatController {
         try {
             const { text, maxLength = 200 } = req.body;
 
-            const summary = await openAIService.summarize(text, maxLength);
+            const summary = await geminiService.summarize(text, maxLength);
 
             res.json({
                 status: 'success',
@@ -71,7 +75,7 @@ class ChatController {
         try {
             const { text } = req.body;
 
-            const note = await openAIService.createNote(text);
+            const note = await geminiService.createNote(text);
 
             res.json({
                 status: 'success',
@@ -92,7 +96,7 @@ class ChatController {
         try {
             const { text } = req.body;
 
-            const explanation = await openAIService.explain(text);
+            const explanation = await geminiService.explain(text);
 
             res.json({
                 status: 'success',
@@ -113,7 +117,7 @@ class ChatController {
         try {
             const { text, style = 'professional' } = req.body;
 
-            const improved = await openAIService.improveWriting(text, style);
+            const improved = await geminiService.improveWriting(text, style);
 
             res.json({
                 status: 'success',
@@ -121,6 +125,28 @@ class ChatController {
                     original: text,
                     improved,
                     style
+                }
+            });
+        } catch (error: any) {
+            next(error);
+        }
+    }
+
+    /**
+     * Dịch thuật văn bản
+     */
+    async translate(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { text, targetLanguage = 'tiếng Anh' } = req.body;
+
+            const translated = await geminiService.translate(text, targetLanguage);
+
+            res.json({
+                status: 'success',
+                data: {
+                    original: text,
+                    translated,
+                    targetLanguage
                 }
             });
         } catch (error: any) {

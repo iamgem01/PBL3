@@ -1,6 +1,6 @@
 # AI Service Backend
 
-Backend service tích hợp ChatGPT/OpenAI API cho ứng dụng SmartNotes.
+Backend service tích hợp Google Gemini API cho ứng dụng SmartNotes.
 
 ## Tính năng
 
@@ -25,7 +25,8 @@ cp .env.example .env
 3. Cấu hình `.env`:
 ```
 PORT=3001
-OPENAI_API_KEY=your_openai_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-1.5-flash
 CORS_ORIGIN=http://localhost:5173
 ```
 

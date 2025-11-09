@@ -5,11 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="60ee78c4-c53c-489c-93ea-d0b3d36208b1" name="Changes" comment="second commit">
-      <change afterPath="$PROJECT_DIR$/ai-service/front-end/postcss.config.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/Message.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/header.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/progressive-blur.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ai-service/front-end/src/pages/Home/ChatPage.tsx" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/note-service/front-end/dev/DataManage.tsx" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/note-service/front-end/output.css" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/note-service/front-end/service/apiService.js" afterDir="false" />
@@ -28,18 +23,13 @@
       <change afterPath="$PROJECT_DIR$/note-service/front-end/src/stores/noteStores.ts" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/note-service/front-end/src/types/note.ts" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/note-service/front-end/src/utils/helpers.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ai-service/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/ai-service/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ai-service/front-end/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/ai-service/front-end/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ai-service/front-end/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/ai-service/front-end/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/AiResult.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/Chatarea.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/sidebar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ai-service/front-end/src/global.css" beforeDir="false" afterPath="$PROJECT_DIR$/ai-service/front-end/src/global.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ai-service/front-end/src/pages/Home/HomeAI.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ai-service/front-end/tailwind.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/ai-service/front-end/tailwind.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/collaboration-service/pom.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/collaboration-service/src/main/java/com/example/collaborationservice/CollaborationServiceApplication.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/vite/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/vite/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/Chatarea.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/Chatarea.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/InputArea.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/InputArea.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/Message.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ai-service/front-end/src/components/ui/Message.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ai-service/front-end/src/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/ai-service/front-end/src/index.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ai-service/front-end/src/pages/Home/ChatPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ai-service/front-end/src/pages/Home/ChatPage.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/note-service/front-end/.vite/deps/_metadata.json" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/note-service/front-end/.vite/deps/package.json" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/note-service/front-end/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/note-service/front-end/index.html" afterDir="false" />
@@ -50,14 +40,6 @@
       <change beforePath="$PROJECT_DIR$/note-service/front-end/src/assets/react.svg" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/note-service/front-end/src/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/note-service/front-end/src/index.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/note-service/front-end/src/main.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepReferral.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepReferral.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepRole.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepRole.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepTemplate.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepTemplate.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepWorkType.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/front-end/src/pages/Onboarding/steps/stepWorkType.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/user-service/src/main/java/com/smartnote/userservice/config/MongoConfig.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -225,7 +207,7 @@
       <workItem from="1762485877815" duration="10915000" />
       <workItem from="1762489762394" duration="977000" />
       <workItem from="1762491055212" duration="70000" />
-      <workItem from="1762491151412" duration="32323000" />
+      <workItem from="1762491151412" duration="33102000" />
     </task>
     <task id="LOCAL-00001" summary="first commit">
       <option name="closed" value="true" />
