@@ -1,5 +1,5 @@
 {
-  "name": "emmi_pbl3",
+  "name": "pbl3",
   "version": "1.0.0",
   "private": true,
   "workspaces": [
@@ -8,9 +8,10 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "dev:ai-service": "cd ai-service && npm run dev",
     "dev:user-service": "cd user-service && npm run dev",
     "dev:front-end": "cd front-end && npm run dev",
-    "dev:all": "concurrently \"npm run dev:user-service\" \"npm run dev:front-end\""
+    "dev:all": "concurrently \"npm run dev:user-service\" \"npm run dev:front-end\" \"npm run dev:ai-service\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

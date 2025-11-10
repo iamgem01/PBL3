@@ -3,8 +3,9 @@
     "baseUrl": "src",
     "paths": {
       "@/*": ["*"],
-      "@pages/*": ["pages/*"],}
-    },
+      "@pages/*": ["pages/*"]
+    }
+  },
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },
