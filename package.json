@@ -4,7 +4,8 @@
   "private": true,
   "workspaces": [
     "user-service",
-    "front-end"
+    "front-end",
+    "ai-service"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
