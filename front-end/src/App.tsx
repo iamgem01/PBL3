@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 import LandingPage from "@/pages/Landing/LandingPage";
 import LoginPage from "@/pages/Login/LoginPage";
@@ -9,14 +10,64 @@ import ChatPage from "./pages/AI/ChatPage";
 import NotFoundPage from "@/pages/NotFound/NotFoundPage";
 
 function App() {
+  const BACKEND_URL =
+    import.meta.env.VITE_USER_SERVICE_URL || "http://localhost:5000";
+
+  function AuthHandler() {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+      const params = new URLSearchParams(window.location.search);
+      const auth = params.get("auth");
+      const error = params.get("error");
+
+      if (error) {
+        // clear query params and optionally show error
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
+        return;
+      }
+
+      if (auth === "success") {
+        (async () => {
+          try {
+            const res = await fetch(`${BACKEND_URL}/api/auth/me`, {
+              credentials: "include",
+            });
+            if (res.ok) {
+              const data = await res.json();
+              localStorage.setItem("user", JSON.stringify(data.user));
+              window.history.replaceState(
+                {},
+                document.title,
+                window.location.pathname
+              );
+              navigate("/home");
+            } else {
+              console.error("Failed to fetch user after OAuth redirect");
+            }
+          } catch (e) {
+            console.error("Error fetching /api/auth/me:", e);
+          }
+        })();
+      }
+    }, [navigate]);
+
+    return null;
+  }
+
   return (
     <BrowserRouter>
+      <AuthHandler />
       <Routes>
-        <Route path="/landing" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/ai" element={<ChatPage />} />
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/home" element={<HomePage />} />
         <Route path="/document/:id" element={<DocumentPage />} />
         <Route
           path="/notifications"
