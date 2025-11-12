@@ -9,7 +9,7 @@ export default function SidebarMainButtons({
   collapsed,
 }: SidebarMainButtonsProps) {
   const buttons = [
-    { label: "Home", icon: <Home size={16} />, path: "/" },
+    { label: "Home", icon: <Home size={16} />, path: "/home" },
     { label: "Aeternus AI", icon: <Sparkles size={16} />, path: "/ai" },
     { label: "Notification", icon: <Bell size={16} />, path: "/notifications" },
     { label: "Search", icon: <Search size={16} />, path: "/search" },

@@ -1,25 +1,66 @@
-import { BookOpen, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import { BookOpen, Sparkles, FileText } from "lucide-react";
 import { FaJava } from "react-icons/fa";
-import { FcStart, FcIdea, FcList, FcBookmark, FcPlanner } from "react-icons/fc";
+import { useNavigate } from "react-router-dom";
+import { getAllNotes } from "@/services/noteService";
+
+// Định nghĩa interface cho Note từ API
+interface Note {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  isImportant?: boolean;
+}
 
 interface SidebarTeamspaceProps {
     collapsed: boolean;
 }
 
 export default function SidebarTeamspace({ collapsed }: SidebarTeamspaceProps) {
+    const navigate = useNavigate();
+    const [notes, setNotes] = useState<Note[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchNotes = async () => {
+            try {
+                const notesData = await getAllNotes();
+                setNotes(notesData);
+            } catch (err: any) {
+                console.error("Failed to fetch notes:", err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchNotes();
+    }, []);
+
     const teamspaces = [
         { label: "PBL 3 - Aeternus", icon: <BookOpen size={14} /> },
         { label: "AeternusAI", icon: <Sparkles size={14} /> },
         { label: "Session 1", icon: <FaJava size={14} /> },
     ];
 
-    const privates = [
-        { label: "Getting Started", icon: <FcStart size={14} /> },
-        { label: "Quick Note", icon: <FcIdea size={14} /> },
-        { label: "Task List", icon: <FcList size={14} /> },
-        { label: "Journal", icon: <FcBookmark size={14} /> },
-        { label: "Project Planner", icon: <FcPlanner size={14} /> },
-    ];
+    // Hàm để truncate title nếu quá dài
+    const truncateTitle = (title: string, maxLength: number = 20) => {
+        if (!title) return "Untitled";
+        return title.length > maxLength ? title.substring(0, maxLength) + "..." : title;
+    };
+
+    // Hàm để lấy icon cho note
+    const getNoteIcon = (title: string, content: string) => {
+        const lowerTitle = title?.toLowerCase() || "";
+        const lowerContent = content?.toLowerCase() || "";
+        
+        if (lowerTitle.includes('task') || lowerContent.includes('todo')) return '📝';
+        if (lowerTitle.includes('journal') || lowerContent.includes('note')) return '📔';
+        if (lowerTitle.includes('project') || lowerContent.includes('brainstorm')) return '🧠';
+        if (lowerTitle.includes('travel') || lowerContent.includes('trip')) return '🧳';
+        return '📄'; // Default note icon
+    };
 
     return (
         <div className="border-t p-3 text-sm">
@@ -44,24 +85,40 @@ export default function SidebarTeamspace({ collapsed }: SidebarTeamspaceProps) {
 
             {!collapsed && (
                 <h3 className="text-xs text-gray-600 mb-1 p-1 font-semibold tracking-wide">
-                    Private
+                    All Notes
                 </h3>
             )}
             <div className="space-y-1">
-                {privates.map((btn) => (
-                    <button
-                        key={btn.label}
-                        className={`flex items-center ${
-                            collapsed ? "justify-center" : "gap-1"
-                        } w-full px-1 py-1 text-gray-800 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors`}
-                    >
-                        {btn.icon}
-                        {!collapsed && <span className="font-normal text-xs">{btn.label}</span>}
-                    </button>
-                ))}
+                {isLoading ? (
+                    // Loading state
+                    <div className="flex items-center justify-center py-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+                    </div>
+                ) : notes.length > 0 ? (
+                    // Display notes
+                    notes.map((note) => (
+                        <button
+                            key={note.id}
+                            onClick={() => navigate(`/document/${note.id}`)}
+                            className={`flex items-center ${
+                                collapsed ? "justify-center" : "gap-1"
+                            } w-full px-1 py-1 text-gray-800 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors`}
+                        >
+                            <span className="text-sm">{getNoteIcon(note.title, note.content)}</span>
+                            {!collapsed && (
+                                <span className="font-normal text-xs truncate">
+                                    {truncateTitle(note.title)}
+                                </span>
+                            )}
+                        </button>
+                    ))
+                ) : (
+                    // Empty state
+                    <div className="text-xs text-gray-500 text-center py-2">
+                        {!collapsed ? "No notes yet" : "📝"}
+                    </div>
+                )}
             </div>
         </div>
-
-
     );
 }
