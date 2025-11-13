@@ -1,21 +1,30 @@
 {
-  "dependencies": {
-    "@lottiefiles/react-lottie-player": "^3.6.0",
-    "@radix-ui/react-dialog": "^1.1.15",
-    "@radix-ui/react-label": "^2.1.7",
-    "@radix-ui/react-select": "^2.2.6",
-    "@radix-ui/react-slot": "^1.2.3",
-    "@radix-ui/react-switch": "^1.2.6",
-    "@radix-ui/react-tabs": "^1.1.13",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.548.0",
-    "react-router-dom": "^7.9.5",
-    "recharts": "^3.3.0",
-    "tailwind-merge": "^3.3.1",
-    "tailwindcss": "^4.1.16"
+  "name": "pbl3",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "user-service",
+    "front-end",
+    "ai-service"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev:ai-service": "cd ai-service && npm run dev",
+    "dev:user-service": "cd user-service && npm run dev",
+    "dev:front-end": "cd front-end && npm run dev",
+    "dev:all": "concurrently \"npm run dev:user-service\" \"npm run dev:front-end\" \"npm run dev:ai-service\""
   },
   "devDependencies": {
-    "vite": "^7.2.2"
+    "@types/react": "^19.2.4",
+    "@types/react-dom": "^19.2.3",
+    "concurrently": "^8.2.2"
+  },
+  "license": "ISC",
+  "optionalDependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.53.2"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   }
 }

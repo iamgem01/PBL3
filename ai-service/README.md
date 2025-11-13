@@ -1,118 +1,66 @@
-# AI Service - SmartNotes
+# AI Service Backend
 
-Service tích hợp ChatGPT/OpenAI cho ứng dụng SmartNotes với các tính năng:
+Backend service tích hợp Google Gemini API cho ứng dụng SmartNotes.
+
+## Tính năng
+
 - 💬 Chat với AI
 - 📝 Tóm tắt văn bản
 - 📋 Tạo ghi chú có cấu trúc
 - 🔍 Giải thích văn bản
 - ✨ Cải thiện văn phong
 
-## Cấu trúc dự án
+## Cài đặt
 
-```
-ai-service/
-├── back-end/          # Backend Node.js/Express với TypeScript
-│   ├── src/
-│   │   ├── controllers/   # Controllers xử lý request
-│   │   ├── middleware/     # Validation và error handling
-│   │   ├── routes/         # API routes
-│   │   ├── services/       # OpenAI service
-│   │   └── index.ts        # Entry point
-│   └── package.json
-└── front-end/         # Frontend React với TypeScript
-    ├── src/
-    │   ├── components/     # UI components
-    │   ├── pages/          # Pages
-    │   ├── services/       # API service
-    │   └── ...
-    └── package.json
-```
-
-## Cài đặt và chạy
-
-### Backend
-
-1. Di chuyển vào thư mục backend:
-```bash
-cd ai-service/back-end
-```
-
-2. Cài đặt dependencies:
+1. Cài đặt dependencies:
 ```bash
 npm install
 ```
 
-3. Tạo file `.env` (xem `ENV_SETUP.md` để biết chi tiết):
-```env
+2. Tạo file `.env` từ `.env.example`:
+```bash
+cp .env.example .env
+```
+
+3. Cấu hình `.env`:
+```
 PORT=3001
-OPENAI_API_KEY=your_openai_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-1.5-flash
 CORS_ORIGIN=http://localhost:5173
 ```
 
-4. Chạy backend:
-```bash
-# Development mode
-npm run dev
+## Chạy ứng dụng
 
-# Production mode
-npm run build && npm start
-```
-
-Backend sẽ chạy trên `http://localhost:3001`
-
-### Frontend
-
-1. Di chuyển vào thư mục frontend:
-```bash
-cd ai-service/front-end
-```
-
-2. Cài đặt dependencies:
-```bash
-npm install
-```
-
-3. Tạo file `.env` (tùy chọn):
-```env
-VITE_API_BASE_URL=http://localhost:3001/api
-```
-
-4. Chạy frontend:
+### Development mode:
 ```bash
 npm run dev
 ```
 
-Frontend sẽ chạy trên `http://localhost:5173` (hoặc port khác nếu 5173 đã được sử dụng)
+### Production mode:
+```bash
+npm run build
+npm start
+```
 
 ## API Endpoints
 
 ### POST `/api/chat/message`
 Gửi tin nhắn chat với AI
 
-**Request:**
+**Request body:**
 ```json
 {
   "message": "Xin chào",
-  "action": "chat",
+  "action": "chat", // chat | summarize | note | explain | improve
   "context": "optional context"
-}
-```
-
-**Response:**
-```json
-{
-  "status": "success",
-  "data": {
-    "response": "Xin chào! Tôi có thể giúp gì cho bạn?",
-    "action": "chat"
-  }
 }
 ```
 
 ### POST `/api/chat/summarize`
 Tóm tắt văn bản
 
-**Request:**
+**Request body:**
 ```json
 {
   "text": "Văn bản cần tóm tắt...",
@@ -123,7 +71,7 @@ Tóm tắt văn bản
 ### POST `/api/chat/note`
 Tạo ghi chú từ văn bản
 
-**Request:**
+**Request body:**
 ```json
 {
   "text": "Nội dung cần tạo ghi chú..."
@@ -133,7 +81,7 @@ Tạo ghi chú từ văn bản
 ### POST `/api/chat/explain`
 Giải thích văn bản
 
-**Request:**
+**Request body:**
 ```json
 {
   "text": "Nội dung cần giải thích..."
@@ -143,24 +91,18 @@ Giải thích văn bản
 ### POST `/api/chat/improve`
 Cải thiện văn phong
 
-**Request:**
+**Request body:**
 ```json
 {
   "text": "Văn bản cần cải thiện...",
-  "style": "professional"
+  "style": "professional" // formal | casual | academic | professional
 }
 ```
 
 ## Validation
 
 Tất cả các endpoint đều có validation đầu vào:
-- ✅ Kiểm tra độ dài văn bản
-- ✅ Kiểm tra định dạng dữ liệu
-- ✅ Trả về lỗi chi tiết nếu không hợp lệ
-
-## Lưu ý
-
-- Cần có OpenAI API Key để sử dụng. Xem `back-end/ENV_SETUP.md` để biết cách lấy API key.
-- Backend và Frontend cần chạy đồng thời.
-- Đảm bảo CORS_ORIGIN trong backend khớp với URL frontend.
+- Kiểm tra độ dài văn bản
+- Kiểm tra định dạng dữ liệu
+- Trả về lỗi chi tiết nếu không hợp lệ
 
