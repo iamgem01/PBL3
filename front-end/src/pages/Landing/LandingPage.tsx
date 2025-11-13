@@ -1,12 +1,10 @@
-import React  from 'react';
+import React, { useState }  from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BookOpen, Send, Star, CheckCircle  , Menu, X, ShieldCheck, LockKeyhole, Fingerprint } from 'lucide-react';
 import { FaPen, FaSyncAlt, FaUsers,FaUserCog,FaRobot } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import "./style.css";
-
-
 import { cn } from '@/lib/utils';
 import  {LogoCloud} from '@/components/ui/logo-cloud-4';
 
@@ -303,24 +301,24 @@ const LandingPage: React.FC = () => {
             {/* Document Section */}
             <section className="py-16 bg-gray-50 dark:bg-slate-900">
                 <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-10">
-                    {/* Container khung viền và bo góc */}
+                    {/* Container */}
                     <div className="border glow-border rounded-lg p-8 bg-white dark:bg-slate-900">
                         {/* Title */}
                         <h2 className="text-3xl font-bold mb-4 text-center text-gray-900 dark:text-white">
                             Document
                         </h2>
-                        {/* Subtitle kèm mô tả */}
+                        {/* Subtitle */}
                         <div className="max-w-3xl mx-auto text-center mb-10 text-gray-800 dark:text-gray-300">
                             <p className="font-bold text-base mb-2">
                                 Document: Write, Organize, and Share Easily
                             </p>
-                            <p className="text-sm leading-relaxed">
+                            <p className="text-m leading-relaxed">
                                 Aeternus lets you create beautiful documents in seconds — from class notes to project plans.
                                 Type, drag, and format freely with our block system. Everything stays neat, synced, and ready to share
                             </p>
                         </div>
                         {/* Cards features */}
-                        <div className="flex flex-col md:flex-row gap-6 md:gap-8 justify-between">
+                        <div className="flex flex-col md:flex-row gap-6 md:gap-8 justify-between font-inter">
                             {documentFeatures.map((feature, idx) => (
                                 <div
                                     key={idx}
@@ -363,7 +361,7 @@ const LandingPage: React.FC = () => {
                     )}
                     />
                     <div className="text-center max-w-4xl mx-auto mb-8 px-4">
-                        <h2 className="font-black text-2xl text-primary tracking-tight md:text-3xl mb-2">
+                        <h2 className="text-3xl font-bold mb-4 text-center text-gray-900 dark:text-white">
                             Integration
                         </h2>
                         <p className="text-muted-foreground text-base">
@@ -390,7 +388,7 @@ const LandingPage: React.FC = () => {
                         effortless and finding information instant.
                     </p>
                 </div>
-                <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-y-20">
+                <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-y-20 font-inter">
                     {/* Purple panel */}
                     <Panel
                         icon={<FaPen className="text-purple-600 w-5 h-5" />}
@@ -477,21 +475,21 @@ const LandingPage: React.FC = () => {
 
 
 
-            {/* Travel Planner Section */}
+            {/* Plan together*/}
             <section className="py-20">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="bg-blue-50 p-8 md:p-12 rounded-lg shadow-lg border border-blue-100 flex flex-col md:flex-row items-center gap-8">
                         <div className="md:w-1/2">
                             <h3 className="text-sm font-semibold text-blue-600 uppercase mb-2">Plan Together</h3>
                             <h2 className="text-3xl font-bold text-gray-900 mb-4">Craft your perfect trip with shared notes.</h2>
-                            <p className="text-gray-600 mb-6">Use SmartNotes to collaboratively plan itineraries, budgets, and packing lists with friends and family. Real-time updates keep everyone on the same page.</p>
+                            <p className="text-gray-600 mb-6">Use Aeternus to collaboratively plan itineraries, budgets, and packing lists with friends and family. Real-time updates keep everyone on the same page.</p>
                             <Button variant="outline">Explore Templates <ArrowRight className="ml-2 h-4 w-4" /></Button>
                         </div>
                         <div className="md:w-1/2">
                             {/* Placeholder for the Travel Planner screenshot */}
-                            <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200">
-                                <PlaceholderImage alt="" className="w-full h-64 bg-gray-100 rounded-md flex items-center justify-center text-gray-500"/>
-                            </div>
+                            <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200">  
+                               <img alt="templates" src="./src/images/share.png"className="w-full h-64 object-cover rounded-md bg-gray-100"/>
+                           </div>
                         </div>
                     </div>
                 </div>
@@ -524,7 +522,7 @@ const LandingPage: React.FC = () => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl font-bold text-gray-900 mb-2">Loved by thousands of users</h2>
-                        <p className="text-sm text-gray-700">See what our users have to say about Eternus</p>
+                        <p className="text-sm text-gray-700">See what our users have to say about Aeternus</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {testimonials.map((t, i) => (
@@ -613,30 +611,34 @@ const LandingPage: React.FC = () => {
                     <div className="absolute top-0 right-1/4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
                     <div className="absolute -bottom-8 left-1/3 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
                 </div>
-                <div className="relative max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+                <div className="relative max-w-3xl mx-auto text-center px-4 sm:px-6 lg:px-8">
                     <h2 className="text-4xl font-bold text-black mb-4">
                         Ready to transform your note-taking?
                     </h2>
                     <p className="text-xl text-black-100 mb-8">
-                        Join thousands of users who have already upgraded their productivity with SmartNotes.
+                        Join thousands of users who have already upgraded their productivity with Aeternus.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                     <Link to="/login" className="block">
                         <Button size="lg" variant="secondary" className="bg-black text-white px-8 py-6">
-                            Start Your Free Trial
+                            Join us now!
                             <ArrowRight className="ml-2 h-5 w-5" />
                         </Button>
-
+                    </Link>    
                     </div>
                 </div>
             </section>
 
             {/* Footer (Keep as is) */}
-            <div className="footer-big">
+            <div className="footer-big font-inter">
                 <div className="company-info">
-                    <div className="text-wrapper">Aternus</div>
+                    <div className="text-wrapper flex items-center gap-2 font-gabarito">
+                        <BookOpen className="h-8 w-8 text-blue-600" />
+                         <h1 className="text-2xl font-bold text-gray-800">Aeternus</h1>
+                        </div>
 
                     <div className="copyright">
-                        <p className="div">
+                        <p className="div mb-6 text-xl font-semibold">
                             The smartest way to organize your thoughts and boost your
                             productivity.
                         </p>
@@ -648,13 +650,15 @@ const LandingPage: React.FC = () => {
                         <div className="text-wrapper-2">Product</div>
 
                         <div className="list-items">
-                            <div className="text-wrapper-3">Features</div>
+                            <div className="text-wrapper-3">Document</div>
+
+                            <div className="text-wrapper-4">Integration</div>
+
+                            <div className="text-wrapper-4">Feature</div>
 
                             <div className="text-wrapper-4">Pricing</div>
 
-                            <div className="text-wrapper-4">API</div>
-
-                            <div className="text-wrapper-4">Integrations</div>
+                            <div className="text-wrapper-4">Reviews</div>
 
                             <div className="text-wrapper-4">{""}</div>
                         </div>
@@ -674,22 +678,24 @@ const LandingPage: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="col-2">
-                        <div className="text-wrapper-2">Stay up to date</div>
+                 <div className="col-2">
+                    <div className="text-wrapper-2">Stay up to date</div>
 
-                        <div className="email-input-field">
-                            <div className="input-field-BG" />
-
-                            <Send className="essential-icons-send" />
-                            <div className="text-wrapper-5">Your email address</div>
-                        </div>
+                    <div className="email-input-field">
+                        <div className="input-field-BG" />
+                        <input
+                        type="email"
+                        placeholder="Your email address"
+                        className="email-input"
+                        />
+                        <Send className="essential-icons-send" />
                     </div>
+                    </div>
+
                 </div>
             </div>
 
         </div>
     );
 };
-
 export default LandingPage;
-

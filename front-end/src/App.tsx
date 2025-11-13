@@ -7,17 +7,19 @@ import HomePage from "@/pages/Homepage/HomePage";
 import DocumentPage from "@/pages/DocumentPage";
 import ChatPage from "./pages/AI/ChatPage";
 import NotFoundPage from "@/pages/NotFound/NotFoundPage";
+import NotePage from "@/pages/NotePage/NotePage";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/landing" element={<LandingPage />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/ai" element={<ChatPage />} />
-        <Route path="/" element={<HomePage />} />
+        <Route path="/home" element={<HomePage />} />
         <Route path="/document/:id" element={<DocumentPage />} />
+       <Route path="/note" element={<NotePage />} />
         <Route
           path="/notifications"
           element={

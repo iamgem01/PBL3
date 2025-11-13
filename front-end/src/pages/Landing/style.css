@@ -173,3 +173,33 @@
     white-space: nowrap;
     width: 46.80%;
 }
+.email-input-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-field-BG {
+  position: absolute;
+  inset: 0;
+  background-color: #f3f3f3; /* hoặc màu bạn muốn */
+  border-radius: 8px;
+}
+
+.email-input {
+  position: relative;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 10px 40px 10px 12px;
+  width: 100%;
+  font-size: 14px;
+  z-index: 1;
+}
+
+.essential-icons-send {
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+  z-index: 2;
+}
