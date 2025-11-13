@@ -1,0 +1,16 @@
+com\smartnote\noteservice\dto\NoteResponse.class
+com\smartnote\noteservice\repository\NoteRepository.class
+com\smartnote\noteservice\service\ExportService.class
+com\smartnote\noteservice\service\impl\TrashServiceImpl$1.class
+com\smartnote\noteservice\config\MongoConfig.class
+com\smartnote\noteservice\controller\DataIOController.class
+com\smartnote\noteservice\service\ImportService.class
+com\smartnote\noteservice\controller\SearchController.class
+com\smartnote\noteservice\controller\NoteController.class
+com\smartnote\noteservice\service\SearchService.class
+com\smartnote\noteservice\model\Note.class
+com\smartnote\noteservice\model\NoteHistory.class
+com\smartnote\noteservice\repository\NoteHistoryRepository.class
+com\smartnote\noteservice\NoteServiceApplication.class
+com\smartnote\noteservice\service\NoteService.class
+com\smartnote\noteservice\dto\NoteRequest.class
