@@ -25,10 +25,10 @@ const TypingText: React.FC<TypingTextProps> = ({ text }) => {
   }, [text]);
 
   return (
-    <h2 className="text-3xl md:text-4xl font-inter font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent relative inline-block">
+    <span className="text-3xl md:text-4xl font-inter font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent relative inline-block">
       {displayedText}
       <span className="border-r-2 border-blue-500 animate-blink ml-1"></span>
-    </h2>
+    </span>
   );
 };
 

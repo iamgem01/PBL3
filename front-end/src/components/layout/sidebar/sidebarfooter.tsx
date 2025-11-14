@@ -3,13 +3,18 @@ import { UserMenu } from "./userpopup";
 
 interface SidebarFooterProps {
     collapsed: boolean;
+    onOpenTrashModal: () => void;
 }
 
-export function SidebarFooter({ collapsed }: SidebarFooterProps) {
+export function SidebarFooter({ collapsed, onOpenTrashModal }: SidebarFooterProps) {
     const footerButtons = [
         { label: "Template", icon: <LayoutPanelTop size={16} /> },
         { label: "Settings", icon: <Settings size={16} /> },
-        { label: "Trash", icon: <Trash size={16} /> },
+        { 
+            label: "Trash", 
+            icon: <Trash size={16} />, 
+            onClick: onOpenTrashModal
+        },
     ];
 
     return (
@@ -18,6 +23,7 @@ export function SidebarFooter({ collapsed }: SidebarFooterProps) {
                 {footerButtons.map((btn) => (
                     <button
                         key={btn.label}
+                        onClick={btn.onClick}
                         className="flex items-center gap-2 w-full px-2 py-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors"
                     >
                         {btn.icon}

@@ -12,7 +12,8 @@
     "dev:ai-service": "cd ai-service && npm run dev",
     "dev:user-service": "cd user-service && npm run dev",
     "dev:front-end": "cd front-end && npm run dev",
-    "dev:all": "concurrently \"npm run dev:user-service\" \"npm run dev:front-end\" \"npm run dev:ai-service\""
+    "dev:note-service": "cd note-service && mvn spring-boot:run",
+    "dev:all": "concurrently \"npm run dev:user-service\" \"npm run dev:front-end\" \"npm run dev:ai-service\" \"npm run dev:note-service\""
   },
   "devDependencies": {
     "@types/react": "^19.2.4",
