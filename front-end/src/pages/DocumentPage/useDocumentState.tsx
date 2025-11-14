@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getNoteById, updateNote, markAsImportant, removeAsImportant, moveToTrash, exportNoteAsPdf } from '@/services';
 import type { Note, ToolbarPosition } from './documentTypes';
+import { mockNotes } from '../../mockData/notes';
 
 export const useDocumentState = () => {
   const { id } = useParams<{ id: string }>();
@@ -9,7 +10,7 @@ export const useDocumentState = () => {
 
   // State
   const [note, setNote] = useState<Note | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   
@@ -47,8 +48,8 @@ export const useDocumentState = () => {
     fetchNote();
   }, [id]);
 
-  // Handlers
-  const handleUpdateNote = async (newContent: string) => {
+  // Handlers - Memoized with useCallback to prevent unnecessary rerenders
+  const handleUpdateNote = useCallback(async (newContent: string) => {
     if (!note || !id) return;
 
     setIsUpdating(true);
@@ -66,9 +67,9 @@ export const useDocumentState = () => {
     } finally {
       setIsUpdating(false);
     }
-  };
+  }, [note, id]);
 
-  const handleMoveToTrash = async () => {
+  const handleMoveToTrash = useCallback(async () => {
     if (!id) return;
     
     setIsDeleting(true);
@@ -81,9 +82,9 @@ export const useDocumentState = () => {
       setError("Failed to move note to trash: " + error.message);
       setIsDeleting(false);
     }
-  };
+  }, [id, navigate]);
 
-  const handleToggleImportant = async () => {
+  const handleToggleImportant = useCallback(async () => {
     if (!note || !id) return;
 
     setIsImportantLoading(true);
@@ -102,9 +103,9 @@ export const useDocumentState = () => {
     } finally {
       setIsImportantLoading(false);
     }
-  };
+  }, [note, id]);
 
-  const handleExportPdf = async () => {
+  const handleExportPdf = useCallback(async () => {
     if (!id) return;
 
     setIsExporting(true);
@@ -125,9 +126,9 @@ export const useDocumentState = () => {
     } finally {
       setIsExporting(false);
     }
-  };
+  }, [id, note?.title]);
 
-  return {
+  return useMemo(() => ({
     // State
     note,
     isLoading,
@@ -150,5 +151,21 @@ export const useDocumentState = () => {
     handleMoveToTrash,
     handleToggleImportant,
     handleExportPdf,
-  };
+  }), [
+    note,
+    isLoading,
+    error,
+    collapsed,
+    showToolbar,
+    toolbarPosition,
+    isUpdating,
+    isDeleting,
+    isExporting,
+    showDeleteConfirm,
+    isImportantLoading,
+    handleUpdateNote,
+    handleMoveToTrash,
+    handleToggleImportant,
+    handleExportPdf,
+  ]);
 };

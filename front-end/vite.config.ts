@@ -3,21 +3,31 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig({
-    plugins: [react()],
+    plugins: [
+        react({
+            babel: {
+                plugins: [
+                    ['babel-plugin-react-compiler', {
+                        // Optional configuration
+                        // target: '19' // Specify React version
+                    }]
+                ]
+            }
+        })
+    ],
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './src'),
             '@pages': path.resolve(__dirname, './src/pages'),
         },
     },
-    // vite.config.ts
-server: {
-    port: 3000,
-    proxy: {
-        '/api': {
-            target: 'http://localhost:3001',
-            changeOrigin: true,
+    server: {
+        port: 3000,
+        proxy: {
+            '/api': {
+                target: 'http://localhost:3001',
+                changeOrigin: true,
+            },
         },
-    },
-}
+    }
 })
