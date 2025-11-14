@@ -31,9 +31,10 @@ const ChatArea: React.FC<ChatAreaProps> = ({ messages, isTyping }) => {
               <h2 className="text-4xl font-bold font-gabarito bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
                 <TypingText text="What's on your mind? " />
               </h2>
-              <p className="text-gray-500">
+              {/* SỬA Ở ĐÂY: Thay thế <p> bằng <div> */}
+              <div className="text-gray-500">
                 <FadeInText text="Start a new conversation or ask anything." />
-              </p>
+              </div>
             </div>
           </div>
         </div>

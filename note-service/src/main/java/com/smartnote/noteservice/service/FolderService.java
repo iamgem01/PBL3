@@ -18,5 +18,5 @@ public interface FolderService {
 
     void internalMoveToTrash(String folderId);
     void internalPermanentDelete(String folderId);
-    Folder internalRestoreFromTrash(String folderId);
+    void internalRestoreFromTrash(String folderId);
 }

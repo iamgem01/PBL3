@@ -230,43 +230,39 @@ public class FolderServiceImpl implements FolderService {
         softDeleteRecursive(folder);
     }
 
-    @Override
-    public Folder internalRestoreFromTrash(String folderId) {
-        Optional<Folder> folderOpt = folderRepository.findById(folderId);
-        
-        if (!folderOpt.isPresent()) {
-            throw new RuntimeException("Folder not found with id: " + folderId);
-        }
-        
-        Folder folder = folderOpt.get();
+@Override
+public void internalRestoreFromTrash(String folderId) {  // Thay đổi return type từ Folder thành void
+    Optional<Folder> folderOpt = folderRepository.findById(folderId);
+    
+    if (!folderOpt.isPresent()) {
+        throw new RuntimeException("Folder not found with id: " + folderId);
+    }
+    
+    Folder folder = folderOpt.get();
 
-        if (!folder.isDeleted()) {
-            throw new RuntimeException("Folder is not in trash.");
-        }
-
-        if (folder.getParentFolderId() != null && !folder.getParentFolderId().isEmpty()) {
-            Optional<Folder> parentOpt = folderRepository.findById(folder.getParentFolderId());
-            if (parentOpt.isPresent()) {
-                Folder parent = parentOpt.get();
-                if (parent.isDeleted()) {
-                    throw new RuntimeException("Cannot restore folder because parent folder is in trash");
-                }
-            } else {
-                // Nếu parent không tồn tại, restore như root folder
-                folder.setParentFolderId(null);
-                folder.setAncestors(new ArrayList<>());
-                folder.setPath("/" + folder.getId());
-            }
-        } else {
-        }
-        restoreRecursive(folder);
-        return folder;
+    if (!folder.isDeleted()) {
+        throw new RuntimeException("Folder is not in trash.");
     }
 
-    @Override
-    public void internalPermanentDelete(String folderId) {
-        Folder folder = folderRepository.findById(folderId)
-                .orElseThrow(() -> new RuntimeException("Folder not found with id: " + folderId));
+    if (folder.getParentFolderId() != null && !folder.getParentFolderId().isEmpty()) {
+        Optional<Folder> parentOpt = folderRepository.findById(folder.getParentFolderId());
+        if (parentOpt.isPresent()) {
+            Folder parent = parentOpt.get();
+            if (parent.isDeleted()) {
+                throw new RuntimeException("Cannot restore folder because parent folder is in trash");
+            }
+        } else {
+            throw new RuntimeException("Parent folder not found: " + folder.getParentFolderId());
+        }
+    }
+
+    restoreRecursive(folder);
+}
+
+@Override
+public void internalPermanentDelete(String folderId) {
+    Folder folder = folderRepository.findById(folderId)
+            .orElseThrow(() -> new RuntimeException("Folder not found with id: " + folderId));
 
         if (!folder.isDeleted()) {
             throw new RuntimeException("Folder is not in trash. Please move to trash first.");

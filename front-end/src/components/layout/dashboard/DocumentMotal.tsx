@@ -15,7 +15,7 @@ export default function DocumentModal({ isOpen, onClose, content }: DocumentModa
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Lớp nền mờ */}
             <div
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/40 "style={{ backdropFilter: 'none' }}
                 onClick={onClose}
             />
 

@@ -25,7 +25,7 @@ export default function Dashboard() {
                 </section>
 
                 {/* Event Section */}
-                <div className="mt-8 text-center font-inter text-gray-500 text-sm border rounded-2xl bg-white/60 backdrop-blur-sm shadow-sm p-6 hover:shadow-md transition-shadow duration-300">
+                <div className="mt-8 text-center font-inter text-gray-500 text-sm border rounded-2xl bg-white/60  shadow-sm p-6 hover:shadow-md transition-shadow duration-300" style={{ backdropFilter: 'none' }}>
                     No upcoming events in the next 3 days <br />
                     <button className="mt-2 text-indigo-600 font-medium font-inter hover:underline hover:text-indigo-800">
                         + New events

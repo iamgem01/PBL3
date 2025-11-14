@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { BookOpen, Sparkles, FileText } from "lucide-react";
 import { FaJava } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { getAllNotes } from "@/services/noteService";
+import { getAllNotes } from "@/services/NoteService";
 
 // Định nghĩa interface cho Note từ API
 interface Note {
@@ -99,7 +99,7 @@ export default function SidebarTeamspace({ collapsed }: SidebarTeamspaceProps) {
                     notes.map((note) => (
                         <button
                             key={note.id}
-                            onClick={() => navigate(`/document/${note.id}`)}
+                            onClick={() => navigate(`/notes/${note.id}`)}
                             className={`flex items-center ${
                                 collapsed ? "justify-center" : "gap-1"
                             } w-full px-1 py-1 text-gray-800 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors`}

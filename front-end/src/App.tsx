@@ -5,9 +5,11 @@ import LandingPage from "@/pages/Landing/LandingPage";
 import LoginPage from "@/pages/Login/LoginPage";
 import SignUpPage from "@/pages/SignUp/SignUpPage";
 import HomePage from "@/pages/Homepage/HomePage";
-import DocumentPage from "@/pages/DocumentPage";
+import DocumentPage from "@/pages/DocumentPage/DocumentPage";
 import ChatPage from "./pages/AI/ChatPage";
+import SearchPage from "@/pages/SearchPage/SearchPage";
 import NotFoundPage from "@/pages/NotFound/NotFoundPage";
+import NotePage from "@/pages/NotePage/NotePage";
 
 function App() {
   const BACKEND_URL =
@@ -68,7 +70,8 @@ function App() {
         <Route path="/ai" element={<ChatPage />} />
         <Route path="/" element={<LandingPage />} />
         <Route path="/home" element={<HomePage />} />
-        <Route path="/document/:id" element={<DocumentPage />} />
+        <Route path="/notes/new" element={<NotePage />} />
+        <Route path="/notes/:id" element={<DocumentPage />} />
         <Route
           path="/notifications"
           element={
@@ -80,16 +83,21 @@ function App() {
           }
         />
         <Route
-          path="/search"
+          path="/new-note"
           element={
             <div className="min-h-screen flex items-center justify-center">
-              <h1 className="text-2xl font-bold">Search Page - Coming Soon!</h1>
+              <h1 className="text-2xl font-bold">Create New Note - Coming Soon!</h1>
             </div>
           }
+        />
+        <Route
+          path="/search"
+          element={<SearchPage />}
         />
         {/* 404 Catch-all route - must be last */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      
     </BrowserRouter>
   );
 }

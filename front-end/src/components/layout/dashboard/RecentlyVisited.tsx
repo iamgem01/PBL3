@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllNotes } from "@/services/noteService";
+import { getAllNotes } from "@/services/NoteService";
 
 // Định nghĩa type cho Note từ API
 interface Note {
@@ -124,7 +124,7 @@ export default function RecentlyVisited() {
                             {notes.map((note) => (
                                 <div
                                     key={note.id}
-                                    onClick={() => navigate(`/document/${note.id}`)}
+                                    onClick={() => navigate(`/notes/${note.id}`)}
                                     className="min-w-[180px] bg-white border border-gray-100 rounded-xl p-3 flex-shrink-0
                                        hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
                                 >
@@ -134,7 +134,7 @@ export default function RecentlyVisited() {
                                             alt={note.title}
                                             className="w-full h-28 object-cover rounded-md"
                                         />
-                                        <div className="absolute top-2 left-2 text-lg bg-white/70 backdrop-blur-sm rounded-md px-2 py-[2px]">
+                                        <div className="absolute top-2 left-2 text-lg bg-white/70  rounded-md px-2 py-[2px]" style={{ backdropFilter: 'none' }}>
                                             {getNoteIcon(note.title, note.content)}
                                         </div>
                                         {note.isImportant && (

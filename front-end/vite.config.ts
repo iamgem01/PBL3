@@ -10,13 +10,14 @@ export default defineConfig({
             '@pages': path.resolve(__dirname, './src/pages'),
         },
     },
-    server: {
-        port: 3000,
-        proxy: {
-            '/api/users': {
-                target: 'http://localhost:8080',
-                changeOrigin: true,
-            },
+    // vite.config.ts
+server: {
+    port: 3000,
+    proxy: {
+        '/api': {
+            target: 'http://localhost:3001',
+            changeOrigin: true,
         },
     },
+}
 })

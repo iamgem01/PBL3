@@ -56,3 +56,6 @@
 ::-moz-selection {
   background-color: rgba(59, 130, 246, 0.2);
 }
+button {
+  pointer-events: auto !important;
+}
