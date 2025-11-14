@@ -11,18 +11,16 @@ export const DocumentToolbar = ({
   toolbarPosition,
   onHideToolbar,
 }: DocumentToolbarProps) => {
-  if (!showToolbar) return null;
 
   return (
     <div
+    key="portal"
+      onMouseDown={(e) => e.preventDefault()}
       className="fixed z-50 transition-all duration-200 ease-out"
       style={{
+        display: showToolbar ? "block" : "none",
         left: `${toolbarPosition.x}px`,
         top: `${toolbarPosition.y}px`,
-      }}
-      onMouseDown={(e) => {
-        // Prevent default to avoid losing focus from textarea
-        e.preventDefault();
       }}
     >
       <div className="shadow-2xl animate-in fade-in slide-in-from-bottom-2">

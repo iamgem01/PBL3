@@ -4,7 +4,8 @@ import { PlainTextContent, NoteStructuredContent } from "./DocumentContent";
 import Sidebar from "@/components/layout/sidebar/sidebar";
 import { DeleteConfirmModal } from "./DocumentModals";
 import { DocumentToolbar } from "./DocumentToolbar";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 function formatDate(date?: string | Date | null) {
   if (!date) return "";
@@ -86,6 +87,11 @@ export default function DocumentPage() {
     </div>
   );
 
+  const handleShowToolbar = useCallback((x: number, y: number) => {
+    setToolbarPosition({ x, y });
+    setShowToolbar(x !== 0 && y !== 0);
+  }, [setShowToolbar, setToolbarPosition]);
+
   // Footer
   const NoteFooter = () => (
     <div className="max-w-4xl mx-auto mt-8">
@@ -96,10 +102,6 @@ export default function DocumentPage() {
       </div>
     </div>
   );
-
-  useEffect(() => {
-    console.log({ showToolbar });
-  }, [showToolbar]);
 
   const NoteContent = () => (
     <div className="min-h-screen bg-gradient-to-b from-gray-50/80 to-gray-100/60 p-8 font-inter backdrop-blur-sm">
@@ -119,24 +121,25 @@ export default function DocumentPage() {
       {/* Document Content */}
       {note?.content && (
         <PlainTextContent
+        key={note.id}
           note={note}
           isUpdating={isUpdating}
           onUpdateContent={handleUpdateNote}
-          onShowToolbar={(position) => {
-            setToolbarPosition(position);
-            setShowToolbar(position.x !== 0 && position.y !== 0);
-          }}
+          onShowToolbar={({ x, y }) => handleShowToolbar(x, y)}
         />
       )}
 
-      <DocumentToolbar
-        showToolbar={showToolbar}
-        toolbarPosition={toolbarPosition}
-        onHideToolbar={() => {
-          setShowToolbar(false);
-          setToolbarPosition({ x: 0, y: 0 });
-        }}
-      />
+      {createPortal(
+          <DocumentToolbar
+            showToolbar={showToolbar}
+            toolbarPosition={toolbarPosition}
+            onHideToolbar={() => {
+              setShowToolbar(false);
+              setToolbarPosition({ x: 0, y: 0 });
+            }}
+          />,
+          document.getElementById("portal") ?? document.body
+        )}
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
