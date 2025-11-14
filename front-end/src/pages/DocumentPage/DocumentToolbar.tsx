@@ -21,12 +21,8 @@ export const DocumentToolbar = ({
         top: `${toolbarPosition.y}px`,
       }}
       onMouseDown={(e) => {
+        // Prevent default to avoid losing focus from textarea
         e.preventDefault();
-        // Restore selection when toolbar is clicked
-        const selection = window.getSelection();
-        if (selection) {
-          selection.removeAllRanges();
-        }
       }}
     >
       <div className="shadow-2xl animate-in fade-in slide-in-from-bottom-2">

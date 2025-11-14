@@ -112,7 +112,6 @@ export default function DocumentPage() {
         onToggleImportant={handleToggleImportant}
         onExportPdf={handleExportPdf}
         onShowDeleteConfirm={() => {
-          console.log("Show delete confirm triggered");
           setShowDeleteConfirm(true);
         }}
       />
@@ -125,7 +124,7 @@ export default function DocumentPage() {
           onUpdateContent={handleUpdateNote}
           onShowToolbar={(position) => {
             setToolbarPosition(position);
-            setShowToolbar(position.x !== 0 || position.y !== 0);
+            setShowToolbar(position.x !== 0 && position.y !== 0);
           }}
         />
       )}

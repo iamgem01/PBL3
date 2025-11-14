@@ -33,63 +33,36 @@ export const PlainTextContent = ({
     }
   }, [currentContent, note?.content, onUpdateContent]);
 
-  // Selection và toolbar - FIXED VERSION
-  useEffect(() => {
-    let savedRange: Range | null = null;
-
-    const handleMouseUp = () => {
-      const selection = window.getSelection();
-
-      if (!selection || selection.rangeCount === 0) return;
-
-      const selectedText = selection.toString();
-
-      console.log({ selectedText });
-
-      if (selectedText.length > 0) {
-        savedRange = selection.getRangeAt(0).cloneRange();
-        const range = selection.getRangeAt(0);
-
-        console.log({
-          textareaRef: textareaRef.current,
-          range: range.commonAncestorContainer,
-        });
-
-        if (
-          range &&
-          textareaRef.current?.contains(range.commonAncestorContainer)
-        ) {
-          const rect = range.getBoundingClientRect();
-
-          onShowToolbar({
-            x: rect.left + window.scrollX,
-            y: rect.top + window.scrollY - 60,
-          });
-
-          setTimeout(() => {
-            if (savedRange) {
-              const newSelection = window.getSelection();
-              if (newSelection) {
-                newSelection.removeAllRanges();
-                newSelection.addRange(savedRange.cloneRange());
-              }
-            }
-          }, 0);
-        }
-      }
-    };
-
-    // CHỈ thêm event listener cho textarea, không dùng document-wide listeners
+  // Selection và toolbar
+  const handleTextSelection = useCallback(() => {
     const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.addEventListener("mouseup", handleMouseUp);
-    }
+    if (!textarea) return;
 
-    return () => {
-      if (textarea) {
-        textarea.removeEventListener("mouseup", handleMouseUp);
-      }
-    };
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+
+    if (selectedText.length > 0) {
+      // Get textarea bounding rect
+      const textareaRect = textarea.getBoundingClientRect();
+      
+      // Calculate approximate position based on selection
+      const lines = textarea.value.substring(0, start).split('\n');
+      const lineNumber = lines.length - 1;
+      const lineHeight = parseInt(window.getComputedStyle(textarea).lineHeight) || 24;
+      
+      // Calculate Y position based on line number and scroll position
+      const yOffset = (lineNumber * lineHeight) - textarea.scrollTop;
+      
+      // Position toolbar above the selection
+      onShowToolbar({
+        x: textareaRect.left / 2 + window.scrollX - 20,
+        y: textareaRect.top + window.scrollY + yOffset - 60,
+      });
+    } else {
+      // Hide toolbar when no text is selected
+      onShowToolbar({ x: 0, y: 0 });
+    }
   }, [onShowToolbar]);
 
   return (
@@ -114,6 +87,7 @@ export const PlainTextContent = ({
             ref={textareaRef}
             value={currentContent}
             onChange={(e) => setCurrentContent(e.target.value)}
+            onSelect={handleTextSelection}
             placeholder="Start writing your note..."
             className="w-full min-h-[400px] text-gray-700 placeholder-gray-400 border-none outline-none focus:ring-0 p-0 resize-none font-mono text-sm leading-6"
             style={{

@@ -2,14 +2,15 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getNoteById, updateNote, markAsImportant, removeAsImportant, moveToTrash, exportNoteAsPdf } from '@/services';
 import type { Note, ToolbarPosition } from './documentTypes';
+import { mockNotes } from '../../mockData/notes';
 
 export const useDocumentState = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   // State
-  const [note, setNote] = useState<Note | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [note, setNote] = useState<Note | null>(mockNotes[0] as Note);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   
@@ -25,27 +26,27 @@ export const useDocumentState = () => {
   const [isImportantLoading, setIsImportantLoading] = useState(false);
 
   // Fetch note
-  useEffect(() => {
-    const fetchNote = async () => {
-      if (!id) {
-        setError("Note ID is missing");
-        setIsLoading(false);
-        return;
-      }
+  // useEffect(() => {
+  //   const fetchNote = async () => {
+  //     if (!id) {
+  //       setError("Note ID is missing");
+  //       setIsLoading(false);
+  //       return;
+  //     }
 
-      try {
-        console.log('Fetching note with ID:', id);
-        const noteData = await getNoteById(id);
-        setNote(noteData);
-      } catch (err: any) {
-        console.error('Error fetching note:', err);
-        setError(err.message || "Failed to load note");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchNote();
-  }, [id]);
+  //     try {
+  //       console.log('Fetching note with ID:', id);
+  //       const noteData = await getNoteById(id);
+  //       setNote(noteData);
+  //     } catch (err: any) {
+  //       console.error('Error fetching note:', err);
+  //       setError(err.message || "Failed to load note");
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+  //   fetchNote();
+  // }, [id]);
 
   // Handlers
   const handleUpdateNote = async (newContent: string) => {
