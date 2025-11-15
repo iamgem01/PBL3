@@ -4,12 +4,17 @@ import { UserMenu } from "./userpopup";
 interface SidebarFooterProps {
     collapsed: boolean;
     onOpenTrashModal: () => void;
+    onOpenSettingsModal: () => void;
 }
 
-export function SidebarFooter({ collapsed, onOpenTrashModal }: SidebarFooterProps) {
+export function SidebarFooter({ collapsed, onOpenTrashModal, onOpenSettingsModal }: SidebarFooterProps) {
     const footerButtons = [
         { label: "Template", icon: <LayoutPanelTop size={16} /> },
-        { label: "Settings", icon: <Settings size={16} /> },
+        { 
+            label: "Settings", 
+            icon: <Settings size={16} />, 
+            onClick: onOpenSettingsModal
+        },
         { 
             label: "Trash", 
             icon: <Trash size={16} />, 

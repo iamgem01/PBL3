@@ -6,6 +6,7 @@ import { Menu, FilePlus } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TrashModal from "@/components/ui/Trash/TrashModal";
+import SettingsModal from "@/components/ui/Settings/SettingModal";
 
 interface SidebarProps {
     collapsed: boolean;
@@ -14,10 +15,14 @@ interface SidebarProps {
 
 export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
     const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
+    const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     const navigate = useNavigate();
 
     const openTrashModal = () => setIsTrashModalOpen(true);
     const closeTrashModal = () => setIsTrashModalOpen(false);
+    
+    const openSettingsModal = () => setIsSettingsModalOpen(true);
+    const closeSettingsModal = () => setIsSettingsModalOpen(false);
 
     const handleCreateNewNote = () => {
         navigate('/notes/new');
@@ -73,7 +78,8 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 <div className={`${collapsed ? "items-center" : "items-stretch"} px-1`}>
                     <SidebarFooter 
                         collapsed={collapsed} 
-                        onOpenTrashModal={openTrashModal} 
+                        onOpenTrashModal={openTrashModal}
+                        onOpenSettingsModal={openSettingsModal}
                     />
                 </div>
             </div>
@@ -82,6 +88,12 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
             <TrashModal 
                 isOpen={isTrashModalOpen} 
                 onClose={closeTrashModal} 
+            />
+            
+            {/* Settings Modal */}
+            <SettingsModal 
+                isOpen={isSettingsModalOpen} 
+                onClose={closeSettingsModal} 
             />
         </>
     );
