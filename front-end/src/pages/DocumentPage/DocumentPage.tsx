@@ -1,6 +1,6 @@
 import { useDocumentState } from "./useDocumentState";
 import { DocumentHeader } from "./DocumentHeader";
-import { PlainTextContent, NoteStructuredContent } from "./DocumentContent";
+import { PlainTextContent } from "./DocumentContent";
 import Sidebar from "@/components/layout/sidebar/sidebar";
 import { DeleteConfirmModal } from "./DocumentModals";
 import { DocumentToolbar } from "./DocumentToolbar";
@@ -113,10 +113,9 @@ export default function DocumentPage() {
           note={note}
           isUpdating={isUpdating}
           onUpdateContent={handleUpdateNote}
-          onShowToolbar={({ x, y }) => handleShowToolbar(x, y)}
         />
       )}
-
+      
       {createPortal(
         <DocumentToolbar
           showToolbar={showToolbar}
