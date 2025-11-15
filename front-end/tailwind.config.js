@@ -8,26 +8,39 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Custom colors for dark mode
-        background: {
-          DEFAULT: '#ffffff',
-          dark: '#111827',
+        // Using CSS custom properties from index.css
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
         },
-        foreground: {
-          DEFAULT: '#111827',
-          dark: '#f9fafb',
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
         },
         muted: {
-          DEFAULT: '#f3f4f6',
-          dark: '#1f2937',
-          foreground: {
-            DEFAULT: '#6b7280',
-            dark: '#9ca3af',
-          }
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
         },
-        primary: {
-          DEFAULT: '#3b82f6',
-          dark: '#60a5fa',
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
         },
       },
       fontFamily: {

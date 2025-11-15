@@ -141,7 +141,7 @@ const ChatPage: React.FC = () => {
   const hasMessages = selectedChat && selectedChat.messages.length > 0;
 
   return (
-    <div className="h-screen flex bg-white relative">
+    <div className="h-screen flex bg-background relative">
       <Sidebar
         collapsed={sidebarCollapsed}
         setCollapsed={setSidebarCollapsed}

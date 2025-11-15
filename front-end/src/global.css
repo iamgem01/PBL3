@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Comment out conflicting styles - now using index.css */
+/*
 @layer base {
   :root {
     --background: 249 250 251;
@@ -38,3 +40,4 @@
     @apply bg-background text-foreground;
   }
 }
+*/
