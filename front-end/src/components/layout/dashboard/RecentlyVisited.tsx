@@ -78,8 +78,8 @@ export default function RecentlyVisited() {
     };
 
     return (
-        <section className="relative flex flex-col font-inter items-left mb-12">
-            <h2 className="text-lg font-regular font-inter mb-4 text-muted-foreground flex justify-start items-center">
+        <section className="relative flex flex-col font-inter mb-12">
+            <h2 className="text-lg font-regular font-inter mb-6 text-muted-foreground flex items-center">
                 <Clock className="w-5 h-5 text-muted-foreground mr-2" strokeWidth={1.5} />
                 Recently Visited
             </h2>
@@ -103,68 +103,64 @@ export default function RecentlyVisited() {
             )}
 
             {!isLoading && !error && notes.length > 0 && (
-                <>
+                <div className="relative">
                     <button
                         onClick={() => scroll("left")}
-                        className="absolute left-[5%] top-1/2 -translate-y-1/2 bg-card shadow-md rounded-full p-2 hover:bg-muted z-20 transition-all hover:scale-110 border border-border"
+                        className="absolute left-0 top-1/2 -translate-y-1/2 bg-card shadow-md rounded-full p-2 hover:bg-muted z-30 transition-all hover:scale-110 border border-border"
                     >
                         <ChevronLeft className="w-5 h-5 text-foreground" />
                     </button>
 
-                    <div className="relative w-full max-w-[100%]">
-                        <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-background via-background/70 to-transparent pointer-events-none z-10" />
+                    <div className="mx-12">
                         <div
                             ref={scrollRef}
-                            className="flex gap-5 overflow-x-auto pb-3 scrollbar-hide scroll-smooth"
+                            className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide scroll-smooth"
                         >
                             {notes.map((note) => (
                                 <div
                                     key={note.id}
                                     onClick={() => navigate(`/notes/${note.id}`)}
-                                    className="min-w-[180px] bg-card border border-border rounded-xl p-3 flex-shrink-0
+                                    className="min-w-[200px] max-w-[200px] bg-card border border-border rounded-xl overflow-hidden flex-shrink-0
                                        hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
                                 >
-                                    <div className="relative">
-                                        <img
-                                            src={`/images/note.jpg`}
-                                            alt={note.title}
-                                            className="w-full h-28 object-cover rounded-md"
-                                        />
-                                        <div className="absolute top-2 left-2 text-lg bg-card/80 backdrop-blur-sm rounded-md px-2 py-[2px] border border-border">
+                                    <div className="relative h-32 bg-muted overflow-hidden">
+                                        <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-20">
+                                            {getNoteIcon(note.title, note.content)}
+                                        </div>
+                                        <div className="absolute top-2 left-2 text-2xl bg-card/90 backdrop-blur-sm rounded-md px-2 py-1 shadow-sm">
                                             {getNoteIcon(note.title, note.content)}
                                         </div>
                                         {note.isImportant && (
-                                            <div className="absolute top-2 right-2 text-sm bg-yellow-400 dark:bg-yellow-500 text-yellow-900 dark:text-yellow-950 rounded-full px-1.5 py-0.5 font-semibold">
+                                            <div className="absolute top-2 right-2 text-sm bg-yellow-400 dark:bg-yellow-500 text-yellow-900 dark:text-yellow-950 rounded-full px-2 py-1 font-semibold shadow-sm">
                                                 ★
                                             </div>
                                         )}
                                     </div>
 
-                                    <div className="mt-2">
-                                        <p className="text-sm font-semibold text-foreground truncate">
+                                    <div className="p-3">
+                                        <p className="text-sm font-semibold text-foreground mb-1 line-clamp-1">
                                             {note.title || 'Untitled Note'}
                                         </p>
-                                        <p className="text-xs text-muted-foreground truncate">
+                                        <p className="text-xs text-muted-foreground line-clamp-2 mb-2 min-h-[32px]">
                                             {getDescription(note.content)}
                                         </p>
-                                        <p className="flex items-center text-[11px] text-muted-foreground mt-1">
-                                            <Clock className="w-3.5 h-3.5 text-muted-foreground mr-1" strokeWidth={1} />
+                                        <p className="flex items-center text-[11px] text-muted-foreground">
+                                            <Clock className="w-3 h-3 text-muted-foreground mr-1" strokeWidth={1.5} />
                                             {formatTime(note.updatedAt || note.createdAt)}
                                         </p>
                                     </div>
                                 </div>
                             ))}
                         </div>
-                        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-background via-background/70 to-transparent pointer-events-none z-10" />
                     </div>
 
                     <button
                         onClick={() => scroll("right")}
-                        className="absolute right-[5%] top-1/2 -translate-y-1/2 bg-card shadow-md rounded-full p-2 hover:bg-muted z-20 transition-all hover:scale-110 border border-border"
+                        className="absolute right-0 top-1/2 -translate-y-1/2 bg-card shadow-md rounded-full p-2 hover:bg-muted z-30 transition-all hover:scale-110 border border-border"
                     >
                         <ChevronRight className="w-5 h-5 text-foreground" />
                     </button>
-                </>
+                </div>
             )}
         </section>
     );
