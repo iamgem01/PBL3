@@ -24,6 +24,7 @@ export function SidebarFooter({ collapsed, onOpenTrashModal, onOpenSettingsModal
 
     return (
         <div className="border-t border-border p-3 text-sm">
+            {/* Footer Buttons */}
             <div className="space-y-1">
                 {footerButtons.map((btn) => (
                     <button
@@ -32,24 +33,16 @@ export function SidebarFooter({ collapsed, onOpenTrashModal, onOpenSettingsModal
                         className="flex items-center gap-2 w-full px-2 py-2 text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg transition-colors"
                     >
                         {btn.icon}
-                        <span className={`${collapsed ? "hidden" : "inline font-medium"}`}>{btn.label}</span>
+                        <span className={`${collapsed ? "hidden" : "inline font-medium"}`}>
+                            {btn.label}
+                        </span>
                     </button>
                 ))}
             </div>
 
-            <div
-                className={`mt-4 flex items-center gap-2 border-t border-border pt-3 ${
-                    collapsed ? "justify-center" : ""
-                }`}>
-                {/* Avatar + Popup User Menu */}
+            {/* User Menu - Avatar + User Info */}
+            <div className="mt-4 border-t border-border pt-3">
                 <UserMenu collapsed={collapsed} />
-
-                {!collapsed && (
-                    <div>
-                        <p className="text-sm font-medium text-foreground">Admin</p>
-                        <p className="text-xs text-muted-foreground">Admin</p>
-                    </div>
-                )}
             </div>
         </div>
     );

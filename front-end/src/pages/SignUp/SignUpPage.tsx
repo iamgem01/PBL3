@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { BookOpen } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { RainbowButton } from "../../components/ui/rainbow-button";
@@ -7,17 +7,91 @@ import { motion } from "framer-motion";
 
 const SignUpPage: React.FC = () => {
   const navigate = useNavigate();
+  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Xử lý callback từ Google OAuth
+    const params = new URLSearchParams(window.location.search);
+    const authStatus = params.get("auth");
+    const errorParam = params.get("error");
+
+    if (authStatus === "success") {
+      console.log("✅ Google sign up successful");
+      setLoading(true);
+      
+      // Verify authentication
+      verifyAuth();
+      
+      // Clean URL
+      window.history.replaceState({}, document.title, "/signup");
+    } else if (errorParam) {
+      console.error("❌ Sign up error:", errorParam);
+      setError(getErrorMessage(errorParam));
+      
+      // Clean URL
+      window.history.replaceState({}, document.title, "/signup");
+    }
+  }, [navigate]);
+
+  const verifyAuth = async () => {
+    try {
+      const BACKEND = import.meta.env.VITE_USER_SERVICE_URL || "http://localhost:5000";
+      const response = await fetch(`${BACKEND}/api/auth/me`, {
+        credentials: "include", // Gửi cookie
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("✅ User registered and authenticated:", data.user);
+        
+        // Lưu user info vào localStorage (optional)
+        localStorage.setItem("user", JSON.stringify(data.user));
+        
+        // Redirect đến onboarding hoặc trang chính
+        navigate("/home");
+      } else {
+        throw new Error("Authentication verification failed");
+      }
+    } catch (error) {
+      console.error("❌ Verify auth error:", error);
+      setError("Failed to verify authentication. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getErrorMessage = (errorCode: string): string => {
+    const errorMessages: Record<string, string> = {
+      authentication_failed: "Sign up failed. Please try again.",
+      token_creation_failed: "Failed to create account. Please try again.",
+      no_email: "No email found in Google account.",
+      user_exists: "An account with this email already exists.",
+    };
+    return errorMessages[errorCode] || "An unexpected error occurred.";
+  };
 
   const handleGoogleLogin = () => {
-    console.log('Bắt đầu quá trình "Continue with Google"...');
-    const BACKEND =
-      import.meta.env.VITE_USER_SERVICE_URL || "http://localhost:5000";
+    console.log('🔐 Starting "Continue with Google" process...');
+    setError("");
+    const BACKEND = import.meta.env.VITE_USER_SERVICE_URL || "http://localhost:5000";
     window.location.href = `${BACKEND}/api/auth/google`;
   };
 
   const handleGoToLogin = () => {
     navigate("/login");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Creating your account...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white relative overflow-hidden">
@@ -48,10 +122,22 @@ const SignUpPage: React.FC = () => {
             </h2>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full mb-4 p-3 bg-red-50 border border-red-200 rounded-lg"
+            >
+              <p className="text-xs text-red-600 text-center">{error}</p>
+            </motion.div>
+          )}
+
           {/* Google Button */}
           <RainbowButton
             onClick={handleGoogleLogin}
-            className="mt-4 w-full flex items-center justify-center gap-2 rounded-full border border-gray-800 bg-black text-white py-2 text-sm font-semibold transition-all duration-300 hover:bg-gray-900 hover:shadow-[0_0_8px_rgba(147,51,234,0.4)]"
+            disabled={loading}
+            className="mt-4 w-full flex items-center justify-center gap-2 rounded-full border border-gray-800 bg-black text-white py-2 text-sm font-semibold transition-all duration-300 hover:bg-gray-900 hover:shadow-[0_0_8px_rgba(147,51,234,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <FcGoogle className="w-5 h-5" />
             Continue with Google
@@ -91,6 +177,21 @@ const SignUpPage: React.FC = () => {
         .animate-border {
           background-size: 200% 200%;
           animation: borderMove 6s linear infinite;
+        }
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
         }
       `}</style>
     </div>

@@ -6,8 +6,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "init-admin": "node init-admin.js"
   },
+  "keywords": ["authentication", "authorization", "jwt", "oauth"],
   "author": "",
   "license": "ISC",
   "description": "",
@@ -18,7 +20,11 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-google-oauth20": "^2.0.0",
+    "mongoose": "^8.0.0",
+    "bcryptjs": "^2.4.3",
+    "passport-local": "^1.0.0",
+    "passport-jwt": "^4.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"

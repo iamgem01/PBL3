@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { BookOpen } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { RainbowButton } from "../../components/ui/rainbow-button";
@@ -7,35 +7,90 @@ import { motion } from "framer-motion";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState(false);
 
-  // useEffect(() => {
-  //     const params = new URLSearchParams(window.location.search);
-  //     const token = params.get("token");
-  //
-  //     if (token) {
-  //         console.log("Received token from backend:", token);
-  //
-  //
-  //         localStorage.setItem("token", token);
-  //
-  //
-  //         window.history.replaceState({}, document.title, "/home");
-  //
-  //
-  //         navigate("/home");
-  //     }
-  // }, [navigate]);
+  useEffect(() => {
+    // Xử lý callback từ Google OAuth
+    const params = new URLSearchParams(window.location.search);
+    const authStatus = params.get("auth");
+    const errorParam = params.get("error");
+
+    if (authStatus === "success") {
+      console.log("✅ Google authentication successful");
+      setLoading(true);
+      
+      // Verify authentication bằng cách gọi /api/auth/me
+      verifyAuth();
+      
+      // Clean URL
+      window.history.replaceState({}, document.title, "/login");
+    } else if (errorParam) {
+      console.error("❌ Authentication error:", errorParam);
+      setError(getErrorMessage(errorParam));
+      
+      // Clean URL
+      window.history.replaceState({}, document.title, "/login");
+    }
+  }, [navigate]);
+
+  const verifyAuth = async () => {
+    try {
+      const BACKEND = import.meta.env.VITE_USER_SERVICE_URL || "http://localhost:5000";
+      const response = await fetch(`${BACKEND}/api/auth/me`, {
+        credentials: "include", // Gửi cookie
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("✅ User authenticated:", data.user);
+        
+        // Lưu user info vào localStorage (optional)
+        localStorage.setItem("user", JSON.stringify(data.user));
+        
+        // Redirect đến trang chính
+        navigate("/home");
+      } else {
+        throw new Error("Authentication verification failed");
+      }
+    } catch (error) {
+      console.error("❌ Verify auth error:", error);
+      setError("Failed to verify authentication. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getErrorMessage = (errorCode: string): string => {
+    const errorMessages: Record<string, string> = {
+      authentication_failed: "Authentication failed. Please try again.",
+      token_creation_failed: "Failed to create session. Please try again.",
+      no_email: "No email found in Google account.",
+    };
+    return errorMessages[errorCode] || "An unexpected error occurred.";
+  };
 
   const handleGoogleLogin = () => {
-    console.log("🔑 Redirecting to backend OAuth2 (user-service)...");
-    const BACKEND =
-      import.meta.env.VITE_USER_SERVICE_URL || "http://localhost:5000";
+    console.log("🔐 Redirecting to Google OAuth...");
+    setError("");
+    const BACKEND = import.meta.env.VITE_USER_SERVICE_URL || "http://localhost:5000";
     window.location.href = `${BACKEND}/api/auth/google`;
   };
 
   const handleGoToSignUp = () => {
     navigate("/signup");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Authenticating...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white relative overflow-hidden">
@@ -66,10 +121,22 @@ const LoginPage: React.FC = () => {
             <BookOpen className="w-10 h-10 text-blue-600" strokeWidth={1.5} />
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full mb-4 p-3 bg-red-50 border border-red-200 rounded-lg"
+            >
+              <p className="text-xs text-red-600 text-center">{error}</p>
+            </motion.div>
+          )}
+
           {/* Google Button */}
           <RainbowButton
             onClick={handleGoogleLogin}
-            className="mt-4 w-full flex items-center justify-center gap-2 rounded-full border border-gray-800 bg-black text-white py-2 text-sm font-semibold transition-all duration-300 hover:bg-gray-900 hover:shadow-[0_0_8px_rgba(147,51,234,0.4)]"
+            disabled={loading}
+            className="mt-4 w-full flex items-center justify-center gap-2 rounded-full border border-gray-800 bg-black text-white py-2 text-sm font-semibold transition-all duration-300 hover:bg-gray-900 hover:shadow-[0_0_8px_rgba(147,51,234,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <FcGoogle className="w-5 h-5" />
             Sign in with Google
@@ -77,7 +144,7 @@ const LoginPage: React.FC = () => {
 
           {/* Sign up link */}
           <div className="mt-4 text-xs text-gray-600">
-            Don’t have an account?{" "}
+            Don't have an account?{" "}
             <button
               onClick={handleGoToSignUp}
               className="text-purple-600 hover:underline font-medium"
@@ -101,16 +168,31 @@ const LoginPage: React.FC = () => {
       </motion.div>
 
       <style>{`
-                @keyframes borderMove {
-                    0% { background-position: 0% 50%; }
-                    50% { background-position: 100% 50%; }
-                    100% { background-position: 0% 50%; }
-                }
-                .animate-border {
-                    background-size: 200% 200%;
-                    animation: borderMove 6s linear infinite;
-                }
-            `}</style>
+        @keyframes borderMove {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animate-border {
+          background-size: 200% 200%;
+          animation: borderMove 6s linear infinite;
+        }
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
+        }
+      `}</style>
     </div>
   );
 };
