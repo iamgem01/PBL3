@@ -16,13 +16,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-/**
- * Controller này xử lý các endpoint liên quan đến Nhập (Import) và Xuất (Export) dữ liệu.
- */
 @RestController
 @RequestMapping("/api/data") 
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"}) // Sửa dòng này
 public class DataIOController {
 
     private final ImportService importService;
@@ -46,11 +43,6 @@ public class DataIOController {
         }
     }
 
-    // --- CÁC ENDPOINT XUẤT FILE ---
-    
-    /**
-     * Xuất một ghi chú cụ thể dưới dạng file Markdown.
-     */
     @GetMapping("/export/md/{id}")
     public ResponseEntity<Resource> exportNoteAsMarkdown(@PathVariable String id) {
         try {
@@ -58,7 +50,7 @@ public class DataIOController {
             String content = note.getContent() != null ? note.getContent() : "";
             
             ByteArrayResource resource = new ByteArrayResource(content.getBytes(StandardCharsets.UTF_8));
-            String filename = note.getTitle() + ".md"; // Giữ nguyên title + .md
+            String filename = note.getTitle() + ".md";
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
@@ -69,9 +61,6 @@ public class DataIOController {
         }
     }
 
-    /**
-     * Xuất một ghi chú cụ thể dưới dạng file PDF.
-     */
     @GetMapping("/export/pdf/{id}")
     public ResponseEntity<Resource> exportNoteAsPdf(@PathVariable String id) {
         try {
