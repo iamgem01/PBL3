@@ -23,13 +23,13 @@ export function SidebarFooter({ collapsed, onOpenTrashModal, onOpenSettingsModal
     ];
 
     return (
-        <div className="border-t border-gray-200 p-3 text-sm">
+        <div className="border-t border-border p-3 text-sm">
             <div className="space-y-1">
                 {footerButtons.map((btn) => (
                     <button
                         key={btn.label}
                         onClick={btn.onClick}
-                        className="flex items-center gap-2 w-full px-2 py-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors"
+                        className="flex items-center gap-2 w-full px-2 py-2 text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg transition-colors"
                     >
                         {btn.icon}
                         <span className={`${collapsed ? "hidden" : "inline font-medium"}`}>{btn.label}</span>
@@ -38,7 +38,7 @@ export function SidebarFooter({ collapsed, onOpenTrashModal, onOpenSettingsModal
             </div>
 
             <div
-                className={`mt-4 flex items-center gap-2 border-t pt-3 ${
+                className={`mt-4 flex items-center gap-2 border-t border-border pt-3 ${
                     collapsed ? "justify-center" : ""
                 }`}>
                 {/* Avatar + Popup User Menu */}
@@ -46,8 +46,8 @@ export function SidebarFooter({ collapsed, onOpenTrashModal, onOpenSettingsModal
 
                 {!collapsed && (
                     <div>
-                        <p className="text-sm font-medium text-gray-800">Admin</p>
-                        <p className="text-xs text-gray-500">Admin</p>
+                        <p className="text-sm font-medium text-foreground">Admin</p>
+                        <p className="text-xs text-muted-foreground">Admin</p>
                     </div>
                 )}
             </div>

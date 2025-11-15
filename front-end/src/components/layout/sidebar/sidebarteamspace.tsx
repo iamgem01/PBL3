@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import { BookOpen, Sparkles, FileText } from "lucide-react";
 import { FaJava } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { getAllNotes } from "@/services/NoteService";
+import { getAllNotes } from "@/services/noteService";
 
-// Định nghĩa interface cho Note từ API
 interface Note {
   id: string;
   title: string;
@@ -44,28 +43,26 @@ export default function SidebarTeamspace({ collapsed }: SidebarTeamspaceProps) {
         { label: "Session 1", icon: <FaJava size={14} /> },
     ];
 
-    // Hàm để truncate title nếu quá dài
     const truncateTitle = (title: string, maxLength: number = 20) => {
         if (!title) return "Untitled";
         return title.length > maxLength ? title.substring(0, maxLength) + "..." : title;
     };
 
-    // Hàm để lấy icon cho note
     const getNoteIcon = (title: string, content: string) => {
         const lowerTitle = title?.toLowerCase() || "";
         const lowerContent = content?.toLowerCase() || "";
         
-        if (lowerTitle.includes('task') || lowerContent.includes('todo')) return '📝';
-        if (lowerTitle.includes('journal') || lowerContent.includes('note')) return '📔';
+        if (lowerTitle.includes('task') || lowerContent.includes('todo')) return '📋';
+        if (lowerTitle.includes('journal') || lowerContent.includes('note')) return '📓';
         if (lowerTitle.includes('project') || lowerContent.includes('brainstorm')) return '🧠';
         if (lowerTitle.includes('travel') || lowerContent.includes('trip')) return '🧳';
-        return '📄'; // Default note icon
+        return '📄';
     };
 
     return (
-        <div className="border-t p-3 text-sm">
+        <div className="border-t border-border p-3 text-sm">
             {!collapsed && (
-                <h3 className="text-xs text-gray-600 mb-1 font-semibold tracking-wide">
+                <h3 className="text-xs text-muted-foreground mb-1 font-semibold tracking-wide">
                     Teamspace
                 </h3>
             )}
@@ -75,7 +72,7 @@ export default function SidebarTeamspace({ collapsed }: SidebarTeamspaceProps) {
                         key={btn.label}
                         className={`flex items-center ${
                             collapsed ? "justify-center" : "gap-1"
-                        } w-full px-1 py-1 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors`}
+                        } w-full px-1 py-1 text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg transition-colors`}
                     >
                         {btn.icon}
                         {!collapsed && <span className="font-normal text-sm">{btn.label}</span>}
@@ -84,25 +81,23 @@ export default function SidebarTeamspace({ collapsed }: SidebarTeamspaceProps) {
             </div>
 
             {!collapsed && (
-                <h3 className="text-xs text-gray-600 mb-1 p-1 font-semibold tracking-wide">
+                <h3 className="text-xs text-muted-foreground mb-1 p-1 font-semibold tracking-wide mt-4">
                     All Notes
                 </h3>
             )}
             <div className="space-y-1">
                 {isLoading ? (
-                    // Loading state
                     <div className="flex items-center justify-center py-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
                     </div>
                 ) : notes.length > 0 ? (
-                    // Display notes
                     notes.map((note) => (
                         <button
                             key={note.id}
                             onClick={() => navigate(`/notes/${note.id}`)}
                             className={`flex items-center ${
                                 collapsed ? "justify-center" : "gap-1"
-                            } w-full px-1 py-1 text-gray-800 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors`}
+                            } w-full px-1 py-1 text-foreground hover:bg-muted rounded-lg transition-colors`}
                         >
                             <span className="text-sm">{getNoteIcon(note.title, note.content)}</span>
                             {!collapsed && (
@@ -113,8 +108,7 @@ export default function SidebarTeamspace({ collapsed }: SidebarTeamspaceProps) {
                         </button>
                     ))
                 ) : (
-                    // Empty state
-                    <div className="text-xs text-gray-500 text-center py-2">
+                    <div className="text-xs text-muted-foreground text-center py-2">
                         {!collapsed ? "No notes yet" : "📝"}
                     </div>
                 )}

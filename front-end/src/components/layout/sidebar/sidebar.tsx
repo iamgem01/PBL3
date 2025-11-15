@@ -31,14 +31,13 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
     return (
         <>
             <div
-                className={`fixed top-0 left-0 h-screen flex flex-col justify-between font-inter bg-white border-r border-gray-200
+                className={`fixed top-0 left-0 h-screen flex flex-col justify-between font-inter bg-card border-r border-border
         transition-all duration-300 ${collapsed ? "w-25" : "w-58"}`}
             >
                 {/* Header */}
                 <div className={`flex items-center justify-between p-2 ${collapsed ? "justify-center" : "justify-between"}`}>
                     {!collapsed && (
                         <div className="flex items-center gap-2 p-2">
-                           {/*//<BookOpen size={20} className="text-indigo-600" />//*/}
                             <span className="font-bold font-gabarito text-lg bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
                                 Aeternus
                             </span>
@@ -47,11 +46,9 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
 
                     {/* Action buttons */}
                     <div className="flex items-center gap-1">
-                        
-
                         {/* Toggle button */}
                         <button
-                            className="p-1 rounded hover:bg-gray-100 transition-colors"
+                            className="p-1 rounded hover:bg-muted transition-colors text-foreground"
                             onClick={() => setCollapsed(!collapsed)}
                         >
                             <Menu size={20} />
@@ -59,7 +56,7 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                         {/* Add Note button */}
                         <button
                             onClick={handleCreateNewNote}
-                            className="p-1 rounded hover:bg-gray-100 transition-colors"
+                            className="p-1 rounded hover:bg-muted transition-colors text-foreground"
                             title="Add new note"
                         >
                             <FilePlus size={20} />

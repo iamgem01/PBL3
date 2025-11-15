@@ -218,5 +218,59 @@ export const apiService = {
     });
   },
 };
+const USER_SERVICE_URL = import.meta.env.VITE_USER_SERVICE_URL || "http://localhost:5000";
+
+export const userApi = {
+  async login(email: string, password: string) {
+    const response = await fetch(`${USER_SERVICE_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ email, password }),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Login failed');
+    }
+    
+    return response.json();
+  },
+  async register(userData: any) {
+    const response = await fetch(`${USER_SERVICE_URL}/api/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(userData),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Registration failed');
+    }
+    
+    return response.json();
+  },
+
+  async logout() {
+    return fetch(`${USER_SERVICE_URL}/api/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+  },
+  async getProfile() {
+    const response = await fetch(`${USER_SERVICE_URL}/api/auth/profile`, {
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to get profile');
+    }
+    
+    return response.json();
+  },
+};
 
 export { ApiError };

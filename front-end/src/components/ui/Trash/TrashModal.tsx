@@ -14,7 +14,6 @@ interface ApiTrashItem {
   name: string;
   user_id: string;
   workspace_id: string;
-  // Add other properties that might be in the API response
 }
 
 interface TrashModalProps {
@@ -33,13 +32,12 @@ export default function TrashModal({ isOpen, onClose }: TrashModalProps) {
     }
   }, [isOpen]);
 
-  // Map API response to TrashItem interface
   const mapApiToTrashItem = (apiItem: ApiTrashItem): TrashItem => {
     return {
       id: apiItem.id,
       title: apiItem.name || 'Untitled Note',
       type: apiItem.item_type,
-      deletedAt: '' // You might need to get this from another property or API
+      deletedAt: ''
     };
   };
 
@@ -48,10 +46,9 @@ export default function TrashModal({ isOpen, onClose }: TrashModalProps) {
     setError(null);
     try {
       const items = await getTrashItems('user_001');
-      console.log('API Response:', items); // Debug
+      console.log('API Response:', items);
       
       if (items && Array.isArray(items)) {
-        // Map API response to expected format
         const mappedItems = items.map(mapApiToTrashItem);
         setTrashItems(mappedItems);
       } else {
@@ -124,14 +121,14 @@ export default function TrashModal({ isOpen, onClose }: TrashModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-xl w-[90%] max-w-4xl max-h-[80vh] flex flex-col">
-        <div className="p-6 border-b border-gray-200">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-card rounded-xl shadow-2xl border border-border w-[90%] max-w-4xl max-h-[80vh] flex flex-col">
+        <div className="p-6 border-b border-border">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-800">Trash</h2>
+            <h2 className="text-xl font-semibold text-foreground">Trash</h2>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -143,35 +140,35 @@ export default function TrashModal({ isOpen, onClose }: TrashModalProps) {
         <div className="flex-1 overflow-y-auto p-6">
           {isLoading ? (
             <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-              <span className="ml-3 text-gray-600">Loading trash items...</span>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <span className="ml-3 text-muted-foreground">Loading trash items...</span>
             </div>
           ) : error ? (
-            <div className="text-center text-red-500 py-8">
+            <div className="text-center text-red-500 dark:text-red-400 py-8">
               <p>{error}</p>
               <button 
                 onClick={fetchTrashItems}
-                className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                className="mt-2 px-4 py-2 bg-primary text-primary-foreground rounded hover:opacity-90 transition-opacity"
               >
                 Retry
               </button>
             </div>
           ) : trashItems.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
+            <div className="text-center text-muted-foreground py-8">
               <p className="mb-2">No items in trash</p>
               <p className="text-sm">Items in Trash for over 30 days will be automatically deleted</p>
             </div>
           ) : (
             <div className="space-y-4">
               {trashItems.map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div key={item.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border hover:bg-muted transition-colors">
                   <div className="flex items-center space-x-3 flex-1">
                     <span className={item.type === 'NOTE' ? '📝 text-xl' : '📁 text-xl'} />
                     <div className="flex-1">
-                      <p className="font-medium text-gray-800 text-lg mb-1">
+                      <p className="font-medium text-foreground text-lg mb-1">
                         {item.title || 'Untitled Note'}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         {item.type} • Deleted {formatDate(item.deletedAt)}
                       </p>
                     </div>
@@ -179,7 +176,7 @@ export default function TrashModal({ isOpen, onClose }: TrashModalProps) {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleRestore(item.id)}
-                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                      className="px-4 py-2 bg-primary text-primary-foreground text-sm rounded hover:opacity-90 transition-opacity"
                     >
                       Restore
                     </button>
@@ -196,8 +193,8 @@ export default function TrashModal({ isOpen, onClose }: TrashModalProps) {
           )}
         </div>
 
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
-          <p className="text-sm text-gray-500 text-center">
+        <div className="p-4 border-t border-border bg-muted/30">
+          <p className="text-sm text-muted-foreground text-center">
             Items in Trash for over 30 days will be automatically deleted
           </p>
         </div>

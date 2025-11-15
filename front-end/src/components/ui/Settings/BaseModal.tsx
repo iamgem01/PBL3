@@ -3,39 +3,39 @@ interface BaseModalProps {
     onClose: () => void;
     title?: string;
     children: React.ReactNode;
-    width?: string; // cho phép tuỳ chỉnh kích thước
+    width?: string;
 }
 
 export default function BaseModal({
-                                      isOpen,
-                                      onClose,
-                                      title,
-                                      children,
-                                      width = "w-[480px]",
-                                  }: BaseModalProps) {
+    isOpen,
+    onClose,
+    title,
+    children,
+    width = "w-[480px]",
+}: BaseModalProps) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
             <div
-                className={`relative bg-white rounded-xl shadow-2xl border border-gray-200 p-6 ${width}`}
+                className={`relative bg-card rounded-xl shadow-2xl border border-border p-6 ${width}`}
             >
-                {/* Nút đóng */}
+                {/* Close button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition"
+                    className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition"
                 >
                     ✕
                 </button>
 
-                {/* Tiêu đề */}
+                {/* Title */}
                 {title && (
-                    <h2 className="text-lg font-semibold mb-4 text-gray-800 border-b border-gray-100 pb-2">
+                    <h2 className="text-lg font-semibold mb-4 text-foreground border-b border-border pb-2">
                         {title}
                     </h2>
                 )}
 
-                {/* Nội dung */}
+                {/* Content */}
                 <div className="max-h-[70vh] overflow-y-auto">{children}</div>
             </div>
         </div>

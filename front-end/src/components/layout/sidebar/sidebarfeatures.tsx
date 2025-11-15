@@ -16,13 +16,13 @@ export default function SidebarMainButtons({
   ];
 
   return (
-    <div className="border-t border-gray-200 p-3 text-sm">
+    <div className="border-t border-border p-3 text-sm">
       <div className="space-y-1">
         {buttons.map((btn) => (
           <Link
             key={btn.label}
             to={btn.path}
-            className="flex items-center gap-2 w-full px-2 py-2 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors"
+            className="flex items-center gap-2 w-full px-2 py-2 text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg transition-colors"
           >
             {btn.icon}
             <span className={`${collapsed ? "hidden" : "inline font-medium"}`}>
