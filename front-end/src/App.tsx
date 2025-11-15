@@ -10,6 +10,7 @@ import ChatPage from "./pages/AI/ChatPage";
 import SearchPage from "@/pages/SearchPage/SearchPage";
 import NotFoundPage from "@/pages/NotFound/NotFoundPage";
 import NotePage from "@/pages/NotePage/NotePage";
+import AdminPage from "./pages/Manager/adminpage";
 
 // Loading Component
 function LoadingScreen() {
@@ -220,6 +221,14 @@ function App() {
                   Create New Note - Coming Soon!
                 </h1>
               </div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminPage />
             </ProtectedRoute>
           }
         />
