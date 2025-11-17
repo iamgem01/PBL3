@@ -12,6 +12,11 @@ export interface MessageItem {
   text: string;
   isUser: boolean;
   timestamp: Date;
+    attachments?: {
+        name: string;
+        url: string;
+        type?: string;
+    }[];
 }
 
 interface SidebarProps {

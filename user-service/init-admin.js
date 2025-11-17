@@ -7,9 +7,9 @@ dotenv.config();
 
 const createAdminUser = async () => {
   try {
-    console.log('🔄 Connecting to MongoDB...');
+    console.log(' Connecting to MongoDB...');
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ Connected to MongoDB');
+    console.log(' Connected to MongoDB');
     
     const adminEmail = 'aeternusad01@gmail.com';
     const adminPassword = 'Ngochoai123@';

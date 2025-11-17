@@ -16,12 +16,12 @@ interface ContextMenuProps {
     selectedNotes?: Note[];
 }
 
-const ContextMenu: React.FC<ContextMenuProps> = ({ 
-    isOpen, 
-    onClose, 
-    onSelectNote,
-    selectedNotes = [] 
-}) => {
+const ContextMenu: React.FC<ContextMenuProps> = ({
+                                                     isOpen,
+                                                     onClose,
+                                                     onSelectNote,
+                                                     selectedNotes = []
+                                                 }) => {
     const [notes, setNotes] = useState<Note[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [loading, setLoading] = useState(false);

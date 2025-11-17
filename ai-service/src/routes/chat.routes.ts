@@ -1,11 +1,15 @@
 import { Router } from 'express';
-import { chatController } from '../controllers/chat.controller.js';
+import { chatController, upload } from '../controllers/chat.controller.js';
 import { validate, chatMessageSchema, summarizeSchema, improveSchema, textProcessingSchema, translateSchema } from '../middleware/validation.js';
 
 const router = Router();
 
-// Chat endpoint
-router.post('/message', validate(chatMessageSchema), chatController.sendMessage);
+
+router.post('/message',
+    upload.array('files', 10),
+    validate(chatMessageSchema),
+    chatController.sendMessage
+);
 
 // Summarize endpoint
 router.post('/summarize', validate(summarizeSchema), chatController.summarize);

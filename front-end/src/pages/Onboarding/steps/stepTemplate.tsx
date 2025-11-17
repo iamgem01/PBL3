@@ -1,52 +1,51 @@
 "use client";
 import { useState, useEffect } from "react";
+import type { StepProps } from "../types";
 
 const templates = [
-  "Team Workspace",
-  "AI Assistant",
-  "Project Planner",
-  "Note Board",
+    "Personal Knowledge Base",
+    "Project Management",
+    "Meeting Notes",
+    "Content Creation",
+    "Blank Template"
 ];
 
-interface StepTemplateProps {
-  onNext: (data: object) => void;
-  data?: TemplateData;
-}
+export default function StepTemplate({ onNext, data }: StepProps) {
+    const [template, setTemplate] = useState<string>(data?.template || "");
 
-interface TemplateData {
-  template: string;
-}
+    useEffect(() => {
+        if (data?.template) {
+            setTemplate(data.template);
+        }
+    }, [data]);
 
-export default function StepTemplate({ onNext, data }: StepTemplateProps) {
-  const [selected, setSelected] = useState<string>("");
+    const handleContinue = () => {
+        onNext({ template });
+    };
 
-  useEffect(() => {
-    if (data && data.template) {
-      setSelected(data.template);
-    }
-  }, [data]);
+    return (
+        <div className="space-y-4">
+            {templates.map((t) => (
+                <button
+                    key={t}
+                    onClick={() => setTemplate(t)}
+                    className={`w-full border p-3 rounded-lg text-left transition-colors ${
+                        template === t
+                            ? "border-blue-500 bg-blue-50 text-blue-700"
+                            : "border-gray-200 hover:border-gray-300"
+                    }`}
+                >
+                    {t}
+                </button>
+            ))}
 
-  return (
-    <div className="space-y-4">
-      {templates.map((t) => (
-        <button
-          key={t}
-          onClick={() => setSelected(t)}
-          className={`w-full border p-3 rounded-lg text-left ${
-            selected === t ? "border-blue-500 bg-blue-50" : "border-gray-200"
-          }`}
-        >
-          {t}
-        </button>
-      ))}
-
-      <button
-        onClick={() => onNext({ template: selected })}
-        disabled={!selected}
-        className="mt-4 w-full bg-green-600 text-white py-2 rounded-lg disabled:opacity-50"
-      >
-        Finish
-      </button>
-    </div>
-  );
+            <button
+                onClick={handleContinue}
+                disabled={!template}
+                className="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg disabled:opacity-50 hover:bg-blue-700 transition-colors"
+            >
+                Complete Setup
+            </button>
+        </div>
+    );
 }

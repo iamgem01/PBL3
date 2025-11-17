@@ -42,11 +42,32 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+          chart: {
+              '1': 'hsl(var(--chart-1))',
+              '2': 'hsl(var(--chart-2))',
+              '3': 'hsl(var(--chart-3))',
+              '4': 'hsl(var(--chart-4))',
+              '5': 'hsl(var(--chart-5))'
+          }
       },
       fontFamily: {
         gabarito: ['Gabarito', 'sans-serif'],
         inter: ['Inter', 'sans-serif'],
       },
+        borderRadius: {
+            lg: 'var(--radius)',
+            md: 'calc(var(--radius) - 2px)',
+            sm: 'calc(var(--radius) - 4px)',
+            xl: 'calc(var(--radius) + 4px)'
+        },
+        width: {
+            '25': '6.25rem', // 100px
+            '58': '14.5rem', // 232px
+        },
+        spacing: {
+            '25': '6.25rem', // 100px cho margin-left
+            '58': '14.5rem', // 232px cho margin-left
+        }
     },
   },
   plugins: [],

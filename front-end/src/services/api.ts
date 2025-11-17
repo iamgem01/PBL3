@@ -23,13 +23,14 @@ export async function fetchItemsByCategory(category: string): Promise<Item[]> {
 }
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
 export interface ChatMessageRequest {
   message: string;
   action?: "chat" | "summarize" | "note" | "explain" | "improve" | "translate";
   context?: string;
   targetLanguage?: string;
+  files?:File[];
 }
 
 export interface ChatMessageResponse {
@@ -162,10 +163,53 @@ export const apiService = {
    * Gửi tin nhắn chat
    */
   async sendMessage(request: ChatMessageRequest): Promise<ChatMessageResponse> {
-    return fetchAPI<ChatMessageResponse>("/chat/message", {
-      method: "POST",
-      body: JSON.stringify(request),
-    });
+      const formData = new FormData();
+      formData.append('message', request.message);
+
+      if (request.action) {
+          formData.append('action', request.action);
+      }
+
+      if (request.context) {
+          formData.append('context', request.context);
+      }
+
+      if (request.targetLanguage) {
+          formData.append('targetLanguage', request.targetLanguage);
+      }
+
+      // Thêm files nếu có
+      if (request.files && request.files.length > 0) {
+          request.files.forEach((file) => {
+              formData.append('files', file);
+          });
+      }
+
+      const url = `${API_BASE_URL}/chat/message`;
+
+      try {
+          const response = await fetch(url, {
+              method: 'POST',
+              body: formData, // Không set Content-Type, browser sẽ tự set với boundary
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+              throw new ApiError(
+                  data.message || "Có lỗi xảy ra",
+                  response.status,
+                  data.errors
+              );
+          }
+
+          return data;
+      } catch (error) {
+          if (error instanceof ApiError) {
+              throw error;
+          }
+          throw new ApiError("Không thể kết nối đến server. Vui lòng thử lại sau.");
+      }
   },
 
   /**

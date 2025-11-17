@@ -16,7 +16,7 @@ export default function SidebarMainButtons({
   ];
 
   return (
-    <div className="border-t border-border p-3 text-sm">
+    <div className="border-t border-border p-2 text-sm">
       <div className="space-y-1">
         {buttons.map((btn) => (
           <Link

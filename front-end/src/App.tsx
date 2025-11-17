@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import LandingPage from "@/pages/Landing/LandingPage";
 import LoginPage from "@/pages/Login/LoginPage";
 import SignUpPage from "@/pages/SignUp/SignUpPage";
+import OnboardingPage from "@/pages/Onboarding/page";
 import HomePage from "@/pages/Homepage/HomePage";
 import DocumentPage from "@/pages/DocumentPage/DocumentPage";
 import ChatPage from "./pages/AI/ChatPage";
@@ -103,7 +104,7 @@ function App() {
       // Xử lý OAuth success
       if (auth === "success" && !isProcessing) {
         setIsProcessing(true);
-        console.log("✅ OAuth callback received");
+        console.log(" OAuth callback received");
 
         (async () => {
           try {
@@ -113,7 +114,7 @@ function App() {
 
             if (res.ok) {
               const data = await res.json();
-              console.log("✅ User authenticated:", data.user);
+              console.log(" User authenticated:", data.user);
               
               localStorage.setItem("user", JSON.stringify(data.user));
               
@@ -123,11 +124,11 @@ function App() {
               // Navigate to home
               navigate("/home", { replace: true });
             } else {
-              console.error("❌ Failed to fetch user after OAuth redirect");
+              console.error(" Failed to fetch user after OAuth redirect");
               navigate("/login", { replace: true });
             }
           } catch (e) {
-            console.error("❌ Error fetching /api/auth/me:", e);
+            console.error(" Error fetching /api/auth/me:", e);
             navigate("/login", { replace: true });
           } finally {
             setIsProcessing(false);
@@ -152,6 +153,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
+         <Route path="/onboarding" element={<OnboardingPage />} />
 
         {/* Protected routes */}
         <Route
