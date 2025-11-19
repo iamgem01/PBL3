@@ -2,7 +2,7 @@ import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
-import { Sparkles, Copy, RotateCw } from "lucide-react";
+import { Sparkles, Copy, RotateCw, File, FileText } from "lucide-react";
 import type { MessageItem } from "./sidebar";
 
 interface MessageProps {
@@ -12,6 +12,12 @@ interface MessageProps {
 }
 
 const Message: React.FC<MessageProps> = ({ message, isUser, onRepeat }) => {
+    const formatFileSize = (bytes: number): string => {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    };
+
     return (
         <div className="w-full">
             <div className="max-w-3xl mx-auto px-4 py-2">
@@ -28,33 +34,98 @@ const Message: React.FC<MessageProps> = ({ message, isUser, onRepeat }) => {
                     <div className="flex-1 min-w-0 relative group">
                         {/* USER MESSAGE */}
                         {isUser ? (
-                            <div className="relative">
-                                <div className="text-gray-700 bg-gray-100 rounded-xl p-3 max-w-[80%] ml-auto break-words">
-                                    {message.text}
-                                </div>
+                            <div className="text-gray-700 bg-gray-100 rounded-xl p-3 max-w-[80%] ml-auto break-words">
+                                {/* Text content */}
+                                {message.text && (
+                                    <div className="mb-2 last:mb-0">{message.text}</div>
+                                )}
 
-                                {/* 🔥 Attachments nằm dưới bên phải message */}
+                                {/* Attachments inside bubble */}
                                 {message.attachments && message.attachments.length > 0 && (
-                                    <div className="flex justify-end mt-2">
-                                        <div className="flex flex-col gap-2 max-w-[80%]">
-                                            {message.attachments.map((file, index) => (
-                                                <a
-                                                    key={index}
-                                                    href={file.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="flex items-center gap-2 px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm text-blue-700 hover:bg-gray-200 transition-colors"
-                                                >
-                                                    📎 {file.name}
-                                                </a>
-                                            ))}
-                                        </div>
+                                    <div className="flex flex-col gap-2 mt-2">
+                                        {message.attachments.map((file, index) => (
+                                            <a
+                                                key={index}
+                                                href={file.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+                                            >
+                                                <File size={16} className="text-blue-600 flex-shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-gray-800 font-medium truncate">
+                                                        {file.name}
+                                                    </div>
+                                                    {file.size && (
+                                                        <div className="text-xs text-gray-500">
+                                                            {formatFileSize(file.size)}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </a>
+                                        ))}
                                     </div>
                                 )}
                             </div>
                         ) : (
                             <>
-                                {/* AI MESSAGE */}
+                                {/* AI MESSAGE - Hiển thị context/files đã sử dụng */}
+                                
+                                {/* Context summary - hiển thị phía trên response */}
+                                {(message.contextUsed || message.notesUsed || message.filesUsed) && (
+                                    <div className="mb-3 space-y-2">
+                                        {/* Files used */}
+                                        {message.filesUsed && message.filesUsed.length > 0 && (
+                                            <div className="text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-2">
+                                                <div className="font-medium mb-1 flex items-center gap-1">
+                                                    <File size={14} className="text-blue-600" />
+                                                    Dựa trên {message.filesUsed.length} file đã gửi:
+                                                </div>
+                                                <div className="flex flex-wrap gap-2 mt-1">
+                                                    {message.filesUsed.map((file, idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-blue-200 rounded text-xs"
+                                                        >
+                                                            <File size={12} className="text-blue-600" />
+                                                            <span className="font-medium truncate max-w-[150px]">
+                                                                {file.name}
+                                                            </span>
+                                                            {file.size && (
+                                                                <span className="text-gray-500">
+                                                                    ({formatFileSize(file.size)})
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Notes used */}
+                                        {message.notesUsed && message.notesUsed.length > 0 && (
+                                            <div className="text-sm text-gray-600 bg-purple-50 border border-purple-200 rounded-lg p-2">
+                                                <div className="font-medium mb-1 flex items-center gap-1">
+                                                    <FileText size={14} className="text-purple-600" />
+                                                    {message.contextUsed || `Đã sử dụng ${message.notesUsed.length} ghi chú:`}
+                                                </div>
+                                                <div className="flex flex-wrap gap-2 mt-1">
+                                                    {message.notesUsed.map((note, idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-purple-200 rounded text-xs"
+                                                        >
+                                                            <FileText size={12} className="text-purple-600" />
+                                                            <span className="font-medium">{note.title}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* AI Response content */}
                                 <div className="markdown-content text-gray-800 break-words max-w-[80%]">
                                     <ReactMarkdown
                                         remarkPlugins={[remarkGfm]}
@@ -107,25 +178,6 @@ const Message: React.FC<MessageProps> = ({ message, isUser, onRepeat }) => {
                                     >
                                         {message.text}
                                     </ReactMarkdown>
-
-                                    {/* 🔥 Attachments nằm dưới bên phải message (cho AI) */}
-                                    {message.attachments && message.attachments.length > 0 && (
-                                        <div className="flex justify-end mt-2">
-                                            <div className="flex flex-col gap-2 max-w-[80%]">
-                                                {message.attachments.map((file, index) => (
-                                                    <a
-                                                        key={index}
-                                                        href={file.url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="flex items-center gap-2 px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm text-blue-700 hover:bg-gray-200 transition-colors"
-                                                    >
-                                                        📎 {file.name}
-                                                    </a>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
                             </>
                         )}

@@ -1,4 +1,4 @@
-export * from './NoteService';
+export * from './noteService';
 export * from './TrashService';
 export * from './FolderService';
 export * from './DataIOService';

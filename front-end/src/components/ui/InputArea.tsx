@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Send, Paperclip, FileText } from "lucide-react";
 import ContextMenu, { type Note } from "./ContextMenu";
+import type { UserPreferences } from "../../services/api";
 
 interface InputAreaProps {
     onSendMessage: (
@@ -13,11 +14,12 @@ interface InputAreaProps {
             | "improve"
             | "translate",
         notes?: Note[],
-        files?:File[]
+        files?: File[]
     ) => void;
     disabled?: boolean;
     hasMessages?: boolean;
-    collapsed?:boolean;
+    collapsed?: boolean;
+    currentPreferences?: UserPreferences;
 }
 
 const QUICK_ACTIONS = [
@@ -28,11 +30,12 @@ const QUICK_ACTIONS = [
 ] as const;
 
 const InputArea: React.FC<InputAreaProps> = ({
-                                                 onSendMessage,
-                                                 disabled,
-                                                 hasMessages,
-                                                 collapsed = false,
-                                             }) => {
+    onSendMessage,
+    disabled,
+    hasMessages,
+    collapsed = false,
+    currentPreferences,
+}) => {
     const [message, setMessage] = useState("");
     const [selectedAction, setSelectedAction] = useState<
         "chat" | "summarize" | "note" | "explain" | "improve" | "translate" | null
@@ -44,16 +47,63 @@ const InputArea: React.FC<InputAreaProps> = ({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const contextButtonRef = useRef<HTMLButtonElement>(null);
 
+    // Log preferences changes (optional - for debugging)
+    useEffect(() => {
+        if (currentPreferences) {
+            console.log('📋 Current preferences in InputArea:', currentPreferences);
+        }
+    }, [currentPreferences]);
+
+    // 🔍 DEBUG: Log attachedFiles state changes
+    useEffect(() => {
+        console.log('📎 attachedFiles state changed:', {
+            count: attachedFiles.length,
+            files: attachedFiles.map(f => ({ name: f.name, size: f.size }))
+        });
+    }, [attachedFiles]);
+
     const handleSubmit = () => {
-        if (message.trim() && !disabled) {
-            onSendMessage(message, selectedAction || "chat", selectedNotes, attachedFiles.length > 0 ? attachedFiles : undefined);
+        // Validate: phải có message hoặc files
+        const hasMessage = message.trim().length > 0;
+        const hasFiles = attachedFiles.length > 0;
+        
+        console.log('🚀 handleSubmit called:', {
+            hasMessage,
+            hasFiles,
+            filesCount: attachedFiles.length,
+            message: message.substring(0, 50),
+            disabled
+        });
+        
+        if ((hasMessage || hasFiles) && !disabled) {
+            console.log('✅ Calling onSendMessage with:', {
+                message: message.trim(),
+                action: selectedAction || "chat",
+                notesCount: selectedNotes.length,
+                filesCount: attachedFiles.length,
+                files: attachedFiles.map(f => ({ name: f.name, size: f.size }))
+            });
+
+            onSendMessage(
+                message.trim(), 
+                selectedAction || "chat", 
+                selectedNotes, 
+                hasFiles ? attachedFiles : undefined
+            );
+            
             setMessage("");
             setSelectedAction(null);
             setSelectedNotes([]);
-            setAttachedFiles([]);// Reset selected notes after sending
+            setAttachedFiles([]);
             if (textareaRef.current) {
                 textareaRef.current.style.height = "auto";
             }
+        } else {
+            console.warn('⚠️ handleSubmit blocked:', {
+                hasMessage,
+                hasFiles,
+                disabled
+            });
         }
     };
 
@@ -71,7 +121,16 @@ const InputArea: React.FC<InputAreaProps> = ({
 
     const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
-        setAttachedFiles((prev) => [...prev, ...files]);
+        console.log('📁 handleFileAttach triggered:', {
+            filesSelected: files.length,
+            fileNames: files.map(f => f.name)
+        });
+        
+        setAttachedFiles((prev) => {
+            const newFiles = [...prev, ...files];
+            console.log('📎 Setting attachedFiles to:', newFiles.length, 'files');
+            return newFiles;
+        });
     };
 
     const handleSelectNote = (note: Note) => {
@@ -128,7 +187,10 @@ const InputArea: React.FC<InputAreaProps> = ({
                                    dark:border-gray-600 dark:bg-gray-800/70 dark:focus-within:border-primary/50"
                         >
                             <button
-                                onClick={() => fileInputRef.current?.click()}
+                                onClick={() => {
+                                    console.log('🖱️ Paperclip button clicked');
+                                    fileInputRef.current?.click();
+                                }}
                                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors dark:hover:bg-gray-700"
                                 title="Đính kèm file"
                             >
@@ -140,6 +202,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                                 multiple
                                 onChange={handleFileAttach}
                                 className="hidden"
+                                accept="*/*"
                             />
 
                             <textarea
@@ -161,7 +224,7 @@ const InputArea: React.FC<InputAreaProps> = ({
 
                             <button
                                 onClick={handleSubmit}
-                                disabled={!message.trim() || disabled}
+                                disabled={(!message.trim() && attachedFiles.length === 0) || disabled}
                                 className="p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-blue-600 mr-1 dark:bg-blue-700 dark:hover:bg-blue-600"
                                 title="Gửi tin nhắn (Enter)"
                             >
@@ -204,11 +267,12 @@ const InputArea: React.FC<InputAreaProps> = ({
                                         <FileText size={14} className="dark:text-gray-300" />
                                         <span className="text-foreground dark:text-gray-200">{file.name}</span>
                                         <button
-                                            onClick={() =>
+                                            onClick={() => {
+                                                console.log('🗑️ Removing file:', file.name);
                                                 setAttachedFiles((prev) =>
                                                     prev.filter((_, i) => i !== index)
-                                                )
-                                            }
+                                                );
+                                            }}
                                             className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                                         >
                                             ×
@@ -222,7 +286,6 @@ const InputArea: React.FC<InputAreaProps> = ({
             </div>
         );
     }
-
 
     return (
         <div className="border-t border-gray-200 bg-white flex-shrink-0 w-full">
@@ -281,11 +344,12 @@ const InputArea: React.FC<InputAreaProps> = ({
                                 <FileText size={14} />
                                 <span className="text-gray-700">{file.name}</span>
                                 <button
-                                    onClick={() =>
+                                    onClick={() => {
+                                        console.log('🗑️ Removing file:', file.name);
                                         setAttachedFiles((prev) =>
                                             prev.filter((_, i) => i !== index)
-                                        )
-                                    }
+                                        );
+                                    }}
                                     className="text-gray-500 hover:text-gray-700"
                                 >
                                     ×
@@ -319,7 +383,10 @@ const InputArea: React.FC<InputAreaProps> = ({
                 )}
                 <div className="relative flex items-end gap-2 bg-white border border-gray-300 rounded-2xl shadow-sm hover:shadow-md transition-shadow focus-within:border-gray-400 focus-within:shadow-md dark:bg-gray-800 dark:border-gray-600 dark:hover:shadow-gray-900/50 dark:focus-within:border-gray-500">
                     <button
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={() => {
+                            console.log('🖱️ Paperclip button clicked (compact mode)');
+                            fileInputRef.current?.click();
+                        }}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors ml-2 mb-2 dark:hover:bg-gray-700"
                         title="Đính kèm file"
                     >
@@ -331,6 +398,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                         multiple
                         onChange={handleFileAttach}
                         className="hidden"
+                        accept="*/*"
                     />
                     <textarea
                         ref={textareaRef}
@@ -351,7 +419,7 @@ const InputArea: React.FC<InputAreaProps> = ({
 
                     <button
                         onClick={handleSubmit}
-                        disabled={!message.trim() || disabled}
+                        disabled={(!message.trim() && attachedFiles.length === 0) || disabled}
                         className="p-2 mr-2 mb-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600"
                         title="Gửi tin nhắn (Enter)"
                     >

@@ -1,22 +1,42 @@
 import React, { useState } from "react";
 import { Plus, Search, Trash2 } from "lucide-react";
 
+export interface FileAttachment {
+  name: string;
+  url: string;
+  type: string;
+  size?: number;
+}
+
+export interface MessageItem {
+    id: number;
+    text: string;
+    isUser: boolean;
+    timestamp: Date;
+    attachments?: {
+        name: string;
+        url: string;
+        type: string;
+        size?: number;
+    }[];
+    metadata?: any;
+    // Thêm các trường mới
+    contextUsed?: string; // Context được sử dụng
+    notesUsed?: Array<{ // Notes được đính kèm
+        id: string;
+        title: string;
+    }>;
+    filesUsed?: Array<{ // Files được gửi kèm
+        name: string;
+        type: string;
+        size?: number;
+    }>;
+}
+
 export interface Chat {
   id: number;
   title: string;
   messages: MessageItem[];
-}
-
-export interface MessageItem {
-  id: number;
-  text: string;
-  isUser: boolean;
-  timestamp: Date;
-    attachments?: {
-        name: string;
-        url: string;
-        type?: string;
-    }[];
 }
 
 interface SidebarProps {
