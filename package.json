@@ -16,6 +16,8 @@
     "dev:all": "concurrently \"npm run dev:user-service\" \"npm run dev:front-end\" \"npm run dev:ai-service\" \"npm run dev:note-service\""
   },
   "devDependencies": {
+    "@types/express": "^5.0.5",
+    "@types/multer": "^2.0.0",
     "@types/react": "^19.2.4",
     "@types/react-dom": "^19.2.3",
     "concurrently": "^8.2.2"
