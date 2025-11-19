@@ -1,0 +1,106 @@
+_format_version: "3.0"
+services:
+# Note Service #
+  - name: note-service
+    host: note-service
+    port: 8080
+    protocol: http
+    connect_timeout: 60000
+    read_timeout: 60000
+    write_timeout: 60000
+    retries: 5
+    plugins:
+      - name: cors
+        config: 
+          origins: 
+            - http://localhost:80 #url of frontend
+          methods:
+            - GET
+            - POST
+            - PUT
+            - PATCH
+            - DELETE
+            - OPTIONS
+          headers:
+            - Content-Type
+            - Authorization
+          credentials: true # httpOnly cookie
+    routes:
+    - name: notes-resource
+      paths:
+        - /api/notes
+      methods: [GET, POST, PUT, DELETE, PATCH]
+      strip_path: false
+      preserve_host: false
+      protocols: [http, https]
+    - name: folders-resource
+      paths: 
+        - /api/folders
+      methods: [GET, POST, PUT, PATCH, DELETE]
+      strip_path: false
+      preserve_host: false
+      protocols: [http, https]
+    
+    - name: data-resource
+      paths: 
+        - /api/data
+      methods: [GET, POST]
+      strip_path: false
+      preserve_host: false
+      protocols: [http, https]
+    - name: trash-resource
+      paths:
+        - /api/trash
+      methods: [GET, POST, DELETE]
+      strip_path: false
+      preserve_host: false
+      protocols: [http, https]
+  # User Service 
+  - name: user-service
+    host: user-service
+    port: 8082
+    protocol: http
+    connect_timeout: 60000
+    read_timeout: 60000
+    write_timeout: 60000
+    retries: 5
+    plugins:
+      - name: cors
+        config:
+          origins: 
+            - http://localhost:80
+          methods:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+            - OPTIONS
+          headers:
+            - Content-Type
+            - Authorization
+          credentials: true
+    routes:
+      - name: auth-resource
+        paths: 
+          - /oauth2/authorization/google
+        methods: [GET]
+        strip_path: false
+        preserve_host: false
+        protocols: [http, https]
+      
+      - name: login-resource
+        paths: 
+          - /login
+        methods: [GET, OPTIONS]
+        strip_path: false
+        preserve_host: false
+        protocols: [http, https]
+      - name: user-resource
+        paths:
+          - /api/users
+          - /api/auth
+        methods: [GET, POST]
+        strip_path: false
+        preserve_host: false
+        protocols: [http, https]
+      

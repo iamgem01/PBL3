@@ -1,0 +1,325 @@
+version: '3.8'
+
+services:
+  # Discovery Server
+  # Tạm thời để qua bên #
+
+    ## ----------------- ##
+
+  # Config Server
+  # config-server:
+  #   build:
+  #     context: ./config-server
+  #     dockerfile: Dockerfile
+  #   image: config-server-app 
+  #   ports:
+  #     - "8888:8888"
+  #   # environment:
+  #   #   # GIT_PAT_FILE: /run/secrets/git_pat
+  #   #   # SPRING_APPLICATION_NAME: config_server
+  #   #   # EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+  #   # depends_on:
+  #   #   - discovery-server
+  #   #   # EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://localhost:8761/eureka/
+  #   #   # Allow Config Server await Eureka Server
+  #   #   SPRING_CLOUD_CONFIG_SERVER_BOOTSTRAP_ENABLED: "true"
+  #   #   # Set the waiting time from git
+  #   #   SPRING_CLOUD_CONFIG_SERVER_GIT_TIMEOUT: 60000
+  #   #   # Reade secrets and convert to env vars (direct content)
+  #   #   SPRING_CLOUD_CONFIG_SERVER_GIT_PRIVATE_KEY: /run/secrets/github_ssh_private_key_secret
+  #   #   SPRING_CLOUD_CONFIG_SERVER_GIT_PASSPHRASE: /run/secrets/github_ssh_passphrase_secret
+  #   #   SPRING_CLOUD_CONFIG_SERVER_GIT_HOST_KEY: /run/secrets/github_ssh_host_key_secret
+  #   #   SPRING_CLOUD_CONFIG_SERVER_ENCRYPT_KEY: /run/secrets/encrypt_key_secret
+    
+  #   # command:
+  #   #   - sh
+  #   #   - -c
+  #   #   - |
+  #   #     export SPRING_CLOUD_CONFIG_SERVER_GIT_PRIVATE_KEY="$$(cat /run/secrets/github_ssh_private_key_secret)" &&
+  #   #     export SPRING_CLOUD_CONFIG_SERVER_GIT_PASSPHRASE="$$(cat /run/secrets/github_ssh_passphrase_secret)" &&
+  #   #     export SPRING_CLOUD_CONFIG_SERVER_GIT_HOST_KEY="$$(cat /run/secrets/github_ssh_host_key_secret)" &&
+  #   #     export SPRING_CLOUD_CONFIG_SERVER_ENCRYPT_KEY="$$(cat /run/secrets/encrypt_key_secret)" &&
+  #   #     exec java -jar /app.jar
+        
+  #   # export SPRING_CLOUD_CONFIG_SERVER_GIT_PRIVATE_KEY="$$(cat /run/secrets/github_ssh_private_key_secret)" && \
+  #   #     export SPRING_CLOUD_CONFIG_SERVER_GIT_PASSPHRASE="$$(cat /run/secrets/github_ssh_passphrase_secret)" && \
+  #   #     export SPRING_CLOUD_CONFIG_SERVER_GIT_HOST_KEY="$$(cat /run/secrets/github_ssh_host_key_secret)" && \
+  #   #     export SPRING_CLOUD_CONFIG_SERVER_ENCRYPT_KEY="$$(cat /run/secrets/encrypt_key_secret)" && \
+  #   #     java -jar /app.jar
+
+  #   # healthcheck:
+  #   #   test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+  #   #   interval: 30s
+  #   #   timeout: 10s
+  #   #   retries: 5
+  #   #   start_period: 40s # Spending 30 seconds for service starts before checked
+
+  #   # secrets:
+  #   #   # Docker sẽ mount secret này vào /run/secrets/encrypt_key_secret trong container
+  #   #   # - encrypt_key_secret
+  #   #   # Gán secret 'github_ssh_private_key_secret' cho dịch vụ này
+  #   #   # Docker sẽ mount secret này vào /run/secrets/github_ssh_private_key_secret
+  #   #   # - github_ssh_private_key_secret
+  #   #   # - github_ssh_host_key_secret
+  #   #   # - github_ssh_passphrase_secret
+  #   #   # - github_ssh_host_key_algorithm
+  #   #   - git_pat
+  #   networks:
+  #     - my-network
+  #   deploy:
+  #     replicas: 1
+  #     restart_policy:
+  #       condition: on-failure
+
+
+  # discovery-server: # Tên service
+  #   build:
+  #     context: ./discovery-server
+  #     dockerfile: Dockerfile
+  #   image: discovery-server-app
+  #   ports:
+  #     - "8761:8761"
+  #   # environment:
+  #     # SPRING_APPLICATION_NAME: discovery-server
+  #   # depends_on:
+  #   #   - config-server
+  #   #     # condition:  service_healthy -> No need by Docker Swarm
+  #   networks:
+  #     - my-network
+  #   deploy:
+  #     replicas: 1
+  #     restart_policy:
+  #       condition: on-failure
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl", "-f", "http://localhost:8761 || exit 1"]
+  #     interval: 30s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 5s
+
+
+  # We can deploy by using docker swarm, so I don't set the container name 
+
+  # User Service #
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    image: user-service-app
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/userservice_database?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: AeternusAd
+      SPRING_DATASOURCE_PASSWORD: Chucmungnammoi2026
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create # Used to update schema database automatively
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
+    networks:
+      - my-network
+    deploy:
+      replicas: 1
+      restart_policy: 
+        condition: on-failure
+    depends_on:
+      # - discovery-server
+      - mysql
+
+  
+  note-service:
+    build:
+      context: ./note-service
+      dockerfile: Dockerfile
+    image: note-service-app
+    ports:
+      - "8080:8080"
+    environment:
+      # SPRING_APPLICATION_NAME: note-service
+      # EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      # EUREKA_CLIENT_REGISTERWITH_EUREKA: "true"
+      # EUREKA_CLIENT_FETCHREGISTRY: "true"
+      # EUREKA_CLIENT_PREFER_IP_ADDRESS: "true"
+      SPRING_DATA_MONGODB_HOST: mongodb
+      SPRING_DATA_MONGODB_PORT: 27017 # In the container
+      SPRING_DATA_MONGODB_DATABASE: noteservice_database
+    networks:
+      - my-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    depends_on:
+      # - discovery-server
+      - mongodb
+    #   - config-server
+  #   # healthcheck:
+  #   #   test: ["CMD-SHELL", "curl", "-f", "http://discovery-server:8761/eureka/apps || exit 1"]
+  #   #   interval: 10s
+  #   #   timeout: 5s
+  #   #   retries: 10
+  #   #   start_period: 30s
+
+
+  # front-end:
+  #   build:
+  #     context: ./front-end
+  #     dockerfile: Dockerfile
+  #   image: frontend-app
+  #   ports:
+  #     - "3000:5000"
+  #   networks:
+  #     - my-network
+  #   deploy:
+  #     replicas: 1
+  #     restart_policy: 
+  #       condition: on-failure
+    # depends_on:
+    #   # - note-service
+    #   # - discovery-server
+    #   # - config-server
+
+# secrets:
+#   git_pat:
+#     external: true
+#   encrypt_key_secret: #
+#     external: true
+#   github_ssh_private_key_secret: #
+#     external: true
+#   github_ssh_passphrase_secret: 
+#     external: true
+#   # github_ssh_host_key_algorithm:
+#   #     external: true
+#   github_ssh_host_key_secret: #
+#     external: true
+  
+
+  kong-database:
+    image: postgres:15
+    restart: on-failure # Auto start when stopped (exit with code != 0)
+    container_name: kong-database
+    ports:
+        - "5433:5432"
+    environment:
+            # POSTGRES_ROOT_PASSWORD: kong_root_password
+            POSTGRES_DB: kong
+            POSTGRES_USER: kong_user
+            POSTGRES_PASSWORD: kong_password
+        # MYSQL_UID: 999
+        # MYSQL_GID: 999
+    volumes:
+        # - ./data/mysql:/var/lib/mysql:z
+        - kong-postgre-data:/var/lib/postgresql/data
+    healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U kong_user -d kong"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+    networks:
+      - my-network
+
+    # Initialize database schema
+  kong-migrations: 
+    image: kong/kong-gateway:3.11.0.5
+    container_name: kong-migrations
+    command: kong migrations bootstrap
+    environment:
+        KONG_DATABASE: postgres # Indicate that it will use mysql
+        # KONG_DB_ADAPTER: mysql # No problem 
+        KONG_PG_HOST: kong-database # Specify the host name of the container mysql
+        # Used to connect to the database
+        KONG_PG_USER: kong_user 
+        KONG_PG_PASSWORD: kong_password
+        KONG_PG_DATABASE: kong
+    depends_on:
+        kong-database:
+            condition: service_healthy
+    networks:
+      - my-network
+    # profiles:
+    #     - skip-migrations
+  api-gateway:    
+    image: kong/kong-gateway:3.11.0.5
+    restart: on-failure
+    container_name: api-gateway
+    environment:
+        KONG_DATABASE: postgres
+        # KONG_DB_ADAPTER: mysql
+        KONG_PG_HOST: kong-database
+        KONG_PG_USER: kong_user
+        KONG_PG_PASSWORD: kong_password
+        KONG_PG_DATABASE: kong
+        KONG_PROXY_ACCESS_LOG: /dev/stdout
+        KONG_ADMIN_ACCESS_LOG: /dev/stdout
+        KONG_PROXY_ERROR_LOG: /dev/stderr
+        KONG_ADMIN_ERROR_LOG: /dev/stderr
+        KONG_ADMIN_LISTEN: "0.0.0.0:8001, 0.0.0.0:8444 ssl" # Kong open Admin API (used to configure) on the port 8001 (HTTP) and port 8444 (HTTPS) inside the container
+        KONG_PROXY_LISTEN: "0.0.0.0:8000, 0.0.0.0:8443 ssl" # Kong open Proxy (used to proxy the main traffic) on the port 8000 (HTTP) and port 8443 (HTTPS) inside the container
+    ports:  
+        - "8000:8000/tcp" # Map host's port 8000 to container's port 8000 (HTTP Proxy)
+        - "8443:8443/tcp" # Map host's port 8443 to container's port 8443 (HTTPs Proxy)
+        - "8001:8001/tcp" # Map host's port 8001 to container's port 8001 (Admin API HTTP)
+        - "8444:8444/tcp" # Map host's port 8444 to container's port 8444 (Admin API HTTPs)
+    depends_on:
+        kong-database:
+            condition: service_healthy
+        kong-migrations:
+            condition: service_completed_successfully
+    networks:
+      - my-network
+
+  # --------------------------------------------------- #
+  # Database for note service #
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb_container
+    ports:
+      - "27018:27017" #Temp
+    volumes:
+      - noteservice_mongodb_data:/data/noteservice_db
+    networks:
+      - my-network  
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:27017"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  #   # command: --default-authentication-plugin=mysql_native_password # Ensure that mysql compatible with oldly driver
+
+  # # Database for user service #
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_container
+    ports: 
+      - "3307:3306" #Temp
+    volumes:
+      - userservice_mysql_data:/data/userservice_db
+    environment: # Have all the privileges
+      MYSQL_ROOT_PASSWORD: VuNguyen2028
+      MYSQL_DATABASE: userservice_database
+      MYSQL_USER: AeternusAd
+      MYSQL_PASSWORD: Chucmungnammoi2026
+    networks:
+      - my-network
+    healthcheck:
+      test: >
+        mysqladmin ping -h localhost -u AeternusAd -p Chucmungnammoi2026
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Database for ai service #
+
+volumes:
+  noteservice_mongodb_data:
+  kong-postgre-data:
+  userservice_mysql_data:
+
+networks:
+  my-network:
+    driver: bridge 
+    # Overlay for docker swarm
+    
+    
+    
+    

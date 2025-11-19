@@ -1,0 +1,533 @@
+# _format_version: "3.0"
+# services:
+# - connect_timeout: 60000
+#   enabled: true
+#   host: note-service
+#   name: note-service
+#   port: 8080
+#   protocol: http
+#   read_timeout: 60000
+#   retries: 5
+#   plugins:
+#   - name: cors
+#     config:
+#       origins:
+#         - http://localhost:80 # Thay bằng URL frontend của bạn
+#       methods:
+#         - GET
+#         - POST
+#         - PUT
+#         - PATCH
+#         - DELETE
+#       headers:
+#         - Content-Type
+#         - Authorization
+#       credentials: true
+#   routes:
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 015fcd2e-fbc9-49d9-b735-0598ff2be69b
+#     methods:
+#     - DELETE
+#     path_handling: v1
+#     paths:
+#     - /api/notes/(?<id>[^/]+)
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 01bbf779-5139-482e-b1ea-c2eec224d3d8
+#     methods:
+#     - GET
+#     path_handling: v1
+#     paths:
+#     - /api/folders/(?<id>[^/]+)
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 0dff8e7b-8f59-46b2-bae0-e8ea9ea1c12b
+#     methods:
+#     - POST
+#     path_handling: v1
+#     paths:
+#     - /api/trash/cleanup
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 1d5dd848-9471-42b1-99c7-e6fe64761221
+#     methods:
+#     - GET
+#     path_handling: v1
+#     paths:
+#     - /api/notes/important
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 38bdd406-85ad-4a84-bd49-0661d3fa2c0c
+#     methods:
+#     - GET
+#     path_handling: v1
+#     paths:
+#     - /api/notes
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 48cb967b-ce03-44ec-9d00-2d1fbbba06e5
+#     methods:
+#     - POST
+#     path_handling: v1
+#     paths:
+#     - /api/notes/(?<id>[^/]+)/important
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 48e69ec8-57ee-4240-8c73-64360cd47703
+#     path_handling: v1
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: true
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 4b2c8cdd-af8f-4920-adf4-ec0035c54e7c
+#     methods:
+#     - POST
+#     path_handling: v1
+#     paths:
+#     - /api/notes
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 5159612a-defd-48ef-b3a4-efb6fdce45b4
+#     methods:
+#     - GET
+#     path_handling: v1
+#     paths:
+#     - /api/notes/folder/(?<folder_id>[^/]+)
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 564c05c6-afaf-4805-b246-c3dd4d277343
+#     methods:
+#     - POST
+#     path_handling: v1
+#     paths:
+#     - /api/trash/move/(?<id>[^/]+)
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 682ab929-a25a-4938-bc61-489b6b74e42a
+#     methods:
+#     - PUT
+#     path_handling: v1
+#     paths:
+#     - /api/folders/(?<id>[^/]+)
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 690dac80-eeb5-4d75-8cfa-53fa34824886
+#     methods:
+#     - GET
+#     path_handling: v1
+#     paths:
+#     - /api/data/export/pdf/(?<id>[^/]+)
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 6f940a17-d837-494c-8890-9c2f96fc2dcd
+#     methods:
+#     - DELETE
+#     path_handling: v1
+#     paths:
+#     - /api/notes/(?<id>[^/]+)/important
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 772d5093-62fa-48f8-a24d-7f0f02e5c59b
+#     methods:
+#     - GET
+#     path_handling: v1
+#     paths:
+#     - /api/data/export/md/(?<id>[^/]+)
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 7776d706-44c8-40a3-997e-b095bd1b806d
+#     methods:
+#     - POST
+#     path_handling: v1
+#     paths:
+#     - /api/notes/(?<id>[^/]+)/restore/(?<history_id>[^/]+)
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 77edcce3-9814-4589-833c-a58967d54d84
+#     methods:
+#     - POST
+#     path_handling: v1
+#     paths:
+#     - /api/data/import
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 885fb58a-81f7-421d-910b-2daf0ef045d2
+#     methods:
+#     - DELETE
+#     path_handling: v1
+#     paths:
+#     - /api/trash/(?<item_id>[^/]+)
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 8dad0e3d-fadf-4c69-9f47-756525705438
+#     methods:
+#     - GET
+#     path_handling: v1
+#     paths:
+#     - /api/trash/stats
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 9096dc15-3eba-43d7-bf4b-b6368a852351
+#     methods:
+#     - PUT
+#     path_handling: v1
+#     paths:
+#     - /api/notes/(?<id>[^/]+)
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: 944c639d-5565-4ebb-9f49-f40e1975bb7e
+#     methods:
+#     - GET
+#     path_handling: v1
+#     paths:
+#     - /api/notes/(?<id>[^/]+)
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: a9c5f997-562f-4a2b-a0b3-3e162695775c
+#     methods:
+#     - POST
+#     path_handling: v1
+#     paths:
+#     - /api/trash/restore/(?<item_id>[^/]+)
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: b61b9604-5fcc-4e2b-add7-8091a14ca330
+#     methods:
+#     - GET
+#     path_handling: v1
+#     paths:
+#     - /api/folders/user/(?<user_id>[^/]+)
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: cbbe8818-b008-4df3-b25f-3e6fdbcfe3da
+#     methods:
+#     - PUT
+#     path_handling: v1
+#     paths:
+#     - /api/folders/reorder
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: ceb8c70c-d09d-435b-8205-d5ca6b59c4a8
+#     methods:
+#     - PUT
+#     path_handling: v1
+#     paths:
+#     - /api/folders/move/(?<id>[^/]+)
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: d9f22524-ead8-451a-9f9c-3a7b7df63b51
+#     methods:
+#     - POST
+#     path_handling: v1
+#     paths:
+#     - /api/folders
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: e408c7b7-56d1-49cb-8e50-4f2e5f35859f
+#     methods:
+#     - GET
+#     path_handling: v1
+#     paths:
+#     - /api/folders/workspace/(?<workspace_id>[^/]+)
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: ed042c68-e995-4daa-8c74-5e2b86537134
+#     methods:
+#     - GET
+#     path_handling: v1
+#     paths:
+#     - /api/trash
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: f6345552-a4b2-49fb-9fd6-123c51beaf97
+#     methods:
+#     - GET
+#     path_handling: v1
+#     paths:
+#     - /api/folders/subfolders/(?<parent_id>[^/]+)
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: f681d439-b189-42f1-9b55-34bcf04fd410
+#     methods:
+#     - PUT
+#     path_handling: v1
+#     paths:
+#     - /api/folders/(?<id>[^/]+)/position
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   - hosts:
+#     - localhost
+#     https_redirect_status_code: 426
+#     id: fe7616ed-7202-40c8-b519-dc2178394f8e
+#     methods:
+#     - DELETE
+#     path_handling: v1
+#     paths:
+#     - /api/trash
+#     preserve_host: false
+#     protocols:
+#     - http
+#     - https
+#     regex_priority: 0
+#     request_buffering: true
+#     response_buffering: true
+#     strip_path: false
+#   write_timeout: 60000

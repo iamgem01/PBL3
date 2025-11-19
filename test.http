@@ -1,0 +1,15 @@
+@hostname = localhost
+@port = 8000
+@baseUrl = http://{{hostname}}:{{port}}
+
+GET {{baseUrl}}/api/notes
+Accept: application/json
+Content-Type: application/json
+
+POST http://localhost:8000/api/notes
+Content-Type: application/json" 
+-d {"title": "Test Kong", "content": That request was sent via Kong gateway"}'
+
+# GET http://localhost:5433
+# Accept: application/json
+# Content-Type: application/json

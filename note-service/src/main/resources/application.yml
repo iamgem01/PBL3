@@ -1,0 +1,51 @@
+# spring:
+#   jackson:
+#     property-naming-strategy: SNAKE_CASE
+#   application:
+#     name: note-service
+#   data:
+#     mongodb:
+#       uri: mongodb://localhost:27017/collaboration_notes_db
+# server:
+#   port: 8082
+# logging:
+#   level:
+#     org.springframework.data.mongodb: DEBUG
+#     com.smartnote.noteservice: DEBUG
+
+server:
+    port: 8080
+spring:
+    application:
+        name: note-service
+    data:
+        mongodb:
+            host: ${SPRING_DATA_MONGODB_HOST}
+            port: ${SPRING_DATA_MONGODB_PORT}
+            database: ${SPRING_DATA_MONGODB_DATABASE}
+            auto-index-creation: true
+
+    jackson:
+        property-naming-strategy: SNAKE_CASE
+        serialization:
+            write-dates-as-timestamps: false
+#     profiles:
+#         active: prod
+#     config:
+#         import: "configserver:http://config-server:8888"
+#     cloud:
+#         config:
+#             label: main
+#             retry:
+#                 initial-interval: 1000
+#                 max-interval: 2000
+#                 max-attempts: 6
+#                 multiplier: 1.1
+eureka:
+    client:
+        serviceUrl:
+            defaultZone: http://discovery-server:8761/eureka/
+        register-with-eureka: true
+        fetch-registry: true
+    instance:
+        preferIpAddress: true
