@@ -140,3 +140,52 @@ export const removeAsImportant = async (id: string, userId: string = 'user_001')
 
   return handleResponse(response);
 };
+
+export const getSharedNotes = async (): Promise<any[]> => {
+    try {
+        const response = await fetch(`${NOTE_SERVICE_URL}/api/notes/shared`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        });
+        return handleResponse(response);
+    } catch (error) {
+        console.error('Error fetching shared notes:', error);
+        throw error;
+    }
+};
+
+export const shareNote = async (noteId: string, userIds: string[]): Promise<any> => {
+    try {
+        const response = await fetch(`${NOTE_SERVICE_URL}/api/notes/${noteId}/share`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ userIds }),
+        });
+        return handleResponse(response);
+    } catch (error) {
+        console.error('Error sharing note:', error);
+        throw error;
+    }
+};
+
+export const unshareNote = async (noteId: string): Promise<any> => {
+    try {
+        const response = await fetch(`${NOTE_SERVICE_URL}/api/notes/${noteId}/unshare`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        });
+        return handleResponse(response);
+    } catch (error) {
+        console.error('Error unsharing note:', error);
+        throw error;
+    }
+};

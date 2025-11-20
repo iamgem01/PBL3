@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getNoteById, updateNote, markAsImportant, removeAsImportant, moveToTrash, exportNoteAsPdf } from '@/services';
-import type { Note, ToolbarPosition } from './documentTypes';
+import type { Note } from '@/types/note'; // Sử dụng Note interface từ types/note.ts
+import type { ToolbarPosition } from './documentTypes'; 
 import { mockNotes } from '../../mockData/notes';
 
 export const useDocumentState = () => {
