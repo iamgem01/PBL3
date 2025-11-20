@@ -1,111 +1,34 @@
 import type { Item } from "../types/Item";
 import { recentlyVisited, upcomingEvents } from "./mockData";
 
-// Giả lập gọi API backend
-export async function fetchItemsByCategory(category: string): Promise<Item[]> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      switch (category) {
-        case "recent":
-          resolve(recentlyVisited);
-          break;
-        case "learn":
-          resolve([]);
-          break;
-        case "event":
-          resolve(upcomingEvents);
-          break;
-        default:
-          resolve([]);
-      }
-    }, 400); // mô phỏng network delay
-  });
-}
+// --- CẤU HÌNH API GATEWAY ---
+// Mọi request đều phải đi qua Kong (Port 8000)
+const API_GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL || "http://localhost:8000";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
-
+// --- CÁC INTERFACE GIỮ NGUYÊN ---
 export interface ChatMessageRequest {
   message: string;
   action?: "chat" | "summarize" | "note" | "explain" | "improve" | "translate";
   context?: string;
   targetLanguage?: string;
 }
-
+// ... (Giữ nguyên các interface Chat/Note/Summarize khác của bạn) ...
 export interface ChatMessageResponse {
   status: string;
-  data: {
-    response: string;
-    action: string;
-  };
+  data: { response: string; action: string; };
 }
+export interface SummarizeRequest { text: string; maxLength?: number; }
+export interface SummarizeResponse { status: string; data: { original: string; summary: string; maxLength: number; }; }
+export interface NoteRequest { text: string; }
+export interface NoteResponse { status: string; data: { original: string; note: string; }; }
+export interface ExplainRequest { text: string; }
+export interface ExplainResponse { status: string; data: { original: string; explanation: string; }; }
+export interface ImproveRequest { text: string; style?: "formal" | "casual" | "academic" | "professional"; }
+export interface ImproveResponse { status: string; data: { original: string; improved: string; style: string; }; }
+export interface TranslateRequest { text: string; targetLanguage?: string; }
+export interface TranslateResponse { status: string; data: { original: string; translated: string; targetLanguage: string; }; }
 
-export interface SummarizeRequest {
-  text: string;
-  maxLength?: number;
-}
-
-export interface SummarizeResponse {
-  status: string;
-  data: {
-    original: string;
-    summary: string;
-    maxLength: number;
-  };
-}
-
-export interface NoteRequest {
-  text: string;
-}
-
-export interface NoteResponse {
-  status: string;
-  data: {
-    original: string;
-    note: string;
-  };
-}
-
-export interface ExplainRequest {
-  text: string;
-}
-
-export interface ExplainResponse {
-  status: string;
-  data: {
-    original: string;
-    explanation: string;
-  };
-}
-
-export interface ImproveRequest {
-  text: string;
-  style?: "formal" | "casual" | "academic" | "professional";
-}
-
-export interface ImproveResponse {
-  status: string;
-  data: {
-    original: string;
-    improved: string;
-    style: string;
-  };
-}
-
-export interface TranslateRequest {
-  text: string;
-  targetLanguage?: string;
-}
-
-export interface TranslateResponse {
-  status: string;
-  data: {
-    original: string;
-    translated: string;
-    targetLanguage: string;
-  };
-}
-
+// Class xử lý lỗi
 class ApiError extends Error {
   statusCode?: number;
   errors?: Array<{ field: string; message: string }>;
@@ -122,14 +45,17 @@ class ApiError extends Error {
   }
 }
 
+// Hàm fetch chung (đã cấu hình credentials để gửi Cookie)
 async function fetchAPI<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
+  // Endpoint backend AI/Chat cũng đi qua Gateway
+  const url = `${API_GATEWAY_URL}${endpoint}`;
 
   const config: RequestInit = {
     ...options,
+    credentials: "include", // QUAN TRỌNG: Luôn gửi cookie SESSION_TOKEN
     headers: {
       "Content-Type": "application/json",
       ...options.headers,
@@ -138,6 +64,12 @@ async function fetchAPI<T>(
 
   try {
     const response = await fetch(url, config);
+    
+    // Xử lý trường hợp 401 (Unauthorized) chung cho toàn app
+    if (response.status === 401) {
+        throw new ApiError("Unauthorized", 401);
+    }
+
     const data = await response.json();
 
     if (!response.ok) {
@@ -153,124 +85,89 @@ async function fetchAPI<T>(
     if (error instanceof ApiError) {
       throw error;
     }
-    throw new ApiError("Không thể kết nối đến server. Vui lòng thử lại sau.");
+    throw new ApiError("Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
   }
 }
 
+// --- API SERVICE CHO CHAT/AI ---
 export const apiService = {
-  /**
-   * Gửi tin nhắn chat
-   */
   async sendMessage(request: ChatMessageRequest): Promise<ChatMessageResponse> {
-    return fetchAPI<ChatMessageResponse>("/chat/message", {
+    return fetchAPI<ChatMessageResponse>("/api/ai/message", { // Giả định route AI
       method: "POST",
       body: JSON.stringify(request),
     });
   },
-
-  /**
-   * Tóm tắt văn bản
-   */
+  // ... (Các hàm summarize, createNote giữ nguyên logic nhưng dùng fetchAPI đã sửa)
   async summarize(request: SummarizeRequest): Promise<SummarizeResponse> {
-    return fetchAPI<SummarizeResponse>("/chat/summarize", {
-      method: "POST",
-      body: JSON.stringify(request),
-    });
+    return fetchAPI<SummarizeResponse>("/api/ai/summarize", { method: "POST", body: JSON.stringify(request) });
   },
-
-  /**
-   * Tạo ghi chú
-   */
   async createNote(request: NoteRequest): Promise<NoteResponse> {
-    return fetchAPI<NoteResponse>("/chat/note", {
-      method: "POST",
-      body: JSON.stringify(request),
-    });
+    return fetchAPI<NoteResponse>("/api/ai/note", { method: "POST", body: JSON.stringify(request) });
   },
-
-  /**
-   * Giải thích văn bản
-   */
   async explain(request: ExplainRequest): Promise<ExplainResponse> {
-    return fetchAPI<ExplainResponse>("/chat/explain", {
-      method: "POST",
-      body: JSON.stringify(request),
-    });
+    return fetchAPI<ExplainResponse>("/api/ai/explain", { method: "POST", body: JSON.stringify(request) });
   },
-
-  /**
-   * Cải thiện văn phong
-   */
   async improveWriting(request: ImproveRequest): Promise<ImproveResponse> {
-    return fetchAPI<ImproveResponse>("/chat/improve", {
-      method: "POST",
-      body: JSON.stringify(request),
-    });
+    return fetchAPI<ImproveResponse>("/api/ai/improve", { method: "POST", body: JSON.stringify(request) });
   },
-
-  /**
-   * Dịch thuật văn bản
-   */
   async translate(request: TranslateRequest): Promise<TranslateResponse> {
-    return fetchAPI<TranslateResponse>("/chat/translate", {
-      method: "POST",
-      body: JSON.stringify(request),
-    });
+    return fetchAPI<TranslateResponse>("/api/ai/translate", { method: "POST", body: JSON.stringify(request) });
   },
 };
-const USER_SERVICE_URL = import.meta.env.VITE_USER_SERVICE_URL || "http://localhost:5000";
 
+// --- USER API (ĐÃ SỬA CHO USER-SERVICE) ---
 export const userApi = {
+  // User Service hiện tại KHÔNG hỗ trợ đăng nhập password, chỉ hỗ trợ OAuth2
+  // Hàm này có thể bỏ hoặc giữ để placeholder
   async login(email: string, password: string) {
-    const response = await fetch(`${USER_SERVICE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({ email, password }),
-    });
-    
-    if (!response.ok) {
-      throw new Error('Login failed');
-    }
-    
-    return response.json();
-  },
-  async register(userData: any) {
-    const response = await fetch(`${USER_SERVICE_URL}/api/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify(userData),
-    });
-    
-    if (!response.ok) {
-      throw new Error('Registration failed');
-    }
-    
-    return response.json();
+    throw new Error("Vui lòng sử dụng đăng nhập bằng Google");
   },
 
+  async register(userData: any) {
+    throw new Error("Vui lòng sử dụng đăng ký bằng Google");
+  },
+
+  // Đăng xuất: Gọi API logout của User Service
   async logout() {
-    return fetch(`${USER_SERVICE_URL}/api/auth/logout`, {
+    // Endpoint logout của User Service qua Gateway
+    return fetch(`${API_GATEWAY_URL}/api/auth/logout`, {
       method: 'POST',
-      credentials: 'include',
+      credentials: 'include', // Gửi cookie để server xóa session
     });
   },
+
+  // Lấy thông tin user hiện tại
   async getProfile() {
-    const response = await fetch(`${USER_SERVICE_URL}/api/auth/profile`, {
-      credentials: 'include',
+    // Endpoint lấy profile của User Service qua Gateway
+    const response = await fetch(`${API_GATEWAY_URL}/api/users/me`, {
+      method: 'GET',
+      credentials: 'include', // BẮT BUỘC: Gửi cookie SESSION_TOKEN
     });
     
     if (!response.ok) {
       throw new Error('Failed to get profile');
     }
     
-    return response.json();
+    return response.json(); // Trả về UserProfileDto
   },
+  
+  // Helper để lấy URL bắt đầu OAuth2
+  getGoogleLoginUrl() {
+    return `${API_GATEWAY_URL}/oauth2/authorization/google`;
+  }
 };
 
 export { ApiError };
+
+// Mock data fetcher (Giữ nguyên)
+export async function fetchItemsByCategory(category: string): Promise<Item[]> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      switch (category) {
+        case "recent": resolve(recentlyVisited); break;
+        case "event": resolve(upcomingEvents); break;
+        default: resolve([]);
+      }
+    }, 400);
+  });
+}

@@ -1,0 +1,69 @@
+eureka:
+    client:
+        serviceUrl:
+            defaultZone: http://discovery-server:8761/eureka/
+        register-with-eureka: true
+        fetch-registry: true
+    instance:
+        preferIpAddress: true
+        
+server:
+  port: 8082
+  
+spring:
+  application: 
+    name: user-service  
+  # This section used to test #
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME}
+  jpa:
+    hibernate:
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO} # Used to test - update
+    defer-datasource-initialization: true
+    show-sql: true
+    properties:
+      hibernate: 
+        dialect: ${SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT}
+        format_sql: true
+  sql:
+    init:
+      mode: always
+
+  security:
+    oauth2:
+      client:  
+        registration:
+          google:  
+            client-id: ${CLIENT_ID}
+            client-secret: ${CLIENT_SECRET}
+            scope: # The permission that you want to access
+              - openid
+              - email
+              - profile
+            redirect-uri: http://localhost:8000/login/oauth2/code/google
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+  
+  # data:
+  #   redis:
+  #       host: localhost
+  #       port: 6379
+
+
+app:
+  jwt:
+    secret: SessionTokenCreatedBySecret22222222222222222222222222222222222222
+    expiration-ms: 7200000
+    cookie-name: SESSION_TOKEN
+  oauth2:
+    redirect-uri: http://localhost:3000/home # Url of frontend

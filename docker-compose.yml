@@ -160,23 +160,23 @@ services:
   #   #   start_period: 30s
 
 
-  # front-end:
-  #   build:
-  #     context: ./front-end
-  #     dockerfile: Dockerfile
-  #   image: frontend-app
-  #   ports:
-  #     - "3000:5000"
-  #   networks:
-  #     - my-network
-  #   deploy:
-  #     replicas: 1
-  #     restart_policy: 
-  #       condition: on-failure
+  front-end:
+    build:
+      context: ./front-end
+      dockerfile: Dockerfile
+    image: frontend-app
+    ports:
+      - "3000:5000"
+    networks:
+      - my-network
+    deploy:
+      replicas: 1
+      restart_policy: 
+        condition: on-failure
     # depends_on:
-    #   # - note-service
-    #   # - discovery-server
-    #   # - config-server
+      # - note-service
+      # - discovery-server
+      # - config-server
 
 # secrets:
 #   git_pat:

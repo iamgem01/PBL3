@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -55,6 +56,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, 
                                         Authentication authentication) throws IOException, ServletException {
         // Get the information of the user
+        System.out.println("Start login success handler");
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         Map<String, Object> attributes = oAuth2User.getAttributes();
         String googleSubId = (String) attributes.get("sub");
@@ -66,7 +68,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
              throw new IllegalStateException("User không tìm thấy sau khi login");
         }
 
-        Set<User_Role> userRoles = userRoleRepository.findByUser(user);
+        List<User_Role> userRoles = userRoleRepository.findByUser(user);
         Set<String> roleNames = userRoles.stream()
                                      .map(userRole -> userRole.getRole().getRoleName())
                                      .collect(Collectors.toSet());

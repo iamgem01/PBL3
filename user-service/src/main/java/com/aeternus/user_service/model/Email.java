@@ -16,13 +16,13 @@ public class Email {
     @Column(name = "email", nullable = false, unique = true, length = 255) 
     private String email; 
 
-    @Column(name = "id_token", nullable = true, unique = true, length = 255)
+    @Column(name = "id_token", columnDefinition = "TEXT")
     private String idToken;
 
-    @Column(name = "access_token", nullable = true, unique = true, length = 255)
+    @Column(name = "access_token", columnDefinition = "TEXT")
     private String accessToken;
 
-    @Column(name = "refresh_token", nullable = true, unique = true, length = 255) 
+    @Column(name = "refresh_token", columnDefinition = "TEXT") 
     private String refreshToken;
 
     //Relationship 

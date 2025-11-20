@@ -1,0 +1,64 @@
+# Đăng ký với Discovery Server 
+# eureka:
+#     client:
+#         register-with-eureka: true
+#         fetch-registry: true
+#         service-url:
+#             defaultZone: http://localhost:8761/eureka/ # The discovery server runs outside Docker
+
+# server:
+#     port: 8888 # Default port for config server
+
+# spring:
+#     application:
+#         name: config-server
+#     cloud:
+#         config:
+#             server:
+#                 git:
+#                     uri: git@github.com:VerNguyen2028/Config-Repo-Aeternus.git
+#                     search-paths: 
+#                         - 'config'
+#                         - 'services/{application}'
+#                         - 'shared'
+#                     default-label: main
+
+#                     # private-key: ""
+#                     # host-key: ""
+
+#                     # Inline from env vars
+#                     private-key: |
+#                         ${SPRING_CLOUD_CONFIG_SERVER_GIT_PRIVATE_KEY}
+#                     passphrase: ${SPRING_CLOUD_CONFIG_SERVER_GIT_PASSPHRASE}
+#                     host-key: ${SPRING_CLOUD_CONFIG_SERVER_GIT_HOST_KEY}
+#                     host-key-algorithm: ssh-rsa
+#                     ignore-local-ssh-settings: true
+#                     strict-host-key-checking: false
+#                 bootstrap: true # Ensure that when this server runs, it will load these configurations
+
+#                 encrypt: 
+#                     key: ${SPRING_CLOUD_CONFIG_SERVER_ENCRYPT_KEY} # Encrypt key will be read by Docker Secret
+server:
+    port: 8888
+
+spring:
+    application:
+        name: config-server
+    cloud:
+        config:
+            server:
+                git:
+                    uri: https://github.com/VerNguyen2028/Config-Repo-Aeternus.git
+                    username: VerNguyen2028
+                    password: ${PASS_GIT} # Tạm thời thôi nhé
+                    default-label: main
+eureka:
+    client:
+        serviceUrl:
+            defaultZone: http://localhost:8761/eureka/
+        register-with-eureka: true
+        fetch-registry: true
+    instance:
+        preferIpAddress: true
+  
+

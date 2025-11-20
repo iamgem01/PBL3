@@ -6,9 +6,9 @@ import com.aeternus.user_service.model.User_Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Set;
+import java.util.List;
 
 @Repository
 public interface UserRoleRepository extends JpaRepository<User_Role, UserRoleKey> {
-    Set<User_Role> findByUser(User user);
+    List<User_Role> findByUser(User user);
 }

@@ -33,7 +33,7 @@ public class Device {
     @Column(name = "last_active_time", nullable = true, unique = false) 
     private LocalDateTime lastActiveTime;
     
-    @Column(name = "session_token", nullable = false, unique = true, length = 255) 
+    @Column(name = "session_token", nullable = false, unique = true, columnDefinition = "TEXT") 
     private String sessionToken;
     
     @Column(name = "is_active", nullable = false, unique = false) 

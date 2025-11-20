@@ -5,10 +5,10 @@ import com.aeternus.user_service.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +18,8 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class CustomOAuth2UserService extends DefaultOAuth2UserService {
+public class CustomOAuth2UserService extends OidcUserService { // SỬA: Kế thừa OidcUserService
+
     private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2UserService.class);
 
     private final UserRepository userRepository;
@@ -28,53 +29,52 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     @Override
     @Transactional
-    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        OAuth2User oAuth2User = super.loadUser(userRequest);
-        Map<String, Object> attributes = oAuth2User.getAttributes();
+    public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
+        logger.info("Start login custom oauth (OIDC Flow)");
+
+        // 1. Gọi lớp cha để lấy thông tin OidcUser chuẩn từ Google
+        OidcUser oidcUser = super.loadUser(userRequest);
+        Map<String, Object> attributes = oidcUser.getAttributes();
         
-        // 1. Lấy thông tin từ Google
+        // 2. Lấy thông tin định danh
         String googleSubId = (String) attributes.get("sub");
         String email = (String) attributes.get("email");
         String name = (String) attributes.get("name");
         
-        // Lấy token an toàn
-        String idToken = (String) userRequest.getAdditionalParameters().get("id_token");
+        // 3. Lấy Token từ OidcUserRequest (Dễ dàng hơn)
+        String idToken = userRequest.getIdToken().getTokenValue();
         String accessToken = userRequest.getAccessToken().getTokenValue();
-        // Refresh token thường null nếu không request offline access
-        String refreshToken = null; 
-
+        
+        // Kiểm tra xem User đã tồn tại chưa
         Optional<Email> emailOptional = emailRepository.findById(googleSubId);
         
         if (emailOptional.isEmpty()) {
             // --- TRƯỜNG HỢP USER MỚI ---
-            logger.info("New user detected via Google OAuth: {}", email);
+            logger.info("New user detected via Google OIDC: {}", email);
 
             // BƯỚC 1: Tạo và LƯU EMAIL TRƯỚC
-            // (Chúng ta lưu chủ động, không chờ User cascade)
             Email emailEntity = new Email();
             emailEntity.setGoogleSub(googleSubId);
             emailEntity.setEmail(email);
             emailEntity.setIdToken(idToken);
             emailEntity.setAccessToken(accessToken);
-            if (refreshToken != null) {
-                emailEntity.setRefreshToken(refreshToken);
-            }
-            // Lưu ngay lập tức để đảm bảo khóa chính tồn tại
-            emailRepository.save(emailEntity);
+            emailEntity.setRefreshToken(null); // Google ít khi trả về refresh token ở luồng này
+            
+            //emailRepository.save(emailEntity); // Lưu ngay để có dữ liệu trong DB
 
             // BƯỚC 2: Tạo và LƯU USER SAU
             User user = new User();
             user.setUsername(name);
             user.setCreated_at(LocalDateTime.now());
-            // Gán liên kết
-            user.setEmail(emailEntity);
+            // Liên kết với Email đã lưu (Lưu ý: File User.java phải cho phép insert cột google_sub)
+            user.setEmail(emailEntity); 
             
-            // Lưu User. Lúc này Email đã có trong DB, Hibernate sẽ link FK chính xác
             User savedUser = userRepository.save(user); 
             
             // BƯỚC 3: Gán Role mặc định
+            // Tìm Role USER (Phải đảm bảo đã chạy data.sql)
             Role defaultRole = roleRepository.findByRoleName("USER")
-                    .orElseThrow(() -> new RuntimeException("Lỗi: Role 'USER' chưa được khởi tạo (hãy chạy file data.sql)."));
+                    .orElseThrow(() -> new RuntimeException("Lỗi nghiêm trọng: Role 'USER' chưa được khởi tạo trong DB."));
             
             UserRoleKey userRoleKey = new UserRoleKey();
             userRoleKey.setUserId(savedUser.getUserId());
@@ -89,19 +89,18 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             logger.info("Successfully created user {} with ROLE_USER", savedUser.getUserId());
 
         } else {
-            // --- TRƯỜNG HỢP USER CŨ (LOGIN LẠI) ---
-            logger.debug("Existing user detected: {}", email);
+            // --- TRƯỜNG HỢP USER CŨ ---
+            logger.debug("Existing user login: {}", email);
             
             Email emailEntity = emailOptional.get();
-            // Cập nhật token mới nhất
+            // Cập nhật token mới
             emailEntity.setIdToken(idToken);
             emailEntity.setAccessToken(accessToken);
-            if (refreshToken != null) {
-                emailEntity.setRefreshToken(refreshToken);
-            }
+            // Lưu ý: Không set refresh token thành null nếu nó không được trả về
             emailRepository.save(emailEntity); 
         }
 
-        return oAuth2User;
+        // Trả về OidcUser để Spring Security tiếp tục xử lý
+        return oidcUser;
     }
 }

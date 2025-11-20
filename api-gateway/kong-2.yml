@@ -13,7 +13,7 @@ services:
       - name: cors
         config: 
           origins: 
-            - http://localhost:80 #url of frontend
+            - http://localhost:3000 #url of frontend
           methods:
             - GET
             - POST
@@ -68,7 +68,7 @@ services:
       - name: cors
         config:
           origins: 
-            - http://localhost:80
+            - http://localhost:3000
           methods:
             - GET
             - POST
