@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getNoteById, updateNote, markAsImportant, removeAsImportant, moveToTrash, exportNoteAsPdf, handleResponse, NOTE_SERVICE_URL, COLLAB_SERVICE_URL } from '@/services';
-import type { Note } from '@/types/note'; // Sử dụng Note interface từ types/note.ts
-import type { ToolbarPosition } from './documentTypes'; 
-import { mockNotes } from '../../mockData/notes';
+import { getNoteById, updateNote, markAsImportant, removeAsImportant, moveToTrash, exportNoteAsPdf, handleResponse, COLLAB_SERVICE_URL } from '@/services';
+import type { Note } from '@/types/note';
+import type { ToolbarPosition } from './documentTypes';
 
 export const useDocumentState = () => {
   const { id } = useParams<{ id: string }>();
@@ -36,7 +35,7 @@ export const useDocumentState = () => {
       }
 
       try {
-        console.log('Fetching note with ID:', id);
+        setIsLoading(true);
         
         // Thử lấy từ collab-service trước
         let noteData;
@@ -51,10 +50,9 @@ export const useDocumentState = () => {
           
           if (collabResponse.ok) {
             noteData = await handleResponse(collabResponse);
-            console.log('✅ Note loaded from collab-service with shares data');
           }
         } catch (collabError) {
-          console.log('⚠️ Note not in collab-service, trying note-service');
+          // Fallback to note-service
         }
 
         // Nếu không có trong collab-service, lấy từ note-service
@@ -64,7 +62,6 @@ export const useDocumentState = () => {
         
         setNote(noteData);
       } catch (err: any) {
-        console.error('Error fetching note:', err);
         setError(err.message || "Failed to load note");
       } finally {
         setIsLoading(false);
@@ -73,13 +70,12 @@ export const useDocumentState = () => {
     fetchNote();
   }, [id]);
 
-  // Handlers - Memoized with useCallback to prevent unnecessary rerenders
+  // Handlers
   const handleUpdateNote = useCallback(async (newContent: string) => {
     if (!note || !id) return;
 
     setIsUpdating(true);
     try {
-      console.log('Updating note content');
       const updatedNote = await updateNote(id, {
         ...note,
         content: newContent,
@@ -87,7 +83,6 @@ export const useDocumentState = () => {
       });
       setNote(updatedNote);
     } catch (error: any) {
-      console.error('Error updating note:', error);
       setError("Failed to update note: " + error.message);
     } finally {
       setIsUpdating(false);
@@ -99,11 +94,9 @@ export const useDocumentState = () => {
     
     setIsDeleting(true);
     try {
-      console.log('Moving note to trash');
       await moveToTrash(id, 'NOTE');
       navigate(-1);
     } catch (error: any) {
-      console.error('Error moving to trash:', error);
       setError("Failed to move note to trash: " + error.message);
       setIsDeleting(false);
     }
@@ -114,7 +107,6 @@ export const useDocumentState = () => {
 
     setIsImportantLoading(true);
     try {
-      console.log('Toggling important status, current:', note.isImportant);
       let updatedNote;
       if (note.isImportant) {
         updatedNote = await removeAsImportant(id);
@@ -123,7 +115,6 @@ export const useDocumentState = () => {
       }
       setNote(updatedNote);
     } catch (error: any) {
-      console.error('Error toggling important:', error);
       setError("Failed to update important status: " + error.message);
     } finally {
       setIsImportantLoading(false);
@@ -135,7 +126,6 @@ export const useDocumentState = () => {
 
     setIsExporting(true);
     try {
-      console.log('Exporting note as PDF');
       const blob = await exportNoteAsPdf(id);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -146,7 +136,6 @@ export const useDocumentState = () => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (error: any) {
-      console.error('Error exporting PDF:', error);
       setError("Failed to export note: " + error.message);
     } finally {
       setIsExporting(false);
@@ -176,6 +165,9 @@ export const useDocumentState = () => {
     handleMoveToTrash,
     handleToggleImportant,
     handleExportPdf,
+
+    // Return noteId for collaboration features
+    noteId: id
   }), [
     note,
     isLoading,
@@ -192,5 +184,6 @@ export const useDocumentState = () => {
     handleMoveToTrash,
     handleToggleImportant,
     handleExportPdf,
+    id,
   ]);
 };

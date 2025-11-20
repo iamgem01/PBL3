@@ -19,6 +19,7 @@ interface DocumentContentProps {
   onUpdateContent: (content: string) => void;
   isCollaborative?: boolean;
   currentUserId?: string;
+  onSelectionChange?: (start: number, end: number) => void;
 }
 
 // MarkdownPreview component
@@ -165,7 +166,6 @@ const callAIService = async (action: string, text: string) => {
 
     const data = await response.json();
     
-    // Backend trả về format: { status: 'success', data: { summary/improved/explanation } }
     if (data.status === 'success' && data.data) {
       return data.data.summary || data.data.improved || data.data.explanation || data.data.translated || '';
     }
@@ -181,6 +181,8 @@ export const PlainTextContent = ({
   note,
   isUpdating,
   onUpdateContent,
+  isCollaborative,
+  onSelectionChange,
 }: DocumentContentProps) => {
   const [currentContent, setCurrentContent] = useState(note?.content || "");
   const [isEditMode, setIsEditMode] = useState(true);
@@ -191,7 +193,6 @@ export const PlainTextContent = ({
   const [aiMenuPosition, setAIMenuPosition] = useState({ x: 0, y: 0 });
   const [isAIProcessing, setIsAIProcessing] = useState(false);
   const [aiResult, setAIResult] = useState<string | null>(null);
-  const [originalText, setOriginalText] = useState("");
   const [selectedText, setSelectedText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -213,6 +214,11 @@ export const PlainTextContent = ({
     const start = textareaRef.current.selectionStart;
     const end = textareaRef.current.selectionEnd;
     setSelection({ start, end });
+
+    // Gọi callback selection change cho collaboration
+    if (isCollaborative && onSelectionChange) {
+      onSelectionChange(start, end);
+    }
 
     if (start !== end) {
       const textarea = textareaRef.current;
@@ -251,14 +257,12 @@ export const PlainTextContent = ({
     if (!selectedText.trim()) return;
     
     setIsAIProcessing(true);
-    setOriginalText(selectedText);
     setShowAIMenu(false);
     
     try {
       const result = await callAIService(action, selectedText);
       setAIResult(result);
       
-      // Position AI result menu
       setAIMenuPosition({
         x: toolbarPosition.x,
         y: toolbarPosition.y + 60,

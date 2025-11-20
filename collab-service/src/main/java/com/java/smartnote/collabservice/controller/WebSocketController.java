@@ -51,33 +51,6 @@ public class WebSocketController {
         System.out.println("👤 User joined note: " + noteId);
         System.out.println("User: " + userInfo);
         
-        // Assign a random color if not provided
-        if (!userInfo.containsKey("color")) {
-            String[] colors = {"#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD", "#98D8C8"};
-            userInfo.put("color", colors[(int)(Math.random() * colors.length)]);
-        }
-        
-        userInfo.put("action", "join");
-        userInfo.put("timestamp", System.currentTimeMillis());
-        
-        return userInfo;
-    }
-    
-    /**
-     * Handle user leave events
-     */
-    @MessageMapping("/ws/note.leave/{noteId}")
-    @SendTo("/topic/note/{noteId}/users")
-    public Map<String, Object> handleUserLeave(
-            @DestinationVariable String noteId,
-            @Payload Map<String, Object> userInfo) {
-        
-        System.out.println("👋 User left note: " + noteId);
-        System.out.println("User: " + userInfo);
-        
-        userInfo.put("action", "leave");
-        userInfo.put("timestamp", System.currentTimeMillis());
-        
         return userInfo;
     }
     
@@ -94,5 +67,49 @@ public class WebSocketController {
         cursorInfo.put("timestamp", System.currentTimeMillis());
         
         return cursorInfo;
+    }
+    
+    /**
+     * Handle presence updates (online/offline status)
+     */
+    @MessageMapping("/ws/note.presence/{noteId}")
+    @SendTo("/topic/note/{noteId}/presence")
+    public Map<String, Object> handlePresenceUpdate(
+            @DestinationVariable String noteId,
+            @Payload Map<String, Object> presenceInfo) {
+        
+        System.out.println("👁️ Presence update for note: " + noteId);
+        presenceInfo.put("timestamp", System.currentTimeMillis());
+        
+        return presenceInfo;
+    }
+    
+    /**
+     * Handle typing indicators
+     */
+    @MessageMapping("/ws/note.typing/{noteId}")
+    @SendTo("/topic/note/{noteId}/typing")
+    public Map<String, Object> handleTypingIndicator(
+            @DestinationVariable String noteId,
+            @Payload Map<String, Object> typingInfo) {
+        
+        // Don't log typing indicators to avoid spam
+        typingInfo.put("timestamp", System.currentTimeMillis());
+        
+        return typingInfo;
+    }
+    
+    /**
+     * Handle user selection updates
+     */
+    @MessageMapping("/ws/note.selection/{noteId}")
+    @SendTo("/topic/note/{noteId}/selection")
+    public Map<String, Object> handleSelectionUpdate(
+            @DestinationVariable String noteId,
+            @Payload Map<String, Object> selectionInfo) {
+        
+        selectionInfo.put("timestamp", System.currentTimeMillis());
+        
+        return selectionInfo;
     }
 }

@@ -9,6 +9,17 @@ import { createPortal } from "react-dom";
 import { shareNote, unshareNote, inviteUser } from '@/services/collabService';
 import { Users, Loader2, Mail, X, UserPlus, Check } from "lucide-react";
 import { collabSocketService } from '@/services/collabSocketService';
+import { PresenceIndicator } from '@/components/PresenceIndicator';
+import { SelectionHighlighter } from '@/components/SelectionHighlighter';
+import { usePresence } from '@/hooks/usePresence';
+
+interface SelectionRange {
+  userId: string;
+  userName: string;
+  start: number;
+  end: number;
+  color: string;
+}
 
 function formatDate(date?: string | Date | null) {
   if (!date) return "";
@@ -26,6 +37,8 @@ interface ActiveUser {
 }
 
 export default function DocumentPage() {
+  const [selections, setSelections] = useState<SelectionRange[]>([]);
+  
   const {
     note,
     isLoading,
@@ -46,7 +59,10 @@ export default function DocumentPage() {
     handleMoveToTrash,
     handleToggleImportant,
     handleExportPdf,
+    noteId
   } = useDocumentState();
+
+  const { users, typingUsers } = usePresence(noteId || '');
 
   const LoadingContent = () => (
     <div className="min-h-screen bg-background p-8">
@@ -121,17 +137,21 @@ export default function DocumentPage() {
     const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
     const currentUser = useRef({
       userId: 'user_' + Math.random().toString(36).substr(2, 9),
-      email: 'current@user.com', // TODO: Get from auth
+      email: 'current@user.com',
       name: 'Current User'
     });
+
+    const generateColor = (userId: string): string => {
+      const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD'];
+      const index = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
+      return colors[index];
+    };
 
     // Kiểm tra trạng thái share của document
     useEffect(() => {
       if (note && note.shares && Array.isArray(note.shares)) {
         const shared = note.shares.length > 0;
         setIsShared(shared);
-        console.log(`📊 Document share status: ${shared ? 'SHARED' : 'NOT SHARED'}`);
-        console.log(`   Shares count: ${note.shares.length}`);
       } else {
         setIsShared(false);
       }
@@ -139,74 +159,114 @@ export default function DocumentPage() {
 
     // Real-time collaboration - WebSocket
     useEffect(() => {
-      if (!note?.id || !isShared) return;
+      if (!noteId || !isShared) return;
 
-      console.log('🔌 Connecting to WebSocket for collaboration...');
+      collabSocketService.connect(
+        noteId,
+        // onMessage callback
+        (message) => {
+          if (message.senderId === currentUser.current.userId) {
+            return;
+          }
+          
+          if (message.type === 'EDIT' && message.senderId !== currentUser.current.userId) {
+            handleUpdateNote(message.content);
+          }
+        },
+        // onUserJoin callback
+        (userJoin) => {
+          setActiveUsers(prev => {
+            const existing = prev.find(u => u.userId === userJoin.userId);
+            if (!existing) {
+              return [...prev, {
+                userId: userJoin.userId,
+                email: userJoin.email,
+                name: userJoin.name,
+                color: generateColor(userJoin.userId)
+              }];
+            }
+            return prev;
+          });
+        },
+        // onUserLeave callback  
+        (userLeave) => {
+          setActiveUsers(prev => prev.filter(u => u.userId !== userLeave.userId));
+          setSelections(prev => prev.filter(s => s.userId !== userLeave.userId));
+        },
+        // onCursorUpdate callback
+        (cursorUpdate) => {
+          setActiveUsers(prev => 
+            prev.map(u => 
+              u.userId === cursorUpdate.userId 
+                ? { ...u, cursorPosition: cursorUpdate.position }
+                : u
+            )
+          );
+        },
+        // onPresenceUpdate callback
+        undefined,
+        // onTypingUpdate callback
+        undefined,
+        // onSelectionUpdate callback
+        (selectionUpdate) => {
+          setSelections(prev => 
+            prev.filter(s => s.userId !== selectionUpdate.userId)
+                .concat({
+                  userId: selectionUpdate.userId,
+                  userName: selectionUpdate.name || 'Anonymous',
+                  start: selectionUpdate.selection.start,
+                  end: selectionUpdate.selection.end,
+                  color: selectionUpdate.color || generateColor(selectionUpdate.userId)
+                })
+          );
+        },
+        // onConnected callback
+        () => {
+          collabSocketService.sendUserJoin(
+            noteId,
+            currentUser.current.userId,
+            currentUser.current.email,
+            currentUser.current.name
+          );
+        }
+      );
       
-      // Connect to WebSocket với callback khi connected
-      collabSocketService.connect(note.id, (message) => {
-        console.log('📨 Received message:', message);
-        
-        // Don't update if message is from current user
-        if (message.senderId === currentUser.current.userId) {
-          return;
-        }
-        
-        // Handle content updates from other users
-        if (message.type === 'EDIT' && message.senderId !== currentUser.current.userId) {
-          console.log('📝 Updating content from collaborator:', message.senderId);
-          handleUpdateNote(message.content);
-        }
-      }, undefined, undefined, undefined, () => {
-        // Callback khi WebSocket đã kết nối thành công
-        console.log('🚀 WebSocket connected, sending join message...');
-        collabSocketService.sendUserJoin(
-          note.id,
-          currentUser.current.userId,
-          currentUser.current.email,
-          currentUser.current.name
-        );
-      });
       return () => {
-        // Cleanup: gửi leave message và disconnect
         if (collabSocketService.isConnected()) {
           collabSocketService.sendUserLeave(
-            note.id,
+            noteId,
             currentUser.current.userId
           );
         }
         collabSocketService.disconnect();
       };
-    }, [note?.id, isShared]);
+    }, [noteId, isShared, handleUpdateNote]);
 
+    const handleSelectionChange = (start: number, end: number) => {
+      if (!noteId || !isShared) return;
+      collabSocketService.sendSelectionUpdate(noteId, { start, end });
+    };
+    
+    const handleTextChange = (newContent: string) => {
+      if (!noteId || !isShared) return;
+      collabSocketService.startTyping(noteId);
+      handleUpdateNote(newContent);
+    };
 
     const handleShareToggle = async () => {
       if (!note?.id) {
-        console.error('❌ No note ID available');
         alert('Cannot share: Note ID is missing');
         return;
       }
-
-      console.log('========================================');
-      console.log('🔄 STARTING SHARE TOGGLE');
-      console.log('========================================');
-      console.log('Note ID:', note.id);
-      console.log('Current state:', isShared ? 'SHARED' : 'NOT SHARED');
-      console.log('Action:', isShared ? 'UNSHARE' : 'SHARE');
 
       setIsSharing(true);
       setShareStatus('idle');
 
       try {
         if (isShared) {
-          // UNSHARE
-          console.log('📤 Calling unshareNote API...');
           await unshareNote(note.id);
           setIsShared(false);
           setShareStatus('success');
-          
-          console.log('✅ UNSHARE SUCCESSFUL');
-          console.log('========================================');
           
           const confirmed = window.confirm(
             '✅ Document unshared successfully!\n\n' +
@@ -218,16 +278,9 @@ export default function DocumentPage() {
             window.location.reload();
           }
         } else {
-          // SHARE - Enable collaboration
-          console.log('📤 Calling shareNote API...');
-          console.log('   Sharing with: ["all"]');
-          
           await shareNote(note.id, ["all"]);
           setIsShared(true);
           setShareStatus('success');
-          
-          console.log('✅ SHARE SUCCESSFUL');
-          console.log('========================================');
           
           const confirmed = window.confirm(
             '✅ Document shared successfully!\n\n' +
@@ -241,26 +294,11 @@ export default function DocumentPage() {
           }
         }
       } catch (error) {
-        console.error('========================================');
-        console.error('❌ SHARE/UNSHARE FAILED');
-        console.error('========================================');
-        console.error('Error:', error);
-        
         setShareStatus('error');
-        
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        alert(
-          `❌ Failed to ${isShared ? 'unshare' : 'share'} document\n\n` +
-          `Error: ${errorMessage}\n\n` +
-          `Please check:\n` +
-          `1. Collab-service is running on port 8083\n` +
-          `2. Note-service is running on port 8080\n` +
-          `3. MongoDB is connected\n` +
-          `4. Check browser console for details`
-        );
+        alert(`❌ Failed to ${isShared ? 'unshare' : 'share'} document\n\nError: ${errorMessage}`);
       } finally {
         setIsSharing(false);
-        console.log('========================================');
       }
     };
 
@@ -279,8 +317,6 @@ export default function DocumentPage() {
       setInviteSuccess(false);
 
       try {
-        console.log('📧 Inviting user:', inviteEmail);
-        
         await inviteUser(
           note.id,
           currentUser.current.email,
@@ -294,10 +330,7 @@ export default function DocumentPage() {
           setInviteEmail('');
           setInviteSuccess(false);
         }, 2000);
-
-        console.log('✅ Invitation sent successfully');
       } catch (error) {
-        console.error('❌ Failed to send invitation:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         alert(`Failed to send invitation: ${errorMessage}`);
       } finally {
@@ -308,6 +341,13 @@ export default function DocumentPage() {
     return (
       <div className="min-h-screen bg-background p-8">
         <div className="max-w-4xl mx-auto bg-card rounded-2xl shadow-lg p-10 border border-border">
+          {/* Presence Indicator */}
+          {isShared && (
+            <div className="mb-6">
+              <PresenceIndicator users={users} />
+            </div>
+          )}
+
           {/* Header với Share/Invite buttons */}
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
             <div className="flex-1">
@@ -322,7 +362,7 @@ export default function DocumentPage() {
                   </div>
                   {activeUsers.length > 0 && (
                     <div className="flex items-center gap-1">
-                      {activeUsers.slice(0, 3).map((user, idx) => (
+                      {activeUsers.slice(0, 3).map((user) => (
                         <div
                           key={user.userId}
                           className="w-6 h-6 rounded-full flex items-center justify-center text-xs text-white font-medium"
@@ -342,7 +382,6 @@ export default function DocumentPage() {
             </div>
             
             <div className="flex items-center gap-2">
-              {/* Share/Unshare Button */}
               {!isShared ? (
                 <button
                   onClick={handleShareToggle}
@@ -370,7 +409,6 @@ export default function DocumentPage() {
                 </button>
               ) : (
                 <>
-                  {/* Invite Users Button */}
                   <button
                     onClick={() => setShowInviteModal(true)}
                     className="px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all
@@ -382,7 +420,6 @@ export default function DocumentPage() {
                     <span>Invite Users</span>
                   </button>
 
-                  {/* Stop Sharing Button */}
                   <button
                     onClick={handleShareToggle}
                     disabled={isSharing}
@@ -411,16 +448,27 @@ export default function DocumentPage() {
             onShowDeleteConfirm={() => setShowDeleteConfirm(true)}
           />
 
-          {/* Document Content */}
+          {/* Document Content với Selection Highlighter */}
           {note?.content && (
-            <PlainTextContent
-              key={note.id}
-              note={note}
-              isUpdating={isUpdating}
-              onUpdateContent={handleUpdateNote}
-              isCollaborative={isShared}
-              currentUserId={currentUser.current.userId}
-            />
+            <div className="relative">
+              <PlainTextContent
+                key={note.id}
+                note={note}
+                isUpdating={isUpdating}
+                onUpdateContent={handleTextChange}
+                isCollaborative={isShared}
+                currentUserId={currentUser.current.userId}
+                onSelectionChange={handleSelectionChange}
+              />
+              
+              {/* Selection Highlighter cho collaborative selection */}
+              {isShared && (
+                <SelectionHighlighter 
+                  selections={selections} 
+                  content={note?.content || ''} 
+                />
+              )}
+            </div>
           )}
           
           {/* Toolbar Portal */}
