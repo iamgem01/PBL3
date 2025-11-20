@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getNoteById, updateNote, markAsImportant, removeAsImportant, moveToTrash, exportNoteAsPdf } from '@/services';
+import { getNoteById, updateNote, markAsImportant, removeAsImportant, moveToTrash, exportNoteAsPdf, handleResponse, NOTE_SERVICE_URL, COLLAB_SERVICE_URL } from '@/services';
 import type { Note } from '@/types/note'; // Sử dụng Note interface từ types/note.ts
 import type { ToolbarPosition } from './documentTypes'; 
 import { mockNotes } from '../../mockData/notes';
@@ -37,7 +37,31 @@ export const useDocumentState = () => {
 
       try {
         console.log('Fetching note with ID:', id);
-        const noteData = await getNoteById(id);
+        
+        // Thử lấy từ collab-service trước
+        let noteData;
+        try {
+          const collabResponse = await fetch(`${COLLAB_SERVICE_URL}/api/notes/${id}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+          });
+          
+          if (collabResponse.ok) {
+            noteData = await handleResponse(collabResponse);
+            console.log('✅ Note loaded from collab-service with shares data');
+          }
+        } catch (collabError) {
+          console.log('⚠️ Note not in collab-service, trying note-service');
+        }
+
+        // Nếu không có trong collab-service, lấy từ note-service
+        if (!noteData) {
+          noteData = await getNoteById(id);
+        }
+        
         setNote(noteData);
       } catch (err: any) {
         console.error('Error fetching note:', err);

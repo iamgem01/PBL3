@@ -17,6 +17,8 @@ interface DocumentContentProps {
   note: Note | null;
   isUpdating: boolean;
   onUpdateContent: (content: string) => void;
+  isCollaborative?: boolean;
+  currentUserId?: string;
 }
 
 // MarkdownPreview component

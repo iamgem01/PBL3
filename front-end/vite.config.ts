@@ -21,6 +21,9 @@ export default defineConfig({
             '@pages': path.resolve(__dirname, './src/pages'),
         },
     },
+    define: {
+        global: 'globalThis',
+    },
     server: {
         port: 3000,
         proxy: {

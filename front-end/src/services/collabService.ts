@@ -2,7 +2,6 @@ const COLLAB_SERVICE_URL = import.meta.env.VITE_COLLAB_SERVICE_URL || 'http://lo
 
 /**
  * Xử lý response từ API
- * Throw error nếu request failed
  */
 const handleResponse = async (response: Response): Promise<any> => {
     console.log('📥 Response status:', response.status);
@@ -45,7 +44,6 @@ const handleResponse = async (response: Response): Promise<any> => {
 
 /**
  * Lấy tất cả documents đã được share từ collab-service
- * Endpoint: GET /api/notes/shared
  */
 export const getSharedNotes = async (): Promise<any[]> => {
     try {
@@ -79,8 +77,6 @@ export const getSharedNotes = async (): Promise<any[]> => {
 
 /**
  * Share một document với danh sách users
- * Endpoint: POST /api/notes/{noteId}/share
- * Body: { userIds: ["all"] } hoặc { userIds: ["user1", "user2"] }
  */
 export const shareNote = async (noteId: string, userIds: string[]): Promise<any> => {
     try {
@@ -121,8 +117,7 @@ export const shareNote = async (noteId: string, userIds: string[]): Promise<any>
 };
 
 /**
- * Unshare một document (xóa tất cả shares)
- * Endpoint: POST /api/notes/{noteId}/unshare
+ * Unshare một document
  */
 export const unshareNote = async (noteId: string): Promise<any> => {
     try {
@@ -157,8 +152,129 @@ export const unshareNote = async (noteId: string): Promise<any> => {
 };
 
 /**
+ * Mời user qua email để collaborate
+ */
+export const inviteUser = async (
+    noteId: string, 
+    inviterEmail: string, 
+    inviteeEmail: string
+): Promise<any> => {
+    try {
+        console.log('========================================');
+        console.log('📧 INVITING USER');
+        console.log('========================================');
+        console.log('Note ID:', noteId);
+        console.log('From:', inviterEmail);
+        console.log('To:', inviteeEmail);
+        
+        const response = await fetch(`${COLLAB_SERVICE_URL}/api/invitations/invite`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                noteId,
+                inviterEmail,
+                inviteeEmail
+            }),
+        });
+        
+        const data = await handleResponse(response);
+        console.log('✅ Invitation sent successfully');
+        console.log('========================================');
+        
+        return data;
+    } catch (error) {
+        console.error('========================================');
+        console.error('❌ ERROR SENDING INVITATION');
+        console.error('========================================');
+        console.error('Error:', error);
+        console.error('========================================');
+        throw error;
+    }
+};
+
+/**
+ * Accept invitation (người được mời click vào link)
+ */
+export const acceptInvitation = async (token: string, userEmail: string): Promise<any> => {
+    try {
+        console.log('========================================');
+        console.log('✅ ACCEPTING INVITATION');
+        console.log('========================================');
+        console.log('Token:', token);
+        console.log('User Email:', userEmail);
+        
+        const response = await fetch(`${COLLAB_SERVICE_URL}/api/invitations/accept`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                token,
+                userEmail
+            }),
+        });
+        
+        const data = await handleResponse(response);
+        console.log('✅ Invitation accepted');
+        console.log('========================================');
+        
+        return data;
+    } catch (error) {
+        console.error('========================================');
+        console.error('❌ ERROR ACCEPTING INVITATION');
+        console.error('========================================');
+        console.error('Error:', error);
+        console.error('========================================');
+        throw error;
+    }
+};
+
+/**
+ * Lấy danh sách invitations cho một note
+ */
+export const getInvitationsByNote = async (noteId: string): Promise<any[]> => {
+    try {
+        const response = await fetch(`${COLLAB_SERVICE_URL}/api/invitations/note/${noteId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        });
+        
+        return await handleResponse(response);
+    } catch (error) {
+        console.error('❌ Error fetching invitations:', error);
+        throw error;
+    }
+};
+
+/**
+ * Lấy pending invitations cho current user
+ */
+export const getPendingInvitations = async (email: string): Promise<any[]> => {
+    try {
+        const response = await fetch(`${COLLAB_SERVICE_URL}/api/invitations/user/${email}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        });
+        
+        return await handleResponse(response);
+    } catch (error) {
+        console.error('❌ Error fetching pending invitations:', error);
+        throw error;
+    }
+};
+
+/**
  * Lấy chi tiết một note từ collab-service
- * Endpoint: GET /api/notes/{noteId}
  */
 export const getNoteById = async (noteId: string): Promise<any> => {
     try {
@@ -183,8 +299,7 @@ export const getNoteById = async (noteId: string): Promise<any> => {
 };
 
 /**
- * Health check - Kiểm tra collab-service có hoạt động không
- * Endpoint: GET /health
+ * Health check
  */
 export const checkCollabServiceHealth = async (): Promise<boolean> => {
     try {

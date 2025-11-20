@@ -5,11 +5,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class NoteUpdateMessage {
-    private String noteId;      // ID của ghi chú đang sửa
-    private String content;     // Nội dung mới (hoặc đoạn thay đổi)
-    private String senderId;    // ID của người đang gõ (để FE phía kia biết ai đang gõ)
-    private String type;        
+    private String noteId;
+    private String content;
+    private String senderId;
+    private String senderEmail;
+    private String senderName;
+    private String type; // "EDIT" or "CURSOR"
+    private Long timestamp;
 }

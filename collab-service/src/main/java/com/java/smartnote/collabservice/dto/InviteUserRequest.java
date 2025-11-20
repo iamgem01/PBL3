@@ -3,11 +3,12 @@ package com.java.smartnote.collabservice.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.util.List; // Đừng quên import List
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ShareNoteRequest {
-    private List<String> userIds;
+public class InviteUserRequest {
+    private String noteId;
+    private String inviterEmail;
+    private String inviteeEmail;
 }

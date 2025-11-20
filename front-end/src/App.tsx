@@ -164,6 +164,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        {/* <Route path="/invitation/accept" element={<InvitationAcceptPage />} /> */}
         
         <Route
           path="/ai"
