@@ -35,13 +35,22 @@ public class JwtTokenProvider {
         Date validity = new Date(now.getTime() + validityInMilliseconds);
 
         return Jwts.builder()
-                .subject(userId.toString())         
+                .subject(UUID.randomUUID().toString())         
                 .claim("roles", roles)            
                 .issuedAt(now)
                 .expiration(validity)
                 .signWith(secretKey)                 
                 .compact();
+            // return Jwts.builder()
+            //         .setClaims(claims)
+            //         .setId(UUID.randomUUID().toString())
+            //         .setIssuedAt(now)
+            //         .setExpiration(validity)
+            //         .signWith(secretKey, SignatureAlgorithm.HS256)
+            //         .compact();
     }
+
+
 
     // Get the content from the token
     public Claims getClaims(String token) {

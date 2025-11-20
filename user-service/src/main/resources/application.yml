@@ -66,4 +66,4 @@ app:
     expiration-ms: 7200000
     cookie-name: SESSION_TOKEN
   oauth2:
-    redirect-uri: http://localhost:3000/home # Url of frontend
+    redirect-uri: http://localhost:3000 # Url of frontend

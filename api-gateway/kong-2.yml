@@ -24,7 +24,14 @@ services:
           headers:
             - Content-Type
             - Authorization
-          credentials: true # httpOnly cookie
+          # Ensure that frontend can't read cookie if options don't return the right header
+          exposed_headers: 
+            - Set-Cookie
+          max-age: 3600
+          # Cookie can be returned by backend
+          # Cors fails when have credential
+          preflight_continue: true
+          credentials: true # accept httpOnly cookie 
     routes:
     - name: notes-resource
       paths:

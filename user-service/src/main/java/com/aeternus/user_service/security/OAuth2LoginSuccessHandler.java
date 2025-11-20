@@ -89,10 +89,10 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         // Send Cookie to client
         Cookie cookie = new Cookie(jwtCookieName, jwtToken);
         cookie.setHttpOnly(true);
-        cookie.setSecure(true);
+        cookie.setSecure(true);  // Because we only send http request
         cookie.setPath("/");
-        //cookie.setMaxAge(60 * 60 * 2); // Can comment this line to force user login from 
-        
+        cookie.setMaxAge(-1); // Only exist in the current session
+        cookie.setAttribute("SameSite", "None");
         response.addCookie(cookie);
         getRedirectStrategy().sendRedirect(request, response, frontendRedirectUri); // Change to api gateway url
     }
