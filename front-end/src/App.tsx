@@ -12,6 +12,7 @@ import SearchPage from "@/pages/SearchPage/SearchPage";
 import NotFoundPage from "@/pages/NotFound/NotFoundPage";
 import NotePage from "@/pages/NotePage/NotePage";
 import AdminPage from "./pages/Manager/adminpage";
+import InvitationAcceptPage from "@/pages/InvitationAcceptPage";
 
 // Loading Component
 function LoadingScreen() {
@@ -164,7 +165,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* <Route path="/invitation/accept" element={<InvitationAcceptPage />} /> */}
+        <Route path="/invitation/accept" element={<InvitationAcceptPage />} />
         
         <Route
           path="/ai"
