@@ -92,6 +92,11 @@ services:
             - Authorization
             - Origin
           credentials: true
+          exposed_headers:
+            - Set-Cookie
+          max_age: 3600
+          preflight_continue: true
+          credentials: true
     routes:
       - name: auth-resource
         paths: 
@@ -114,6 +119,48 @@ services:
           - /api/auth
         methods: [GET, POST, OPTIONS]
         strip_path: false
+        preserve_host: false
+        protocols: [http, https]
+
+    # AI Service #
+  - name: ai-service
+    host: ai-service
+    port: 3001
+    path: /api/chat
+    protocol: http
+    connect_timeout: 60000
+    read_timeout: 60000
+    write_timeout: 60000
+    retries: 5
+    plugins:
+      - name: cors
+        config:
+          origins:
+            - http://localhost:3000
+          methods:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+            - OPTIONS
+          headers:
+            - Accept
+            - Accept-Encoding
+            - Content-Type
+            - Authorization
+            - Origin
+          credentials: true
+          exposed_headers:
+            - Set-Cookie
+          max_age: 3600
+          preflight_continue: true
+          credentials: true
+    routes:
+      - name: ai-resource
+        paths:
+          - /api/ai
+        methods: [POST, GET, OPTIONS]
+        strip_path: true
         preserve_host: false
         protocols: [http, https]
       
