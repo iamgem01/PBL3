@@ -1,13 +1,20 @@
 package com.aeternus.user_service.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @Table(name = "Email")
+@ToString(exclude = "user")
 public class Email {
     @Id
     @Column(name = "google_sub", nullable = false, unique = true, length = 255)
@@ -27,6 +34,7 @@ public class Email {
 
     //Relationship 
     @OneToOne(mappedBy = "email", fetch = FetchType.LAZY)
+    @JsonBackReference
     private User user; 
    
 }

@@ -1,13 +1,20 @@
 package com.aeternus.user_service.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
-@Table(name  = "User_Role")
+@Table(name = "User_Role")
+@ToString(exclude = {"user", "role"})
 public class User_Role {
     @EmbeddedId
     @AttributeOverrides({
@@ -20,6 +27,7 @@ public class User_Role {
     @ManyToOne
     @MapsId("userId")
     @JoinColumn(name = "user_id") 
+    @JsonIgnore
     private User user;
 
     @ManyToOne

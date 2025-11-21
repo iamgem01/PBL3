@@ -6,6 +6,8 @@ import com.aeternus.user_service.dto.DeviceDto;
 import com.aeternus.user_service.dto.UserProfileDto;
 import com.aeternus.user_service.security.JwtTokenProvider;
 import com.aeternus.user_service.service.UserService;
+import com.aeternus.user_service.service.UserServiceImpl;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -48,6 +50,7 @@ public class UserController {
     public ResponseEntity<UserProfileDto> getCurrentUser(Principal principal) {
         UUID userId = UUID.fromString(principal.getName());
         UserProfileDto userProfile = userService.getCurrentUserProfile(userId);
+        System.out.println("Send request after logging");
         return ResponseEntity.ok(userProfile);
     }
 

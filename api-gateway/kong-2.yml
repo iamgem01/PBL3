@@ -22,12 +22,15 @@ services:
             - DELETE
             - OPTIONS
           headers:
+            - Accept
+            - Accept-Encoding  
             - Content-Type
             - Authorization
+            - Origin
           # Ensure that frontend can't read cookie if options don't return the right header
           exposed_headers: 
             - Set-Cookie
-          max-age: 3600
+          max_age: 3600
           # Cookie can be returned by backend
           # Cors fails when have credential
           preflight_continue: true
@@ -36,14 +39,14 @@ services:
     - name: notes-resource
       paths:
         - /api/notes
-      methods: [GET, POST, PUT, DELETE, PATCH]
+      methods: [GET, POST, PUT, DELETE, PATCH, OPTIONS]
       strip_path: false
       preserve_host: false
       protocols: [http, https]
     - name: folders-resource
       paths: 
         - /api/folders
-      methods: [GET, POST, PUT, PATCH, DELETE]
+      methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
       strip_path: false
       preserve_host: false
       protocols: [http, https]
@@ -51,14 +54,14 @@ services:
     - name: data-resource
       paths: 
         - /api/data
-      methods: [GET, POST]
+      methods: [GET, POST, OPTIONS]
       strip_path: false
       preserve_host: false
       protocols: [http, https]
     - name: trash-resource
       paths:
         - /api/trash
-      methods: [GET, POST, DELETE]
+      methods: [GET, POST, DELETE, OPTIONS]
       strip_path: false
       preserve_host: false
       protocols: [http, https]
@@ -83,14 +86,17 @@ services:
             - DELETE
             - OPTIONS
           headers:
+            - Accept
+            - Accept-Encoding  
             - Content-Type
             - Authorization
+            - Origin
           credentials: true
     routes:
       - name: auth-resource
         paths: 
           - /oauth2/authorization/google
-        methods: [GET]
+        methods: [GET, OPTIONS]
         strip_path: false
         preserve_host: false
         protocols: [http, https]
@@ -106,7 +112,7 @@ services:
         paths:
           - /api/users
           - /api/auth
-        methods: [GET, POST]
+        methods: [GET, POST, OPTIONS]
         strip_path: false
         preserve_host: false
         protocols: [http, https]

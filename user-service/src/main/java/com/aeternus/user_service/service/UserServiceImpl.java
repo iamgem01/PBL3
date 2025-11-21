@@ -66,12 +66,13 @@ public class UserServiceImpl implements UserService {
         if (user.getEmail() != null) {
             dto.setEmail(user.getEmail().getEmail());
         }
-        
+
+        // Sử dụng query custom để lấy chỉ roleName, không load toàn bộ User_Role
         Set<String> roles = user.getUserRoles().stream()
-                .map(userRole -> userRole.getRole().getRoleName())
-                .collect(Collectors.toSet());
+            .map(userRole -> userRole.getRole().getRoleName())
+            .collect(Collectors.toSet());
         dto.setRoles(roles);
-        
+
         return dto;
     }
     

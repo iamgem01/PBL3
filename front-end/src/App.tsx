@@ -12,6 +12,8 @@ import NotFoundPage from "@/pages/NotFound/NotFoundPage";
 import NotePage from "@/pages/NotePage/NotePage";
 import { verifyAuth } from "./utils/authUtils";
 
+// console.log("debugger");
+
 // Loading Component
 function LoadingScreen() {
   return (
@@ -60,22 +62,22 @@ function AuthInit() {
   const location = useLocation();
 
   useEffect(() => {
-    // Kiểm tra tham số lỗi từ URL (nếu backend redirect về kèm lỗi)
+    console.log("debugger");
     const params = new URLSearchParams(location.search);
     const error = params.get("error");
 
     if (error) {
       console.error("Login error:", error);
-      // Có thể hiển thị Toast lỗi ở đây
-      // Xóa params lỗi trên URL
       window.history.replaceState({}, document.title, location.pathname);
     }
 
-    // Kiểm tra xem người dùng đã đăng nhập chưa (có cookie chưa)
-    // Nếu đang ở trang Login/Signup mà đã đăng nhập -> Chuyển vào Home
-    if (location.pathname === "/login" || location.pathname === "/signup") {
+    console.log("Checking auth status at path:", location.pathname);
+
+    // SỬA Ở ĐÂY: Thêm điều kiện kiểm tra khi ở trang chủ "/"
+    if (location.pathname === "/login" || location.pathname === "/signup" || location.pathname === "/") {
       verifyAuth().then((user) => {
         if (user) {
+          console.log("User authenticated, redirecting to home...");
           navigate("/home", { replace: true });
         }
       });

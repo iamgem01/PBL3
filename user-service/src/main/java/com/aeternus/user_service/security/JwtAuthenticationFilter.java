@@ -42,12 +42,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         
         String token = getTokenFromCookie(request);
+        System.out.println("Cookie was received: " + token);
 
-        if (token != null && jwtTokenProvider.validateToken(token)) {
+        if (token != null) {
+            System.out.println("token isn't null");
             if(jwtTokenProvider.validateToken(token)) {
+                System.out.println("Valid token");
                 Optional<Device> deviceOpt = deviceRepository.findBySessionTokenAndIsActive(token, true);
 
                 if(deviceOpt.isPresent()) {
+                    System.out.println("Valid JWT and active device session found.");
                     logger.debug("Valid JWT and active device session found.");
 
                     Claims claims = jwtTokenProvider.getClaims(token);
@@ -55,7 +59,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     // Lấy roles từ claims (đã lưu ở dạng List/Set)
                     List<String> roles = claims.get("roles", List.class);
-                    List<SimpleGrantedAuthority> authorities = roles.stream()
+                    var authorities = roles.stream()
                                                                     .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                                                                     .collect(Collectors.toList());
 
@@ -76,8 +80,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } else {
             logger.debug("No JWT cookie found, proceeding as anonymous");
         }
+        System.out.println("Transfer to the second filter");
         // Transfer request to the second filter
         filterChain.doFilter(request, response);
+        System.out.println("Complete to the second filter");
+
     }
     
     // private boolean isTokenActiveInDatabase(String token) {
