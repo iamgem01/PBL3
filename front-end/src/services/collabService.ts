@@ -175,6 +175,16 @@ export const inviteUser = async (
     inviteeEmail: string
 ): Promise<any> => {
     try {
+        // Get current user ID
+        const userData = localStorage.getItem('user');
+        if (!userData) {
+            console.error('❌ No user data in localStorage for invitation');
+            throw new Error('User not authenticated');
+        }
+        
+        const user = JSON.parse(userData);
+        const userId = user.id;
+        
         console.log('========================================');
         console.log('📧 INVITING USER');
         console.log('========================================');
@@ -186,6 +196,7 @@ export const inviteUser = async (
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-User-Id': userId,
             },
             credentials: 'include',
             body: JSON.stringify({
