@@ -20,7 +20,7 @@ export const useYjs = (documentId: string, isShared: boolean) => {
   const [provider, setProvider] = useState<WebsocketProvider | null>(null);
   const [connected, setConnected] = useState(false);
   const [isSynced, setIsSynced] = useState(false);
-  const [persistenceReady, setPersistenceReady] = useState(false); // ✅ NEW: Trạng thái persistence
+  const [persistenceReady, setPersistenceReady] = useState(false);
   const [users, setUsers] = useState<CollaborativeUser[]>([]);
   
   const initializingRef = useRef(false);
@@ -36,7 +36,7 @@ export const useYjs = (documentId: string, isShared: boolean) => {
     const cleanDocId = documentId.split('/').pop() || documentId;
     initializingRef.current = true;
     setIsSynced(false);
-    setPersistenceReady(false); // ✅ Reset persistence state
+    setPersistenceReady(false);
 
     const initialize = async () => {
       try {
@@ -64,13 +64,29 @@ export const useYjs = (documentId: string, isShared: boolean) => {
             setAwareness(result.awareness);
             setProvider(result.provider);
             
+            // ✅ FIX: Đảm bảo awareness được thiết lập đúng cách
+            setTimeout(() => {
+              if (result.awareness) {
+                try {
+                  result.awareness.setLocalState({
+                    user: currentUser,
+                    cursor: null,
+                    selection: null,
+                  });
+                  console.log('✅ Initial awareness state set');
+                } catch (error) {
+                  console.error('❌ Error setting initial awareness state:', error);
+                }
+              }
+            }, 100);
+            
             // ✅ Lắng nghe sự kiện sync từ provider
             result.provider.on('sync', (synced: boolean) => {
               console.log('🔄 Yjs Provider Synced:', synced);
               setIsSynced(synced);
             });
 
-            await new Promise(resolve => setTimeout(resolve, 50));
+            await new Promise(resolve => setTimeout(resolve, 100));
             setConnected(true);
             retryCount.current = 0;
             
@@ -89,7 +105,7 @@ export const useYjs = (documentId: string, isShared: boolean) => {
           }
         } else {
           setConnected(true);
-          setIsSynced(true); // Local mode luôn coi là synced
+          setIsSynced(true);
         }
       } catch (error) {
         console.error('❌ Failed to initialize Yjs:', error);
@@ -114,7 +130,7 @@ export const useYjs = (documentId: string, isShared: boolean) => {
       setProvider(null);
       setConnected(false);
       setIsSynced(false);
-      setPersistenceReady(false); // ✅ Reset persistence state
+      setPersistenceReady(false);
     };
 
     return cleanupRef.current;
@@ -126,8 +142,15 @@ export const useYjs = (documentId: string, isShared: boolean) => {
   ) => {
     if (!awareness) return;
     try {
-      awareness.setLocalStateField('cursor', cursor);
-      awareness.setLocalStateField('selection', selection);
+      // ✅ FIX: Đảm bảo chỉ update khi awareness đã sẵn sàng
+      const currentState = awareness.getLocalState();
+      if (currentState) {
+        awareness.setLocalState({
+          ...currentState,
+          cursor,
+          selection,
+        });
+      }
     } catch (error) {
       console.error('❌ Failed to update awareness:', error);
     }
@@ -141,18 +164,23 @@ export const useYjs = (documentId: string, isShared: boolean) => {
         const states = Array.from(awareness.getStates().values());
         const currentUserId = JSON.parse(localStorage.getItem('user') || '{}').id;
         
-        const otherUsers: CollaborativeUser[] = states
-          .filter((state: any) => state.user && state.user.id !== currentUserId)
-          .map((state: any) => ({
-            id: state.user.id,
-            name: state.user.name,
-            email: state.user.email,
-            color: state.user.color,
-            cursor: state.cursor,
-            selection: state.selection,
-          }));
+        // ✅ FIX: Sử dụng Set để loại bỏ duplicate users
+        const uniqueUsers = new Map();
         
-        setUsers(otherUsers);
+        states.forEach((state: any) => {
+          if (state.user && state.user.id !== currentUserId) {
+            uniqueUsers.set(state.user.id, {
+              id: state.user.id,
+              name: state.user.name,
+              email: state.user.email,
+              color: state.user.color,
+              cursor: state.cursor,
+              selection: state.selection,
+            });
+          }
+        });
+        
+        setUsers(Array.from(uniqueUsers.values()));
       } catch (error) {
         console.error('❌ Error handling awareness change:', error);
       }
@@ -169,8 +197,8 @@ export const useYjs = (documentId: string, isShared: boolean) => {
   return {
     doc,
     connected,
-    isSynced: isSynced && persistenceReady, // ✅ Chỉ synced khi persistence ready
-    persistenceReady, // ✅ Export thêm trạng thái này
+    isSynced: isSynced && persistenceReady,
+    persistenceReady,
     users,
     updateAwareness,
     yjsService,

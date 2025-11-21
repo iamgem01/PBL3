@@ -1,7 +1,6 @@
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Collaboration from '@tiptap/extension-collaboration';
-import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
 import { Placeholder } from '@tiptap/extension-placeholder';
 import { Underline } from '@tiptap/extension-underline';
 import { TextAlign } from '@tiptap/extension-text-align';
@@ -44,14 +43,16 @@ export const CollaborativeEditor = memo(({
     yjsService, 
     awareness, 
     provider, 
-    isSynced,
-    persistenceReady // ✅ Nhận thêm trạng thái persistence
+    isSynced, 
+    persistenceReady 
   } = useYjs(documentId, isShared);
   
   const [isEditorReady, setIsEditorReady] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'offline'>('connecting');
+  const [collaborationReady, setCollaborationReady] = useState(false);
   
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const editorInitializedRef = useRef(false);
 
   const currentUser = useMemo(() => {
     try {
@@ -83,6 +84,15 @@ export const CollaborativeEditor = memo(({
     return () => clearInterval(interval);
   }, [provider, isShared]);
 
+  useEffect(() => {
+    if (isShared && doc && yjsService && persistenceReady && awareness) {
+      console.log('✅ All collaboration conditions met');
+      setCollaborationReady(true);
+    } else {
+      setCollaborationReady(false);
+    }
+  }, [isShared, doc, yjsService, persistenceReady, awareness]);
+
   const handleContentChange = useCallback((content: string) => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
@@ -93,7 +103,7 @@ export const CollaborativeEditor = memo(({
   const extensions = useMemo(() => {
     const base: any[] = [
       StarterKit.configure({ 
-        history: isShared ? false : undefined // Disable history for shared docs (Yjs handles it)
+        history: isShared ? false : undefined
       }),
       Placeholder.configure({ placeholder: 'Start writing...' }),
       Underline,
@@ -102,25 +112,16 @@ export const CollaborativeEditor = memo(({
       Color,
     ];
 
-    // ✅ QUAN TRỌNG: Chỉ thêm collaboration khi persistence đã ready
-    if (isShared && doc && provider && persistenceReady) {
-      console.log('✅ Adding Collaboration extension');
+    // ✅ CHỈ sử dụng Collaboration cơ bản, KHÔNG dùng CollaborationCursor
+    if (isShared && doc && persistenceReady) {
+      console.log('✅ Adding Collaboration extension (basic mode)');
       base.push(Collaboration.configure({ 
         document: doc 
       }));
     }
-
-    // ✅ QUAN TRỌNG: Chỉ thêm collaboration cursor khi tất cả đã sẵn sàng
-    if (isShared && doc && provider && awareness && isSynced && persistenceReady) {
-      console.log('✅ Adding CollaborationCursor extension');
-      base.push(CollaborationCursor.configure({ 
-        provider, 
-        user: currentUser 
-      }));
-    }
     
     return base;
-  }, [isShared, doc, provider, awareness, currentUser, isSynced, persistenceReady]);
+  }, [isShared, doc, persistenceReady]);
 
   const editor = useEditor({
     extensions,
@@ -128,32 +129,38 @@ export const CollaborativeEditor = memo(({
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
       handleContentChange(editor.getHTML());
-      if (isShared && updateAwareness) {
-         const { from, to } = editor.state.selection;
-         updateAwareness({ pos: from }, { from, to });
-      }
+    },
+    onCreate: ({ editor }) => {
+      console.log('✅ Editor created successfully');
+      editorInitializedRef.current = true;
     },
     editorProps: {
-        attributes: {
-            class: 'prose prose-lg max-w-none min-h-[600px] focus:outline-none px-8 py-12 mx-auto'
-        }
+      attributes: {
+        class: 'prose prose-lg max-w-none min-h-[600px] focus:outline-none px-8 py-12 mx-auto'
+      }
     }
   }, [extensions]);
 
-  // ✅ FIX: Chỉ set editor ready khi persistence đã sync
   useEffect(() => {
     if (isShared) {
-      const ready = !!doc && !!yjsService && persistenceReady;
-      console.log('🔄 Editor ready check:', { doc: !!doc, yjsService: !!yjsService, persistenceReady, ready });
+      const ready = !!doc && !!yjsService && persistenceReady && editorInitializedRef.current && collaborationReady;
+      console.log('🔄 Editor ready check:', { 
+        doc: !!doc, 
+        yjsService: !!yjsService, 
+        persistenceReady, 
+        editorInitialized: editorInitializedRef.current,
+        collaborationReady,
+        ready 
+      });
       setIsEditorReady(ready);
     } else {
-      setIsEditorReady(true);
+      setIsEditorReady(!!editor);
     }
-  }, [doc, yjsService, isShared, persistenceReady]);
+  }, [doc, yjsService, isShared, persistenceReady, editor, collaborationReady]);
 
-  // Cleanup timeout on unmount
   useEffect(() => () => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    editorInitializedRef.current = false;
   }, []);
 
   if (!isEditorReady || !editor) {
@@ -200,7 +207,7 @@ export const CollaborativeEditor = memo(({
             <span>{isShared ? '🟢 Collaborative Mode' : '🔵 Local Mode'}</span>
             <ConnectionStatus />
             {isShared && (
-              <span>Persistence: {persistenceReady ? '✅ Ready' : '⏳ Loading'}</span>
+              <span>Collaboration: {collaborationReady ? '✅ Ready' : '⏳ Loading'}</span>
             )}
           </div>
           <span>{editor.storage.characterCount?.characters() || 0} characters</span>

@@ -31,26 +31,35 @@ export class YjsService {
       
       // ✅ Tạo promise để đợi persistence sync
       this.persistencePromise = new Promise((resolve, reject) => {
-        this.persistence!.on('synced', () => {
+        const onSynced = () => {
           console.log('✅ Content loaded from IndexedDB');
+          this.persistence!.off('synced', onSynced);
+          this.persistence!.off('error', onError);
           resolve();
-        });
+        };
 
-        this.persistence!.on('error', (error: any) => {
+        const onError = (error: any) => {
           console.error('❌ IndexedDB persistence error:', error);
+          this.persistence!.off('synced', onSynced);
+          this.persistence!.off('error', onError);
           reject(error);
-        });
+        };
+
+        this.persistence!.on('synced', onSynced);
+        this.persistence!.on('error', onError);
 
         // Fallback: nếu đã synced rồi
         if (this.persistence!.synced) {
           console.log('✅ Persistence already synced');
+          this.persistence!.off('synced', onSynced);
+          this.persistence!.off('error', onError);
           resolve();
         }
       });
 
     } catch (error) {
       console.error('❌ Failed to setup IndexedDB persistence:', error);
-      this.persistencePromise = Promise.resolve(); // Vẫn tiếp tục dù có lỗi
+      this.persistencePromise = Promise.resolve();
     }
   }
 
@@ -58,6 +67,7 @@ export class YjsService {
     if (this.persistencePromise) {
       await this.persistencePromise;
     }
+    return Promise.resolve();
   }
 
   connectWebSocket(documentId: string, user: any): Promise<{ awareness: Awareness; provider: WebsocketProvider }> {
@@ -89,34 +99,41 @@ export class YjsService {
 
         // Create provider - PASS EMPTY STRING as room name to avoid double path
         this.provider = new WebsocketProvider(
-          wsUrlWithParam,  // Full URL with query param
-          '',              // ✅ EMPTY room name (no path append)
+          wsUrlWithParam,
+          '',
           this.doc,
           {
             connect: true,
           }
         );
 
-        // Get awareness IMMEDIATELY
+        // Get awareness
         this.awareness = this.provider.awareness;
 
         if (!this.awareness) {
           throw new Error('Failed to get awareness from provider');
         }
 
-        // Set user state
-        this.awareness.setLocalState({
-          user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            color: this.generateUserColor(user.id),
-          },
-          cursor: null,
-          selection: null,
-        });
+        // ✅ FIX: Khởi tạo awareness state với delay để đảm bảo document đã sẵn sàng
+        setTimeout(() => {
+          try {
+            this.awareness!.setLocalState({
+              user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                color: this.generateUserColor(user.id),
+              },
+              cursor: null,
+              selection: null,
+            });
+            console.log('✅ Awareness state set for:', user.email);
+          } catch (error) {
+            console.error('❌ Error setting awareness state:', error);
+          }
+        }, 100);
 
-        console.log('✅ Awareness created and state set for:', user.email);
+        console.log('✅ Awareness created for:', user.email);
 
         // Mark as ready
         this.isAwarenessReady = true;
@@ -147,7 +164,7 @@ export class YjsService {
           console.error('❌ Yjs connection error:', event);
         });
 
-        // Return both awareness AND provider immediately
+        // Return both awareness AND provider
         console.log('✅ Returning awareness and provider');
         resolve({
           awareness: this.awareness,

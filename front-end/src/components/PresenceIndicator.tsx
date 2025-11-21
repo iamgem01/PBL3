@@ -1,68 +1,52 @@
-import React from 'react';
-import { User, Clock } from 'lucide-react';
+import { memo } from 'react';
+import { User } from 'lucide-react';
 
-interface UserPresence {
+interface PresenceUser {
   id: string;
   name: string;
   email: string;
   color: string;
-  cursor?: any;
-  selection?: any;
+  cursor?: { pos: number };
+  selection?: { from: number; to: number };
 }
 
 interface PresenceIndicatorProps {
-  users: UserPresence[];
-  maxDisplay?: number;
+  users: PresenceUser[];
 }
 
-export const PresenceIndicator: React.FC<PresenceIndicatorProps> = ({ 
-  users, 
-  maxDisplay = 5 
-}) => {
+export const PresenceIndicator = memo(({ users }: PresenceIndicatorProps) => {
+  if (!users || users.length === 0) {
+    return null;
+  }
+
+  // ✅ FIX: Đảm bảo không có duplicate users bằng cách sử dụng Map
+  const uniqueUsers = Array.from(
+    new Map(users.map(user => [user.id, user])).values()
+  );
+
   return (
-    <div className="flex items-center gap-3 px-3 py-2 bg-muted/30 rounded-lg">
-      {/* Online users avatars */}
-      <div className="flex -space-x-2">
-        {users.slice(0, maxDisplay).map((user) => (
+    <div className="flex items-center gap-2 px-4 py-2">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <User size={14} />
+        <span>Active collaborators:</span>
+      </div>
+      <div className="flex items-center gap-2">
+        {uniqueUsers.map((user) => (
           <div
-            key={user.id}
-            className="w-8 h-8 rounded-full border-2 border-background flex items-center justify-center text-xs font-medium text-white relative"
-            style={{ backgroundColor: user.color }}
+            key={`${user.id}-${user.email}`} // ✅ FIX: Sử dụng composite key
+            className="flex items-center gap-2 px-2 py-1 rounded-md bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs"
             title={`${user.name} (${user.email})`}
           >
-            {user.name.charAt(0).toUpperCase()}
-            {/* Online indicator */}
-            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+            <div
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: user.color }}
+            />
+            <span className="font-medium">{user.name}</span>
           </div>
         ))}
-        {users.length > maxDisplay && (
-          <div 
-            className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs font-medium text-muted-foreground"
-            title={`${users.length - maxDisplay} more users`}
-          >
-            +{users.length - maxDisplay}
-          </div>
-        )}
       </div>
-      
-      {/* Status text */}
-      <div className="text-sm text-muted-foreground">
-        {users.length === 0 ? (
-          <span>Just you</span>
-        ) : users.length === 1 ? (
-          <span>1 other person editing</span>
-        ) : (
-          <span>{users.length} people editing</span>
-        )}
-      </div>
-
-      {/* Collaborative cursors info */}
-      {users.some(u => u.cursor) && (
-        <div className="flex items-center gap-1 text-xs text-blue-600">
-          <Clock size={12} />
-          <span>Live cursors active</span>
-        </div>
-      )}
     </div>
   );
-};
+});
+
+PresenceIndicator.displayName = 'PresenceIndicator';

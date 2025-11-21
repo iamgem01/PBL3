@@ -57,11 +57,9 @@ export const useDocumentState = () => {
     fetchNote();
   }, [id]);
 
-  // ✅ FIX: Update note ngầm, chỉ update timestamp trên UI
   const handleUpdateNote = useCallback(async (newContent: string) => {
     if (!note || !id) return;
 
-    // Không set isUpdating (loading) toàn màn hình để tránh unmount editor
     try {
       await updateNote(id, {
         ...note,
@@ -69,7 +67,6 @@ export const useDocumentState = () => {
         updatedAt: new Date().toISOString()
       });
       
-      // Update local state nhẹ nhàng
       setNote(prev => prev ? { 
         ...prev, 
         content: newContent, 
@@ -80,13 +77,10 @@ export const useDocumentState = () => {
     }
   }, [note, id]);
 
-  // ✅ FIX: Function để lấy initial content thông minh
   const getInitialContent = useCallback(() => {
-    // Nếu là shared document, để Yjs tự load từ persistence
-    // Chỉ dùng initialContent cho local documents
     if (note?.shares && note.shares.length > 0) {
       console.log('🔄 Shared document - Yjs will load content from persistence');
-      return ''; // Yjs sẽ tự load từ IndexedDB
+      return '';
     } else {
       console.log('📝 Local document - using content from API');
       return note?.content || '';
@@ -155,7 +149,7 @@ export const useDocumentState = () => {
     handleMoveToTrash, 
     handleToggleImportant, 
     handleExportPdf,
-    getInitialContent, // ✅ Export function mới
+    getInitialContent,
     noteId: id
   }), [
     note, isLoading, error, collapsed, showToolbar, toolbarPosition, 
