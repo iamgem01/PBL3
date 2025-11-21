@@ -40,42 +40,74 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 		
-
+		<!-- WebSocket Dependencies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
 		</dependency>
 
+		<!-- MongoDB -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-mongodb</artifactId>
 		</dependency>
 
+		<!-- Lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
 
+		<!-- Testing -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- Email -->
 		<dependency>
     		<groupId>org.springframework.boot</groupId>
     		<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
+
+		<!-- Jakarta Annotations -->
 		<dependency>
-    <groupId>jakarta.annotation</groupId>
-    <artifactId>jakarta.annotation-api</artifactId>
-    <version>2.1.1</version>
-</dependency>
-<dependency>
-    <groupId>io.github.cdimascio</groupId>
-    <artifactId>dotenv-java</artifactId>
-    <version>3.0.0</version>
-</dependency>
+    		<groupId>jakarta.annotation</groupId>
+    		<artifactId>jakarta.annotation-api</artifactId>
+    		<version>2.1.1</version>
+		</dependency>
+
+		<!-- Environment Variables -->
+		<dependency>
+    		<groupId>io.github.cdimascio</groupId>
+    		<artifactId>dotenv-java</artifactId>
+    		<version>3.0.0</version>
+		</dependency>
+
+		<!-- JSON Processing -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
+
+		<!-- Yjs WebSocket Handler (Java-WebSocket) -->
+		<dependency>
+			<groupId>org.java-websocket</groupId>
+			<artifactId>Java-WebSocket</artifactId>
+			<version>1.5.3</version>
+		</dependency>
+		<dependency>
+    		<groupId>org.springframework.boot</groupId>
+    		<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
+
+		<dependency>
+    		<groupId>org.slf4j</groupId>
+    		<artifactId>slf4j-api</artifactId>
+		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -83,6 +115,14 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

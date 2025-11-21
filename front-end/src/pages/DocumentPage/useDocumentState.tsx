@@ -79,6 +79,7 @@ export const useDocumentState = () => {
       const updatedNote = await updateNote(id, {
         ...note,
         content: newContent,
+        contentType: 'richtext',
         updatedAt: new Date().toISOString()
       });
       setNote(updatedNote);

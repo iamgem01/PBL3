@@ -1,25 +1,11 @@
 import { useDocumentState } from "./useDocumentState";
 import { DocumentHeader } from "./DocumentHeader";
-import { PlainTextContent } from "./DocumentContent";
+import { CollaborativeEditor } from "./CollaborativeEditor";
 import Sidebar from "@/components/layout/sidebar/sidebar";
 import { DeleteConfirmModal } from "./DocumentModals";
-import { DocumentToolbar } from "./DocumentToolbar";
-import { useCallback, useEffect, useState, useRef } from "react";
-import { createPortal } from "react-dom";
+import { useCallback, useEffect, useState } from "react";
 import { shareNote, unshareNote, inviteUser } from '@/services/collabService';
-import { Users, Loader2, Mail, X, UserPlus, Check } from "lucide-react";
-import { collabSocketService } from '@/services/collabSocketService';
-import { PresenceIndicator } from '@/components/PresenceIndicator';
-import { SelectionHighlighter } from '@/components/SelectionHighlighter';
-import { usePresence } from '@/hooks/usePresence';
-
-interface SelectionRange {
-  userId: string;
-  userName: string;
-  start: number;
-  end: number;
-  color: string;
-}
+import { Users, Loader2, Mail, X, UserPlus, Check, Calendar, Clock } from "lucide-react";
 
 function formatDate(date?: string | Date | null) {
   if (!date) return "";
@@ -28,27 +14,13 @@ function formatDate(date?: string | Date | null) {
   return d.toLocaleString();
 }
 
-interface ActiveUser {
-  userId: string;
-  email: string;
-  name: string;
-  color: string;
-  cursorPosition?: number;
-}
-
 export default function DocumentPage() {
-  const [selections, setSelections] = useState<SelectionRange[]>([]);
-  
   const {
     note,
     isLoading,
     error,
     collapsed,
     setCollapsed,
-    showToolbar,
-    setShowToolbar,
-    toolbarPosition,
-    setToolbarPosition,
     isUpdating,
     isDeleting,
     isExporting,
@@ -62,7 +34,24 @@ export default function DocumentPage() {
     noteId
   } = useDocumentState();
 
-  const { users, typingUsers } = usePresence(noteId || '');
+  const [isShared, setIsShared] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  
+  // Invite Modal State
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [isInviting, setIsInviting] = useState(false);
+  const [inviteSuccess, setInviteSuccess] = useState(false);
+
+  // Kiểm tra trạng thái share của document
+  useEffect(() => {
+    if (note && note.shares && Array.isArray(note.shares)) {
+      const shared = note.shares.length > 0;
+      setIsShared(shared);
+    } else {
+      setIsShared(false);
+    }
+  }, [note]);
 
   const LoadingContent = () => (
     <div className="min-h-screen bg-background p-8">
@@ -107,276 +96,146 @@ export default function DocumentPage() {
     </div>
   );
 
-  const handleShowToolbar = useCallback((x: number, y: number) => {
-    setToolbarPosition({ x, y });
-    setShowToolbar(x !== 0 && y !== 0);
-  }, [setShowToolbar, setToolbarPosition]);
+  const handleShareToggle = async () => {
+    if (!note?.id) {
+      alert('Cannot share: Note ID is missing');
+      return;
+    }
+
+    setIsSharing(true);
+
+    try {
+      if (isShared) {
+        await unshareNote(note.id);
+        setIsShared(false);
+        
+        const confirmed = window.confirm(
+          '✅ Document unshared successfully!\n\n' +
+          'This document is no longer available for collaboration.\n\n' +
+          'Click OK to refresh the page.'
+        );
+        
+        if (confirmed) {
+          window.location.reload();
+        }
+      } else {
+        await shareNote(note.id, ["all"]);
+        setIsShared(true);
+        
+        const confirmed = window.confirm(
+          '✅ Document shared successfully!\n\n' +
+          'This document is now ready for collaboration.\n' +
+          'Use "Invite Users" to add collaborators via email.\n\n' +
+          'Click OK to refresh the page.'
+        );
+        
+        if (confirmed) {
+          window.location.reload();
+        }
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`❌ Failed to ${isShared ? 'unshare' : 'share'} document\n\nError: ${errorMessage}`);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleInviteUser = async () => {
+    if (!inviteEmail.trim()) {
+      alert('Please enter an email address');
+      return;
+    }
+
+    if (!note?.id) {
+      alert('Cannot invite: Note ID is missing');
+      return;
+    }
+
+    setIsInviting(true);
+    setInviteSuccess(false);
+
+    try {
+      // Get current user from localStorage or auth context
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{"email": "current@user.com"}');
+      
+      await inviteUser(
+        note.id,
+        currentUser.email,
+        inviteEmail.trim()
+      );
+
+      setInviteSuccess(true);
+      
+      setTimeout(() => {
+        setShowInviteModal(false);
+        setInviteEmail('');
+        setInviteSuccess(false);
+      }, 2000);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`Failed to send invitation: ${errorMessage}`);
+    } finally {
+      setIsInviting(false);
+    }
+  };
+
+  const handleContentChange = useCallback((content: string) => {
+    handleUpdateNote(content);
+  }, [handleUpdateNote]);
 
   const NoteFooter = () => (
-    <div className="max-w-4xl mx-auto mt-8">
-      <div className="bg-card/50 rounded-xl p-4 border border-border">
-        <div className="text-sm text-muted-foreground text-center">
-          Created: {note ? formatDate(note.createdAt) : ""}
+    <div className="max-w-6xl mx-auto mt-8">
+      <div className="bg-card/50 rounded-xl p-6 border border-border">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <Calendar size={16} />
+            <span>Created: {note ? formatDate(note.createdAt) : ""}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock size={16} />
+            <span>Updated: {note ? formatDate(note.updatedAt) : ""}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Users size={16} />
+            <span>
+              {isShared ? "Collaborative Mode" : "Private Document"}
+            </span>
+          </div>
         </div>
+        
+        {note?.tags && note.tags.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {note.tags.map((tag: string, index: number) => (
+              <span
+                key={index}
+                className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full border border-primary/20"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 
   const NoteContent = () => {
-    const [isShared, setIsShared] = useState(false);
-    const [isSharing, setIsSharing] = useState(false);
-    const [shareStatus, setShareStatus] = useState<'idle' | 'success' | 'error'>('idle');
-    
-    // Invite Modal State
-    const [showInviteModal, setShowInviteModal] = useState(false);
-    const [inviteEmail, setInviteEmail] = useState('');
-    const [isInviting, setIsInviting] = useState(false);
-    const [inviteSuccess, setInviteSuccess] = useState(false);
-    
-    // Active Users (Real-time collaboration)
-    const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
-    const currentUser = useRef({
-      userId: 'user_' + Math.random().toString(36).substr(2, 9),
-      email: 'current@user.com',
-      name: 'Current User'
-    });
-
-    const generateColor = (userId: string): string => {
-      const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD'];
-      const index = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
-      return colors[index];
-    };
-
-    // Kiểm tra trạng thái share của document
-    useEffect(() => {
-      if (note && note.shares && Array.isArray(note.shares)) {
-        const shared = note.shares.length > 0;
-        setIsShared(shared);
-      } else {
-        setIsShared(false);
-      }
-    }, [note]);
-
-    // Real-time collaboration - WebSocket
-    useEffect(() => {
-      if (!noteId || !isShared) return;
-
-      collabSocketService.connect(
-        noteId,
-        // onMessage callback
-        (message) => {
-          if (message.senderId === currentUser.current.userId) {
-            return;
-          }
-          
-          if (message.type === 'EDIT' && message.senderId !== currentUser.current.userId) {
-            handleUpdateNote(message.content);
-          }
-        },
-        // onUserJoin callback
-        (userJoin) => {
-          setActiveUsers(prev => {
-            const existing = prev.find(u => u.userId === userJoin.userId);
-            if (!existing) {
-              return [...prev, {
-                userId: userJoin.userId,
-                email: userJoin.email,
-                name: userJoin.name,
-                color: generateColor(userJoin.userId)
-              }];
-            }
-            return prev;
-          });
-        },
-        // onUserLeave callback  
-        (userLeave) => {
-          setActiveUsers(prev => prev.filter(u => u.userId !== userLeave.userId));
-          setSelections(prev => prev.filter(s => s.userId !== userLeave.userId));
-        },
-        // onCursorUpdate callback
-        (cursorUpdate) => {
-          setActiveUsers(prev => 
-            prev.map(u => 
-              u.userId === cursorUpdate.userId 
-                ? { ...u, cursorPosition: cursorUpdate.position }
-                : u
-            )
-          );
-        },
-        // onPresenceUpdate callback
-        undefined,
-        // onTypingUpdate callback
-        undefined,
-        // onSelectionUpdate callback
-        (selectionUpdate) => {
-          setSelections(prev => 
-            prev.filter(s => s.userId !== selectionUpdate.userId)
-                .concat({
-                  userId: selectionUpdate.userId,
-                  userName: selectionUpdate.name || 'Anonymous',
-                  start: selectionUpdate.selection.start,
-                  end: selectionUpdate.selection.end,
-                  color: selectionUpdate.color || generateColor(selectionUpdate.userId)
-                })
-          );
-        },
-        // onConnected callback
-        () => {
-          collabSocketService.sendUserJoin(
-            noteId,
-            currentUser.current.userId,
-            currentUser.current.email,
-            currentUser.current.name
-          );
-        }
-      );
-      
-      return () => {
-        if (collabSocketService.isConnected()) {
-          collabSocketService.sendUserLeave(
-            noteId,
-            currentUser.current.userId
-          );
-        }
-        collabSocketService.disconnect();
-      };
-    }, [noteId, isShared, handleUpdateNote]);
-
-    const handleSelectionChange = (start: number, end: number) => {
-      if (!noteId || !isShared) return;
-      collabSocketService.sendSelectionUpdate(noteId, { start, end });
-    };
-    
-    const handleTextChange = (newContent: string) => {
-      if (!noteId || !isShared) return;
-      collabSocketService.startTyping(noteId);
-      handleUpdateNote(newContent);
-    };
-
-    const handleShareToggle = async () => {
-      if (!note?.id) {
-        alert('Cannot share: Note ID is missing');
-        return;
-      }
-
-      setIsSharing(true);
-      setShareStatus('idle');
-
-      try {
-        if (isShared) {
-          await unshareNote(note.id);
-          setIsShared(false);
-          setShareStatus('success');
-          
-          const confirmed = window.confirm(
-            '✅ Document unshared successfully!\n\n' +
-            'This document is no longer available for collaboration.\n\n' +
-            'Click OK to refresh the page.'
-          );
-          
-          if (confirmed) {
-            window.location.reload();
-          }
-        } else {
-          await shareNote(note.id, ["all"]);
-          setIsShared(true);
-          setShareStatus('success');
-          
-          const confirmed = window.confirm(
-            '✅ Document shared successfully!\n\n' +
-            'This document is now ready for collaboration.\n' +
-            'Use "Invite Users" to add collaborators via email.\n\n' +
-            'Click OK to refresh the page.'
-          );
-          
-          if (confirmed) {
-            window.location.reload();
-          }
-        }
-      } catch (error) {
-        setShareStatus('error');
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        alert(`❌ Failed to ${isShared ? 'unshare' : 'share'} document\n\nError: ${errorMessage}`);
-      } finally {
-        setIsSharing(false);
-      }
-    };
-
-    const handleInviteUser = async () => {
-      if (!inviteEmail.trim()) {
-        alert('Please enter an email address');
-        return;
-      }
-
-      if (!note?.id) {
-        alert('Cannot invite: Note ID is missing');
-        return;
-      }
-
-      setIsInviting(true);
-      setInviteSuccess(false);
-
-      try {
-        await inviteUser(
-          note.id,
-          currentUser.current.email,
-          inviteEmail.trim()
-        );
-
-        setInviteSuccess(true);
-        
-        setTimeout(() => {
-          setShowInviteModal(false);
-          setInviteEmail('');
-          setInviteSuccess(false);
-        }, 2000);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        alert(`Failed to send invitation: ${errorMessage}`);
-      } finally {
-        setIsInviting(false);
-      }
-    };
-
     return (
-      <div className="min-h-screen bg-background p-8">
-        <div className="max-w-4xl mx-auto bg-card rounded-2xl shadow-lg p-10 border border-border">
-          {/* Presence Indicator */}
-          {isShared && (
-            <div className="mb-6">
-              <PresenceIndicator users={users} />
-            </div>
-          )}
-
+      <div className="min-h-screen bg-background">
+        <div className="max-w-6xl mx-auto bg-card rounded-2xl shadow-lg border border-border my-8">
           {/* Header với Share/Invite buttons */}
-          <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
+          <div className="flex items-center justify-between p-6 border-b border-border">
             <div className="flex-1">
               <h1 className="text-2xl font-semibold text-foreground">
                 {note?.title || "Untitled Document"}
               </h1>
               {isShared && (
                 <div className="flex items-center gap-2 mt-2">
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center gap-1.5 text-xs text-green-600">
                     <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                    <span>Collaborative</span>
+                    <span>Collaborative Mode - Real-time Editing</span>
                   </div>
-                  {activeUsers.length > 0 && (
-                    <div className="flex items-center gap-1">
-                      {activeUsers.slice(0, 3).map((user) => (
-                        <div
-                          key={user.userId}
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-xs text-white font-medium"
-                          style={{ backgroundColor: user.color }}
-                          title={user.email}
-                        >
-                          {user.name.charAt(0).toUpperCase()}
-                        </div>
-                      ))}
-                      {activeUsers.length > 3 && (
-                        <span className="text-xs text-gray-500">+{activeUsers.length - 3}</span>
-                      )}
-                    </div>
-                  )}
                 </div>
               )}
             </div>
@@ -388,35 +247,35 @@ export default function DocumentPage() {
                   disabled={isSharing}
                   title="Enable collaboration on this document"
                   className={`
-                    px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all
-                    font-medium text-sm border
+                    px-4 py-2 rounded-lg flex items-center gap-2 transition-all
+                    font-medium text-sm border-2
                     border-blue-600 text-blue-600 hover:bg-blue-50 
                     dark:border-blue-500 dark:text-blue-400 dark:hover:bg-blue-900/20
-                    ${isSharing ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-sm'}
+                    ${isSharing ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-sm hover:-translate-y-0.5'}
                   `}
                 >
                   {isSharing ? (
                     <>
-                      <Loader2 className="animate-spin h-3.5 w-3.5" />
+                      <Loader2 className="animate-spin h-4 w-4" />
                       <span>Enabling...</span>
                     </>
                   ) : (
                     <>
-                      <Users size={14} />
+                      <Users size={16} />
                       <span>Enable Collaboration</span>
                     </>
                   )}
                 </button>
               ) : (
-                <>
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => setShowInviteModal(true)}
-                    className="px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all
-                      font-medium text-sm border border-green-600 text-green-600 
+                    className="px-4 py-2 rounded-lg flex items-center gap-2 transition-all
+                      font-medium text-sm border-2 border-green-600 text-green-600 
                       hover:bg-green-50 dark:border-green-500 dark:text-green-400 
-                      dark:hover:bg-green-900/20 hover:shadow-sm"
+                      dark:hover:bg-green-900/20 hover:shadow-sm hover:-translate-y-0.5"
                   >
-                    <Mail size={14} />
+                    <Mail size={16} />
                     <span>Invite Users</span>
                   </button>
 
@@ -424,15 +283,15 @@ export default function DocumentPage() {
                     onClick={handleShareToggle}
                     disabled={isSharing}
                     title="Stop sharing this document"
-                    className="px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all
-                      font-medium text-sm border border-gray-300 text-gray-700 
+                    className="px-4 py-2 rounded-lg flex items-center gap-2 transition-all
+                      font-medium text-sm border-2 border-gray-300 text-gray-700 
                       hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 
-                      dark:hover:bg-gray-800 hover:shadow-sm"
+                      dark:hover:bg-gray-800 hover:shadow-sm hover:-translate-y-0.5"
                   >
-                    <X size={14} />
+                    <X size={16} />
                     <span>Stop Sharing</span>
                   </button>
-                </>
+                </div>
               )}
             </div>
           </div>
@@ -448,41 +307,15 @@ export default function DocumentPage() {
             onShowDeleteConfirm={() => setShowDeleteConfirm(true)}
           />
 
-          {/* Document Content với Selection Highlighter */}
-          {note?.content && (
-            <div className="relative">
-              <PlainTextContent
-                key={note.id}
-                note={note}
-                isUpdating={isUpdating}
-                onUpdateContent={handleTextChange}
-                isCollaborative={isShared}
-                currentUserId={currentUser.current.userId}
-                onSelectionChange={handleSelectionChange}
-              />
-              
-              {/* Selection Highlighter cho collaborative selection */}
-              {isShared && (
-                <SelectionHighlighter 
-                  selections={selections} 
-                  content={note?.content || ''} 
-                />
-              )}
-            </div>
-          )}
-          
-          {/* Toolbar Portal */}
-          {createPortal(
-            <DocumentToolbar
-              showToolbar={showToolbar}
-              toolbarPosition={toolbarPosition}
-              onHideToolbar={() => {
-                setShowToolbar(false);
-                setToolbarPosition({ x: 0, y: 0 });
-              }}
-            />,
-            document.getElementById("portal") ?? document.body
-          )}
+          {/* Collaborative Editor */}
+          <div className="border-t border-border">
+            <CollaborativeEditor
+              documentId={noteId || ''}
+              isShared={isShared}
+              initialContent={note?.content}
+              onContentChange={handleContentChange}
+            />
+          </div>
 
           {/* Delete Confirmation Modal */}
           <DeleteConfirmModal
@@ -495,8 +328,8 @@ export default function DocumentPage() {
 
           {/* Invite Modal */}
           {showInviteModal && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl border border-border">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold flex items-center gap-2">
                     <UserPlus size={20} className="text-blue-500" />
@@ -508,7 +341,7 @@ export default function DocumentPage() {
                       setInviteEmail('');
                       setInviteSuccess(false);
                     }}
-                    className="text-gray-500 hover:text-gray-700"
+                    className="text-gray-500 hover:text-gray-700 transition-colors"
                   >
                     <X size={20} />
                   </button>
@@ -534,7 +367,7 @@ export default function DocumentPage() {
 
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium mb-2">
+                        <label className="block text-sm font-medium mb-2 text-foreground">
                           Email Address
                         </label>
                         <input
@@ -543,8 +376,8 @@ export default function DocumentPage() {
                           onChange={(e) => setInviteEmail(e.target.value)}
                           placeholder="colleague@example.com"
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 
-                            rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500
-                            dark:bg-gray-700 dark:text-white"
+                            rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                            dark:bg-gray-700 dark:text-white transition-colors"
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               handleInviteUser();
@@ -557,7 +390,7 @@ export default function DocumentPage() {
                         <button
                           onClick={handleInviteUser}
                           disabled={isInviting || !inviteEmail.trim()}
-                          className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md
+                          className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg
                             hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed
                             flex items-center justify-center gap-2 transition-colors"
                         >
@@ -579,7 +412,7 @@ export default function DocumentPage() {
                             setInviteEmail('');
                           }}
                           className="px-4 py-2 border border-gray-300 dark:border-gray-600 
-                            rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-foreground"
                         >
                           Cancel
                         </button>
@@ -590,10 +423,10 @@ export default function DocumentPage() {
               </div>
             </div>
           )}
-
-          {/* Footer */}
-          <NoteFooter />
         </div>
+
+        {/* Footer */}
+        <NoteFooter />
       </div>
     );
   };
