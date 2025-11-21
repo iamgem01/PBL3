@@ -13,9 +13,12 @@
     "dev:user-service": "cd user-service && npm run dev",
     "dev:front-end": "cd front-end && npm run dev",
     "dev:note-service": "cd note-service && mvn spring-boot:run",
-    "dev:all": "concurrently \"npm run dev:user-service\" \"npm run dev:front-end\" \"npm run dev:ai-service\" \"npm run dev:note-service\""
+    "dev:collab-service": "cd collab-service && mvn spring-boot:run",
+    "dev:all": "concurrently \"npm run dev:user-service\" \"npm run dev:front-end\" \"npm run dev:ai-service\" \"npm run dev:note-service\" \"npm run dev:collab-service\""
   },
   "devDependencies": {
+    "@types/express": "^5.0.5",
+    "@types/multer": "^2.0.0",
     "@types/react": "^19.2.4",
     "@types/react-dom": "^19.2.3",
     "concurrently": "^8.2.2"
@@ -25,6 +28,7 @@
     "@rollup/rollup-win32-x64-msvc": "^4.53.2"
   },
   "dependencies": {
+    "jspdf": "^3.0.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   }

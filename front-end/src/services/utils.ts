@@ -5,6 +5,13 @@ if (!NOTE_SERVICE_URL) {
   throw new Error("VITE_NOTE_SERVICE_URL is not defined in .env file");
 }
 
+// Lấy URL của collab-service từ biến môi trường
+const COLLAB_SERVICE_URL = import.meta.env.VITE_COLLAB_SERVICE_URL || 'http://localhost:8083';
+
+if (!COLLAB_SERVICE_URL) {
+  throw new Error("VITE_COLLAB_SERVICE_URL is not defined in .env file");
+}
+
 // Helper function để xử lý response
 export const handleResponse = async (response: Response): Promise<any> => {
   if (!response.ok) {
@@ -35,4 +42,4 @@ export const handleResponse = async (response: Response): Promise<any> => {
   }
 };
 
-export { NOTE_SERVICE_URL };
+export { NOTE_SERVICE_URL, COLLAB_SERVICE_URL };
