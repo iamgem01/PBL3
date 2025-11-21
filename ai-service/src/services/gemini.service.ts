@@ -1,561 +1,392 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
+// --- INTERFACES ---
 interface ModelConfig {
     apiKey: string;
     modelName: string;
 }
 
-interface UserPreferences {
-    tone?: 'formal' | 'casual' | 'friendly' | 'professional';
+export interface UserPreferences {
+    tone?: 'formal' | 'casual' | 'friendly' | 'professional' | 'witty';
     responseLength?: 'concise' | 'detailed' | 'comprehensive';
     language?: string;
     expertise?: 'beginner' | 'intermediate' | 'expert';
 }
 
-interface FileData {
+export interface FileData {
     mimeType: string;
     data: Buffer | Uint8Array;
     fileName?: string;
 }
 
+// --- HELPER FUNCTIONS ---
 function getApiKeys(): string[] {
     const keys: string[] = [];
+    if (process.env.GEMINI_API_KEY) keys.push(process.env.GEMINI_API_KEY);
+    
     let index = 1;
-
-    if (process.env.GEMINI_API_KEY) {
-        keys.push(process.env.GEMINI_API_KEY);
-    }
-
     while (process.env[`GEMINI_API_KEY_${index}`]) {
         keys.push(process.env[`GEMINI_API_KEY_${index}`]!);
         index++;
     }
 
-    if (keys.length === 0) {
-        throw new Error('GEMINI_API_KEY is not set in environment variables');
-    }
-
+    if (keys.length === 0) throw new Error('❌ CRITICAL: Không tìm thấy GEMINI_API_KEY trong .env');
     return keys;
 }
 
-function getModels(): string[] {
-    const models: string[] = [];
-    const defaultModel = process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp';
-    models.push(defaultModel);
-
-    let index = 1;
-    while (process.env[`GEMINI_MODEL_${index}`]) {
-        models.push(process.env[`GEMINI_MODEL_${index}`]!);
-        index++;
-    }
-
-    return models;
-}
-
-function createModelConfigs(): ModelConfig[] {
+function createModelConfigs(defaultModel: string): ModelConfig[] {
     const apiKeys = getApiKeys();
-    const models = getModels();
-    const configs: ModelConfig[] = [];
-
-    for (const apiKey of apiKeys) {
-        for (const model of models) {
-            configs.push({ apiKey, modelName: model });
-        }
-    }
-
-    return configs;
+    return apiKeys.map(apiKey => ({ apiKey, modelName: defaultModel }));
 }
 
-function isQuotaOrRateLimitError(error: any): boolean {
-    const errorMessage = error?.message?.toLowerCase() || '';
-    const statusCode = error?.status || error?.code;
-
-    return (
-        errorMessage.includes('quota') ||
-        errorMessage.includes('rate limit') ||
-        errorMessage.includes('429') ||
-        errorMessage.includes('resource exhausted') ||
-        statusCode === 429 ||
-        statusCode === 403 ||
-        errorMessage.includes('permission denied')
-    );
+function isQuotaError(error: any): boolean {
+    const msg = error?.message?.toLowerCase() || '';
+    const status = error?.status || error?.code;
+    return msg.includes('quota') || msg.includes('429') || status === 429 || msg.includes('resource exhausted');
 }
 
+// --- MAIN SERVICE CLASS ---
 export class GeminiService {
     private modelConfigs: ModelConfig[];
     private currentConfigIndex: number = 0;
     private failedConfigs: Set<number> = new Set();
     private lastResetTime: number = Date.now();
-    private readonly RESET_INTERVAL = 5 * 60 * 1000;
+    
+    // Chiến lược Model (Dual-Core)
+    private readonly fastModel = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+    private readonly smartModel = process.env.GEMINI_MODEL_SMART || 'gemini-1.5-pro';
 
     constructor() {
-        this.modelConfigs = createModelConfigs();
-        if (this.modelConfigs.length === 0) {
-            throw new Error('No Gemini API keys or models configured');
-        }
-        console.log(`✅ Khởi tạo với ${this.modelConfigs.length} cấu hình model`);
+        // Khởi tạo config ban đầu
+        this.modelConfigs = createModelConfigs(this.fastModel);
+        console.log(`✨ Gemini Service Ultimate Ready | Keys: ${this.modelConfigs.length}`);
+        console.log(`🚀 Fast Core: ${this.fastModel} | 🧠 Smart Core: ${this.smartModel}`);
     }
 
-    private getCurrentModel() {
+    // --- 1. INTELLIGENT LOAD BALANCING SYSTEM ---
+
+    private getCurrentModel(targetModelName: string) {
         const config = this.modelConfigs[this.currentConfigIndex];
         const genAI = new GoogleGenerativeAI(config.apiKey);
-        return genAI.getGenerativeModel({ model: config.modelName });
-    }
-
-    private resetFailedConfigsIfNeeded() {
-        const now = Date.now();
-        if (now - this.lastResetTime > this.RESET_INTERVAL) {
-            this.failedConfigs.clear();
-            this.lastResetTime = now;
-            console.log('🔄 Reset failed configs - thử lại tất cả keys');
-        }
-    }
-
-    private getNextAvailableConfigIndex(): number | null {
-        this.resetFailedConfigsIfNeeded();
-
-        const startIndex = this.currentConfigIndex;
-        let attempts = 0;
-
-        do {
-            this.currentConfigIndex = (this.currentConfigIndex + 1) % this.modelConfigs.length;
-            attempts++;
-
-            if (attempts >= this.modelConfigs.length) {
-                if (this.failedConfigs.size === this.modelConfigs.length) {
-                    this.failedConfigs.clear();
-                    this.currentConfigIndex = 0;
-                    return 0;
-                }
-                if (attempts >= this.modelConfigs.length * 2) {
-                    return null;
-                }
+        
+        return genAI.getGenerativeModel({ 
+            model: targetModelName,
+            safetySettings: [
+                { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+                { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+            ],
+            generationConfig: {
+                // Cấu hình sinh lời thoại tự nhiên hơn
+                temperature: targetModelName.includes('flash') ? 0.7 : 0.4, // Flash sáng tạo hơn, Pro chính xác hơn
+                topP: 0.95,
+                topK: 40,
+                maxOutputTokens: 8192, // Tăng token để trả lời dài
             }
-        } while (this.failedConfigs.has(this.currentConfigIndex) && attempts < this.modelConfigs.length * 2);
-
-        return this.currentConfigIndex;
+        });
     }
 
     private async tryWithFallback<T>(
         operation: (model: any) => Promise<T>,
-        operationName: string
+        operationName: string,
+        targetModel: string
     ): Promise<T> {
         const maxAttempts = this.modelConfigs.length * 2;
-        let lastError: any;
-        let consecutiveFailures = 0;
+        
+        // Reset danh sách lỗi mỗi 5 phút
+        if (Date.now() - this.lastResetTime > 5 * 60 * 1000) {
+            this.failedConfigs.clear();
+            this.lastResetTime = Date.now();
+        }
 
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
             try {
-                const model = this.getCurrentModel();
-                const result = await operation(model);
+                // Bỏ qua các key đã fail
+                while (this.failedConfigs.has(this.currentConfigIndex) && this.failedConfigs.size < this.modelConfigs.length) {
+                    this.currentConfigIndex = (this.currentConfigIndex + 1) % this.modelConfigs.length;
+                }
 
-                const config = this.modelConfigs[this.currentConfigIndex];
-                console.log(`✓ ${operationName} thành công với model: ${config.modelName}`);
+                const model = this.getCurrentModel(targetModel);
+                return await operation(model);
 
-                this.failedConfigs.delete(this.currentConfigIndex);
-                return result;
             } catch (error: any) {
-                lastError = error;
-                const config = this.modelConfigs[this.currentConfigIndex];
-
-                if (isQuotaOrRateLimitError(error)) {
-                    console.warn(`⚠ ${operationName} thất bại với ${config.modelName}: ${error.message}`);
-
+                if (isQuotaError(error)) {
+                    console.warn(`⚠ Quota Exceeded [${operationName}] Key #${this.currentConfigIndex}. Switching...`);
                     this.failedConfigs.add(this.currentConfigIndex);
-                    consecutiveFailures++;
-
-                    if (this.failedConfigs.size === this.modelConfigs.length) {
-                        const waitTime = Math.min(5000 + (consecutiveFailures * 1000), 30000);
-                        console.log(`⏳ Tất cả configs hết quota. Đợi ${waitTime/1000}s...`);
-                        await new Promise(resolve => setTimeout(resolve, waitTime));
-                        this.failedConfigs.clear();
-                        this.currentConfigIndex = 0;
-                        continue;
+                    this.currentConfigIndex = (this.currentConfigIndex + 1) % this.modelConfigs.length;
+                    
+                    if (this.failedConfigs.size >= this.modelConfigs.length) {
+                        console.log('⏳ All keys exhausted. Waiting 3s...');
+                        await new Promise(r => setTimeout(r, 3000));
+                        this.failedConfigs.clear(); 
                     }
-
-                    const nextIndex = this.getNextAvailableConfigIndex();
-                    if (nextIndex === null) {
-                        throw new Error('Không tìm thấy config khả dụng');
-                    }
-
-                    await new Promise(resolve => setTimeout(resolve, 500));
                 } else {
+                    console.error(`❌ Fatal Error in [${operationName}]:`, error);
                     throw error;
                 }
             }
         }
-
-        throw new Error(
-            `Tất cả model đã hết quota. Vui lòng thử lại sau. Lỗi: ${lastError?.message || 'Unknown error'}`
-        );
+        throw new Error(`Service Unavailable: Hệ thống đang quá tải, vui lòng thử lại sau.`);
     }
 
-    private buildSystemInstruction(baseInstruction: string, preferences?: UserPreferences): string {
-        let instruction = baseInstruction;
+    // --- 2. PROMPT ENGINEERING SYSTEM (THE CORE MAGIC) ---
 
-        if (preferences) {
-            // Thêm tone preference
-            if (preferences.tone) {
-                const toneMap = {
-                    formal: 'Sử dụng ngôn ngữ trang trọng, lịch sự và chuyên nghiệp.',
-                    casual: 'Sử dụng ngôn ngữ thân thiện, thoải mái và gần gũi.',
-                    friendly: 'Sử dụng ngôn ngữ thân thiện, nhiệt tình và hỗ trợ.',
-                    professional: 'Sử dụng ngôn ngữ chuyên nghiệp, rõ ràng và súc tích.'
-                };
-                instruction += `\n${toneMap[preferences.tone]}`;
-            }
+    private buildSystemInstruction(role: string, coreTask: string, pref?: UserPreferences): string {
+        // 1. Thiết lập Persona (Nhập vai)
+        let instruction = `${role}\n\n`;
+        instruction += `NHIỆM VỤ CỐT LÕI: ${coreTask}\n\n`;
 
-            // Thêm response length preference
-            if (preferences.responseLength) {
-                const lengthMap = {
-                    concise: 'Trả lời ngắn gọn, đi thẳng vào vấn đề chính.',
-                    detailed: 'Trả lời chi tiết với giải thích rõ ràng.',
-                    comprehensive: 'Trả lời toàn diện với ví dụ, giải thích sâu và các góc nhìn đa chiều.'
+        // 2. Quy tắc trình bày (Structured Output) - Ép AI format đẹp
+        instruction += `QUY TẮC TRÌNH BÀY (BẮT BUỘC):\n`;
+        instruction += `- Trả về HTML thuần túy, KHÔNG có code block () hoặc markdown markers.\n`;
+        instruction += `- Tiêu đề chính dùng <h3>, tiêu đề phụ <h4>.\n`;
+        instruction += `- Các phần tử sát nhau, KHÔNG xuống dòng thừa giữa các phần.\n`;
+        instruction += `- Response ngắn gọn, súc tích, tránh dài dòng.\n`;
+        instruction += `- In đậm dùng <strong>text</strong>.\n`;
+        instruction += `- Danh sách dùng <ul><li>item</li></ul> sát nhau.\n`;
+        instruction += `- Văn bản liên tục dùng <p>, không <br> thừa.\n`;
+        instruction += `- KHÔNG dùng <h1>, <h2>, <code>, <pre>.\n\n`;
+        // 3. Rào chắn chống bịa đặt (Anti-Hallucination)
+        instruction += `NGUYÊN TẮC TRUNG THỰC:\n`;
+        instruction += `- Chỉ trả lời dựa trên dữ kiện có thật hoặc context được cung cấp.\n`;
+        instruction += `- Nếu không biết hoặc thông tin không đủ, hãy nói "Tôi chưa có đủ thông tin về vấn đề này", đừng cố bịa ra câu trả lời.\n\n`;
+        instruction += `- Nếu không biết hoặc thông tin không đủ, hãy nói "Tôi chưa có đủ thông tin về vấn đề này", đừng cố bịa ra câu trả lời.\n\n`;
+        instruction += `ĐỘ DÀI RESPONSE:\n`;
+        instruction += `- Giữ response ngắn gọn, tránh dài dòng.\n`;
+        instruction += `- Tóm tắt súc tích, đi thẳng vào vấn đề.\n\n`;
+        // 4. Dynamic Tuning (Tùy chỉnh theo user)
+        if (pref) {
+            instruction += `CẤU HÌNH PHẢN HỒI THEO YÊU CẦU USER:\n`;
+            if (pref.tone) {
+                const tones = {
+                    formal: 'Trang trọng, lịch sự, dùng kính ngữ.',
+                    casual: 'Thân thiện, gần gũi, tự nhiên như bạn bè.',
+                    friendly: 'Thân thiện, ấm áp, dễ gần, tạo cảm giác thoải mái.',
+                    professional: 'Chuyên nghiệp, súc tích, đi thẳng vào vấn đề.',
+                    witty: 'Hài hước, thông minh, dí dỏm.'
                 };
-                instruction += `\n${lengthMap[preferences.responseLength]}`;
+                instruction += `- Tone giọng: ${tones[pref.tone] || pref.tone}.\n`;
             }
-
-            // Thêm expertise level
-            if (preferences.expertise) {
-                const expertiseMap = {
-                    beginner: 'Giải thích theo cách dễ hiểu cho người mới bắt đầu, tránh thuật ngữ phức tạp.',
-                    intermediate: 'Sử dụng thuật ngữ phù hợp, giải thích khi cần thiết.',
-                    expert: 'Sử dụng thuật ngữ chuyên môn, đi sâu vào chi tiết kỹ thuật.'
-                };
-                instruction += `\n${expertiseMap[preferences.expertise]}`;
-            }
+            if (pref.responseLength) instruction += `- Độ dài phản hồi: ${pref.responseLength}.\n`;
+            if (pref.expertise) instruction += `- Trình độ người đọc mục tiêu: ${pref.expertise}.\n`;
+            if (pref.language) instruction += `- Ngôn ngữ trả lời: ${pref.language} (Ưu tiên Tiếng Việt nếu không chỉ định).\n`;
+        } else {
+            instruction += `- Ngôn ngữ trả lời: Tiếng Việt.\n`;
         }
 
         return instruction;
     }
 
-    private async extractTextFromFiles(files: FileData[]): Promise<string> {
-        let extractedText = '';
+    // --- 3. ADVANCED API METHODS ---
+
+    // ➤ CHAT: Tốc độ cao (Fast Model)
+    async chat(message: string, context?: string, files?: FileData[], pref?: UserPreferences): Promise<string> {
+        const role = `Bạn là một Trợ lý AI Thông minh, Tận tâm và Hiệu quả.`;
+        const task = `Hỗ trợ người dùng giải quyết vấn đề, trả lời câu hỏi hoặc phân tích dữ liệu đầu vào.`;
+        const instruction = this.buildSystemInstruction(role, task, pref);
+
+        // Context Injection Technique
+        let prompt = `YÊU CẦU CỦA TÔI:\n"${message}"\n\n`;
         
-        for (const file of files) {
-            if (file.mimeType.startsWith('text/')) {
-                const text = Buffer.from(file.data).toString('utf-8');
-                extractedText += `\n\n--- Nội dung từ ${file.fileName || 'file'} ---\n${text}`;
-            } else if (file.mimeType === 'application/pdf') {
-                extractedText += `\n\n--- File PDF: ${file.fileName || 'document.pdf'} ---\n[Nội dung sẽ được phân tích bởi AI]`;
-            } else if (file.mimeType.startsWith('image/')) {
-                extractedText += `\n\n--- Hình ảnh: ${file.fileName || 'image'} ---\n[Hình ảnh sẽ được phân tích bởi AI]`;
-            }
-        }
-        
-        return extractedText;
-    }
-
-    async chat(
-        message: string, 
-        context?: string, 
-        files?: FileData[],
-        preferences?: UserPreferences
-    ): Promise<string> {
-        const baseInstruction = `Bạn là một trợ lý AI thông minh, hiểu biết sâu rộng và hữu ích.
-
-NHIỆM VỤ CHÍNH:
-- Đọc và hiểu chính xác nội dung câu hỏi và tất cả tài liệu đính kèm
-- Phân tích kỹ lưỡng context và files được cung cấp
-- Trả lời chính xác, đúng trọng tâm và có căn cứ
-- Trích dẫn thông tin từ nguồn khi cần thiết
-
-NGUYÊN TẮC TRẢ LỜI:
-1. ĐỌC KỸ: Đọc toàn bộ nội dung câu hỏi, context và files trước khi trả lời
-2. CHÍNH XÁC: Chỉ đưa ra thông tin chính xác, có căn cứ từ dữ liệu được cung cấp
-3. TRỌNG TÂM: Tập trung vào điểm chính của câu hỏi, không lan man
-4. CHI TIẾT: Cung cấp đủ chi tiết để người dùng hiểu rõ, nhưng không dài dòng
-5. CẤU TRÚC: Tổ chức câu trả lời rõ ràng, logic và dễ theo dõi
-6. TRÍCH DẪN: Khi sử dụng thông tin từ context/files, hãy chỉ rõ nguồn
-
-KHI LÀM VIỆC VỚI FILES:
-- PDF: Đọc và phân tích toàn bộ nội dung
-- Hình ảnh: Mô tả chi tiết những gì nhìn thấy
-- Text files: Trích xuất thông tin quan trọng
-- Luôn xác nhận đã đọc và hiểu nội dung file
-
-KHI CÓ CONTEXT:
-- Ưu tiên sử dụng thông tin từ context để trả lời
-- So sánh và kết hợp thông tin từ nhiều nguồn nếu có
-- Chỉ ra nếu thông tin trong context không đủ để trả lời
-
-Trả lời bằng tiếng Việt một cách tự nhiên và chuyên nghiệp.`;
-
-        const systemInstruction = this.buildSystemInstruction(baseInstruction, preferences);
-
-        // Xây dựng prompt với context và file information
-        let enhancedPrompt = '';
-
-        // Thêm file content nếu có
-        if (files && files.length > 0) {
-            const fileInfo = await this.extractTextFromFiles(files);
-            enhancedPrompt += `${fileInfo}\n\n---\n\n`;
-        }
-
-        // Thêm context nếu có
         if (context) {
-            enhancedPrompt += `📚 THÔNG TIN CONTEXT TỪ GHI CHÚ:\n\n${context}\n\n---\n\n`;
+            prompt = `THÔNG TIN BỐI CẢNH (CONTEXT - ƯU TIÊN SỬ DỤNG):\n"""\n${context}\n"""\n\n` + prompt;
         }
-
-        // Thêm câu hỏi chính
-        enhancedPrompt += `❓ CÂU HỎI CỦA NGƯỜI DÙNG:\n\n${message}\n\n`;
-
-        // Thêm hướng dẫn phản hồi
-        enhancedPrompt += `\n💡 YÊU CẦU:\n`;
-        enhancedPrompt += `- Đọc kỹ và hiểu toàn bộ thông tin đã cung cấp ở trên\n`;
-        enhancedPrompt += `- Trả lời chính xác, đúng trọng tâm dựa trên dữ liệu có sẵn\n`;
-        enhancedPrompt += `- Nếu thông tin không đủ, hãy nói rõ phần nào còn thiếu\n`;
-        if (context || (files && files.length > 0)) {
-            enhancedPrompt += `- Trích dẫn cụ thể từ nguồn khi đưa ra thông tin quan trọng\n`;
+        
+        if (files && files.length > 0) {
+            const fileNames = files.map(f => f.fileName).join(', ');
+            prompt = `(Tôi có gửi kèm ${files.length} file: ${fileNames}. Hãy phân tích kỹ nội dung của chúng)\n\n` + prompt;
         }
 
         return this.tryWithFallback(async (model) => {
-            const parts: any[] = [{ text: enhancedPrompt }];
-
-            // Thêm files dưới dạng inline data
-            if (files && files.length > 0) {
-                for (const file of files) {
+            const parts: any[] = [{ text: prompt }];
+            
+            // Xử lý Multimodal (Ảnh/PDF)
+            if (files) {
+                files.forEach(file => {
                     parts.push({
                         inlineData: {
                             data: Buffer.from(file.data).toString('base64'),
                             mimeType: file.mimeType
                         }
                     });
-                }
+                });
             }
 
             const result = await model.generateContent({
                 contents: [{ role: 'user', parts }],
-                systemInstruction: systemInstruction,
-                generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 4096,
-                    topP: 0.95,
-                    topK: 40,
-                },
+                systemInstruction: instruction,
             });
-
-            const response = result.response;
-            const text = response.text();
-            
-            if (!text || text.trim().length === 0) {
-                throw new Error('AI không tạo được phản hồi. Vui lòng thử lại.');
-            }
-
-            return text;
-        }, 'chat');
+            return result.response.text();
+        }, 'chat', this.fastModel);
     }
 
-    async summarize(text: string, maxLength: number = 200, preferences?: UserPreferences): Promise<string> {
-        const baseInstruction = `Bạn là chuyên gia tóm tắt văn bản với khả năng:
+    // ➤ SUMMARIZE: Phân tích sâu (Smart Model)
+    async summarize(text: string, maxLength: number = 300, pref?: UserPreferences): Promise<string> {
+        const role = `Bạn là Chuyên gia Phân tích Dữ liệu và Tổng hợp Thông tin cấp cao.`;
+        const task = `Đọc hiểu sâu văn bản, lọc bỏ nhiễu và trích xuất những thông tin giá trị nhất.`;
+        const instruction = this.buildSystemInstruction(role, task, pref);
 
-NHIỆM VỤ:
-- Đọc và hiểu toàn bộ nội dung văn bản
-- Xác định các ý chính và thông tin quan trọng nhất
-- Tóm tắt ngắn gọn nhưng đầy đủ ý nghĩa
-
-NGUYÊN TẮC:
-1. Giữ lại tất cả thông tin quan trọng và ý chính
-2. Loại bỏ chi tiết không cần thiết
-3. Sử dụng ngôn ngữ súc tích, rõ ràng
-4. Đảm bảo tóm tắt mạch lạc và dễ hiểu
-5. Không thêm thông tin không có trong văn bản gốc`;
-
-        const systemInstruction = this.buildSystemInstruction(baseInstruction, preferences);
-        const prompt = `Hãy đọc kỹ và tóm tắt văn bản sau trong khoảng ${maxLength} từ. Tập trung vào các ý chính và thông tin quan trọng:\n\n${text}`;
+        // Chain of Density Prompt
+        const prompt = `
+        HÃY TÓM TẮT VĂN BẢN SAU ĐÂY.
+        Giới hạn độ dài: Khoảng ${maxLength} từ.
+        
+        VĂN BẢN GỐC:
+        """
+        ${text}
+        """
+        
+        YÊU CẦU ĐẦU RA (Bắt buộc định dạng Markdown):
+        1. **Tổng quan (Executive Summary)**: Tóm tắt nội dung cốt lõi trong 1 đoạn văn ngắn.
+        2. **Điểm nhấn quan trọng (Key Takeaways)**:
+           - 📌 [Điểm 1]
+           - 📌 [Điểm 2]
+           - 📌 [Điểm 3]
+        3. **Số liệu/Dữ kiện nổi bật** (nếu có): Liệt kê các con số, ngày tháng, tên riêng quan trọng.
+        4. **Kết luận/Ý nghĩa**: Thông điệp chính của văn bản là gì?
+        `;
 
         return this.tryWithFallback(async (model) => {
             const result = await model.generateContent({
                 contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                systemInstruction: systemInstruction,
-                generationConfig: {
-                    temperature: 0.3,
-                    maxOutputTokens: Math.min(maxLength * 3, 2048),
-                    topP: 0.9,
-                },
+                systemInstruction: instruction,
             });
-
-            const response = result.response;
-            return response.text() || 'Không thể tóm tắt văn bản.';
-        }, 'summarize');
+            return result.response.text();
+        }, 'summarize', this.smartModel);
     }
 
-    async createNote(text: string, preferences?: UserPreferences): Promise<string> {
-        const baseInstruction = `Bạn là chuyên gia tạo ghi chú chuyên nghiệp với khả năng:
+    // ➤ CREATE NOTE: Cấu trúc hóa tư duy (Smart Model)
+    async createNote(text: string, pref?: UserPreferences): Promise<string> {
+        const role = `Bạn là Thư ký Chuyên nghiệp và Chuyên gia Quản lý Tri thức (Knowledge Manager).`;
+        const task = `Biến đổi văn bản thô thành hệ thống ghi chú thông minh (Smart Note) có cấu trúc phân cấp, dễ nhớ và dễ tra cứu.`;
+        const instruction = this.buildSystemInstruction(role, task, pref);
 
-NHIỆM VỤ:
-- Đọc và phân tích toàn bộ nội dung
-- Tổ chức thông tin theo cấu trúc logic
-- Tạo ghi chú dễ đọc, dễ tìm kiếm và dễ sử dụng lại
+        const prompt = `
+        CHUYỂN ĐỔI VĂN BẢN SAU THÀNH GHI CHÚ (SMART NOTE).
+        
+        VĂN BẢN NGUỒN:
+        """
+        ${text}
+        """
+        
+        MẪU ĐỊNH DẠNG GHI CHÚ MONG MUỐN:
+        # 📑 [Tiêu đề ghi chú thật thu hút]
+        
+        ## 🎯 Mục tiêu / Ý chính
+        (Tóm tắt mục đích của tài liệu này trong 1 câu)
 
-CẤU TRÚC GHI CHÚ:
-1. **Tiêu đề chính**: Nội dung tóm tắt
-2. **Các điểm chính**: 
-   - Ý 1: Chi tiết
-   - Ý 2: Chi tiết
-3. **Chi tiết quan trọng**: Thông tin cụ thể
-4. **Kết luận/Hành động**: (nếu có)
+        ## 📝 Nội dung chi tiết
+        ### 1. [Luận điểm chính 1]
+        - Chi tiết A...
+        - Chi tiết B...
+        - *Lưu ý*: ...
+        
+        ### 2. [Luận điểm chính 2]
+        - ...
 
-YÊU CẦU:
-- Sử dụng markdown để định dạng
-- Làm nổi bật thông tin quan trọng
-- Tổ chức theo thứ bậc rõ ràng
-- Dễ scan và tìm kiếm`;
+        ## 💡 Insight & Bài học
+        (Những điểm sáng tạo hoặc bài học rút ra)
 
-        const systemInstruction = this.buildSystemInstruction(baseInstruction, preferences);
-        const prompt = `Hãy đọc kỹ và tạo ghi chú có cấu trúc từ văn bản sau:\n\n${text}`;
+        ## ✅ Hành động tiếp theo (Action Items)
+        - [ ] Việc cần làm 1
+        - [ ] Việc cần làm 2
+        `;
 
         return this.tryWithFallback(async (model) => {
             const result = await model.generateContent({
                 contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                systemInstruction: systemInstruction,
-                generationConfig: {
-                    temperature: 0.4,
-                    maxOutputTokens: 3072,
-                    topP: 0.95,
-                },
+                systemInstruction: instruction,
             });
-
-            const response = result.response;
-            return response.text() || 'Không thể tạo ghi chú.';
-        }, 'createNote');
+            return result.response.text();
+        }, 'createNote', this.smartModel);
     }
 
-    async explain(text: string, preferences?: UserPreferences): Promise<string> {
-        const baseInstruction = `Bạn là giáo viên tận tâm với khả năng giải thích phức tạp thành đơn giản.
+    // ➤ EXPLAIN: Sư phạm & Đơn giản hóa (Smart Model)
+    async explain(text: string, pref?: UserPreferences): Promise<string> {
+        const role = `Bạn là một Giáo sư uyên bác với khả năng sư phạm tuyệt vời (như Richard Feynman).`;
+        const task = `Giải thích các khái niệm phức tạp trở nên đơn giản, dễ hiểu, sử dụng phép ẩn dụ (analogy) thực tế.`;
+        const instruction = this.buildSystemInstruction(role, task, pref);
 
-NHIỆM VỤ:
-- Đọc và hiểu sâu nội dung cần giải thích
-- Phân tích các khái niệm và mối quan hệ
-- Giải thích theo cách dễ hiểu nhất
-
-PHƯƠNG PHÁP GIẢI THÍCH:
-1. **Tổng quan**: Giới thiệu nội dung chung
-2. **Chi tiết**: Giải thích từng phần với ví dụ
-3. **Kết nối**: Liên hệ với kiến thức đã biết
-4. **Tóm tắt**: Kết luận và điểm mấu chốt
-
-YÊU CẦU:
-- Sử dụng ví dụ cụ thể và dễ hiểu
-- Giải thích thuật ngữ khó
-- Chia nhỏ nội dung phức tạp
-- Đảm bảo logic và mạch lạc`;
-
-        const systemInstruction = this.buildSystemInstruction(baseInstruction, preferences);
-        const prompt = `Hãy đọc kỹ và giải thích chi tiết, dễ hiểu nội dung sau:\n\n${text}`;
+        const prompt = `
+        HÃY GIẢI THÍCH NỘI DUNG SAU:
+        """
+        ${text}
+        """
+        
+        QUY TRÌNH GIẢI THÍCH:
+        1. **Định nghĩa đơn giản (ELI5)**: Giải thích như thể đang nói với một người mới bắt đầu (tránh thuật ngữ chuyên ngành nếu không cần thiết).
+        2. **Ví dụ minh họa (Analogy)**: "Hãy tưởng tượng nó giống như..." (Sử dụng so sánh thực tế để dễ hình dung).
+        3. **Phân tích sâu ("Under the hood")**: Giải thích cơ chế hoạt động hoặc nguyên lý cốt lõi.
+        4. **Tại sao nó quan trọng?**: Ứng dụng của nó trong thực tế là gì?
+        `;
 
         return this.tryWithFallback(async (model) => {
             const result = await model.generateContent({
                 contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                systemInstruction: systemInstruction,
-                generationConfig: {
-                    temperature: 0.6,
-                    maxOutputTokens: 3072,
-                    topP: 0.95,
-                },
+                systemInstruction: instruction,
             });
-
-            const response = result.response;
-            return response.text() || 'Không thể giải thích văn bản.';
-        }, 'explain');
+            return result.response.text();
+        }, 'explain', this.smartModel);
     }
 
-    async improveWriting(
-        text: string, 
-        style: 'formal' | 'casual' | 'academic' | 'professional' = 'professional',
-        preferences?: UserPreferences
-    ): Promise<string> {
-        const styleDescriptions = {
-            formal: 'trang trọng, lịch sự, phù hợp văn bản chính thức',
-            casual: 'thân thiện, tự nhiên, gần gũi',
-            academic: 'học thuật, nghiêm túc, có trích dẫn và lập luận chặt chẽ',
-            professional: 'chuyên nghiệp, rõ ràng, súc tích và thuyết phục'
-        };
+    // ➤ IMPROVE WRITING: Biên tập viên (Smart Model)
+    async improveWriting(text: string, style: string = 'professional', pref?: UserPreferences): Promise<string> {
+        const role = `Bạn là Tổng biên tập (Editor-in-Chief) của một tạp chí danh tiếng.`;
+        const task = `Biên tập lại văn bản, nâng cấp từ vựng, cải thiện cấu trúc câu nhưng giữ nguyên ý nghĩa gốc.`;
+        const instruction = this.buildSystemInstruction(role, task, pref);
 
-        const baseInstruction = `Bạn là chuyên gia biên tập văn bản hàng đầu.
-
-NHIỆM VỤ:
-- Đọc và hiểu văn bản gốc
-- Cải thiện văn phong theo phong cách ${styleDescriptions[style]}
-- Giữ nguyên ý nghĩa và thông điệp chính
-
-QUY TRÌNH CẢI THIỆN:
-1. **Cấu trúc**: Tổ chức lại nếu cần
-2. **Ngôn từ**: Chọn từ chính xác, phù hợp phong cách
-3. **Ngữ pháp**: Sửa lỗi và cải thiện câu văn
-4. **Mạch lạc**: Đảm bảo logic và liền mạch
-5. **Tác động**: Tăng sức thuyết phục và rõ ràng
-
-YÊU CẦU:
-- Giữ nguyên ý nghĩa gốc 100%
-- Cải thiện rõ rệt so với bản gốc
-- Phù hợp với phong cách yêu cầu
-- Tự nhiên và dễ đọc`;
-
-        const systemInstruction = this.buildSystemInstruction(baseInstruction, preferences);
-        const prompt = `Hãy cải thiện văn phong của văn bản sau theo phong cách ${styleDescriptions[style]}. Giữ nguyên ý nghĩa nhưng làm cho văn bản hay hơn, rõ ràng hơn:\n\n${text}`;
+        const prompt = `
+        YÊU CẦU BIÊN TẬP:
+        - Phong cách mục tiêu: **${style.toUpperCase()}**
+        - Nhiệm vụ: Sửa lỗi ngữ pháp, thay thế từ ngữ nhàm chán bằng từ ngữ đắt giá, làm mượt câu văn (Flow).
+        
+        VĂN BẢN GỐC:
+        """
+        ${text}
+        """
+        
+        OUTPUT:
+        Chỉ cung cấp phiên bản đã viết lại hoàn chỉnh.
+        `;
 
         return this.tryWithFallback(async (model) => {
             const result = await model.generateContent({
                 contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                systemInstruction: systemInstruction,
-                generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 3072,
-                    topP: 0.95,
-                },
+                systemInstruction: instruction,
             });
-
-            const response = result.response;
-            return response.text() || 'Không thể cải thiện văn bản.';
-        }, 'improveWriting');
+            return result.response.text();
+        }, 'improveWriting', this.smartModel);
     }
 
-    async translate(
-        text: string, 
-        targetLanguage: string = 'tiếng Anh',
-        preferences?: UserPreferences
-    ): Promise<string> {
-        const baseInstruction = `Bạn là chuyên gia dịch thuật chuyên nghiệp với khả năng:
+    // ➤ TRANSLATE: Bản địa hóa (Fast Model)
+    async translate(text: string, targetLang: string, pref?: UserPreferences): Promise<string> {
+        const role = `Bạn là Dịch giả Cao cấp và Chuyên gia Bản địa hóa (Localization Expert).`;
+        const task = `Dịch thuật chính xác, tự nhiên, chuyển tải đúng sắc thái văn hóa và ngữ cảnh. Không dịch từng từ (word-by-word).`;
+        const instruction = this.buildSystemInstruction(role, task, pref);
 
-NHIỆM VỤ:
-- Đọc và hiểu chính xác văn bản gốc
-- Dịch sang ${targetLanguage} một cách tự nhiên
-- Giữ nguyên tone và ý nghĩa
-
-NGUYÊN TẮC DỊCH:
-1. **Chính xác**: 100% ý nghĩa gốc
-2. **Tự nhiên**: Phù hợp ngôn ngữ đích
-3. **Văn hóa**: Điều chỉnh thành ngữ, tục ngữ nếu cần
-4. **Tone**: Giữ nguyên giọng điệu và cảm xúc
-5. **Thuật ngữ**: Sử dụng thuật ngữ chuyên ngành đúng
-
-YÊU CẦU:
-- Dịch toàn bộ, không bỏ sót
-- Giữ định dạng nếu có
-- Tự nhiên như người bản xứ
-- Không thêm hoặc bớt thông tin`;
-
-        const systemInstruction = this.buildSystemInstruction(baseInstruction, preferences);
-        const prompt = `Hãy đọc kỹ và dịch chính xác văn bản sau sang ${targetLanguage}:\n\n${text}`;
+        const prompt = `
+        HÃY DỊCH VĂN BẢN SAU SANG NGÔN NGỮ: **${targetLang}**
+        
+        VĂN BẢN GỐC:
+        """
+        ${text}
+        """
+        
+        YÊU CẦU:
+        - Giữ nguyên các thuật ngữ chuyên ngành (nếu không có từ tương đương chuẩn).
+        - Giữ nguyên định dạng (nếu có).
+        - Văn phong tự nhiên như người bản xứ.
+        `;
 
         return this.tryWithFallback(async (model) => {
             const result = await model.generateContent({
                 contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                systemInstruction: systemInstruction,
-                generationConfig: {
-                    temperature: 0.3,
-                    maxOutputTokens: 3072,
-                    topP: 0.9,
-                },
+                systemInstruction: instruction,
             });
-
-            const response = result.response;
-            return response.text() || 'Không thể dịch văn bản.';
-        }, 'translate');
+            return result.response.text();
+        }, 'translate', this.fastModel);
     }
 }
 

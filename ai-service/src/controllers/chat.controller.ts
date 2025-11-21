@@ -1,13 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
-import { geminiService } from '../services/gemini.service.js';
+import { geminiService, UserPreferences } from '../services/gemini.service.js';
 import multer from 'multer';
 
+// --- CẤU HÌNH UPLOAD ---
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
-        fileSize: 20 * 1024 * 1024,
+        fileSize: 20 * 1024 * 1024, // Giới hạn 20MB mỗi file
     },
     fileFilter: (req, file, cb) => {
+        // Chấp nhận: Ảnh, PDF, Text, Word, Excel
         const allowedMimes = [
             'image/jpeg', 'image/png', 'image/gif', 'image/webp',
             'application/pdf',
@@ -19,298 +21,216 @@ const upload = multer({
         if (allowedMimes.includes(file.mimetype)) {
             cb(null, true);
         } else {
-            cb(new Error(`Loại file ${file.mimetype} không được hỗ trợ`));
+            cb(new Error(`Định dạng file ${file.mimetype} không được hỗ trợ`));
         }
     }
 });
 
-interface UserPreferences {
-    tone?: 'formal' | 'casual' | 'friendly' | 'professional';
-    responseLength?: 'concise' | 'detailed' | 'comprehensive';
-    language?: string;
-    expertise?: 'beginner' | 'intermediate' | 'expert';
-}
+// --- HELPER: Chuẩn hóa dữ liệu file ---
+const processUploadedFiles = (files: Express.Multer.File[] | undefined) => {
+    if (!files || files.length === 0) return undefined;
+    return files.map(file => ({
+        mimeType: file.mimetype,
+        data: file.buffer,
+        fileName: file.originalname
+    }));
+};
 
 class ChatController {
 
+    /**
+     * 1. MAIN CHAT ENDPOINT
+     * Xử lý hội thoại thông minh, hỗ trợ Context và File đính kèm.
+     * Route: POST /api/chat/message
+     */
     async sendMessage(req: Request, res: Response, next: NextFunction) {
         try {
             const { 
                 message, 
-                action = 'chat', 
                 context,
-                preferences 
+                preferences,
+                action = 'chat' // Hỗ trợ fallback nếu frontend gửi action trong body
             } = req.body;
 
-            // Validate message
-            if (!message || message.trim().length === 0) {
-                return res.status(400).json({
-                    status: 'error',
-                    message: 'Tin nhắn không được để trống'
-                });
-            }
-
-            // Process files
             const files = req.files as Express.Multer.File[];
-            const fileData = files?.map(file => ({
-                mimeType: file.mimetype,
-                data: file.buffer,
-                fileName: file.originalname
-            }));
+            const fileData = processUploadedFiles(files);
 
-            // Log để debug
-            console.log(`📝 Nhận yêu cầu: action=${action}, message length=${message.length}, files=${files?.length || 0}`);
-            if (context) {
-                console.log(`📚 Context length: ${context.length}`);
-            }
-            if (preferences) {
-                console.log(`⚙️ User preferences:`, preferences);
-            }
+            console.log(`📨 [Request] Action: ${action} | Msg Length: ${message?.length} | Files: ${files?.length || 0}`);
 
             let response: string;
-            const userPreferences: UserPreferences | undefined = preferences ? {
-                tone: preferences.tone,
-                responseLength: preferences.responseLength,
-                language: preferences.language,
-                expertise: preferences.expertise
-            } : undefined;
 
+            // Router mini để điều hướng nếu frontend dùng chung 1 endpoint
+            // (Tốt nhất vẫn nên dùng các endpoint riêng biệt bên dưới)
             switch (action) {
                 case 'summarize':
-                    const { maxLength = 200 } = req.body;
-                    response = await geminiService.summarize(message, maxLength, userPreferences);
+                    response = await geminiService.summarize(message, 300, preferences);
                     break;
-                    
                 case 'note':
-                    response = await geminiService.createNote(message, userPreferences);
+                    response = await geminiService.createNote(message, preferences);
                     break;
-                    
                 case 'explain':
-                    response = await geminiService.explain(message, userPreferences);
+                    response = await geminiService.explain(message, preferences);
                     break;
-                    
                 case 'improve':
-                    const { style = 'professional' } = req.body;
-                    response = await geminiService.improveWriting(message, style, userPreferences);
+                    const { style } = req.body;
+                    response = await geminiService.improveWriting(message, style, preferences);
                     break;
-                    
                 case 'translate':
-                    const { targetLanguage = 'English' } = req.body;
-                    response = await geminiService.translate(message, targetLanguage, userPreferences);
+                    const { targetLanguage } = req.body;
+                    response = await geminiService.translate(message, targetLanguage, preferences);
                     break;
-                    
                 case 'chat':
                 default:
-                    response = await geminiService.chat(message, context, fileData, userPreferences);
+                    // Mặc định gọi hàm Chat (Fast Model)
+                    response = await geminiService.chat(message, context, fileData, preferences);
                     break;
             }
-
-            console.log(`✅ Tạo phản hồi thành công: ${response.length} ký tự`);
 
             res.json({
                 status: 'success',
                 data: {
                     response,
                     action,
-                    metadata: {
-                        responseLength: response.length,
-                        filesProcessed: files?.length || 0,
-                        hasContext: !!context,
-                        timestamp: new Date().toISOString()
-                    }
+                    timestamp: new Date().toISOString()
                 }
             });
-        } catch (error: any) {
-            console.error('❌ Lỗi trong sendMessage:', error);
+        } catch (error) {
+            console.error('❌ Error in sendMessage:', error);
             next(error);
         }
     }
 
+    /**
+     * 2. SUMMARIZE ENDPOINT
+     * Tóm tắt văn bản chuyên sâu.
+     * Route: POST /api/chat/summarize
+     */
     async summarize(req: Request, res: Response, next: NextFunction) {
         try {
-            const { text, maxLength = 200, preferences } = req.body;
-
-            if (!text || text.trim().length === 0) {
-                return res.status(400).json({
-                    status: 'error',
-                    message: 'Văn bản không được để trống'
-                });
-            }
-
-            console.log(`📝 Summarize request: text length=${text.length}, maxLength=${maxLength}`);
-
+            const { text, maxLength, preferences } = req.body;
+            
+            console.log(`📝 [Summarize] Length: ${text?.length} chars`);
+            
             const summary = await geminiService.summarize(text, maxLength, preferences);
 
             res.json({
                 status: 'success',
-                data: {
-                    original: text,
-                    summary,
-                    maxLength,
-                    metadata: {
-                        originalLength: text.length,
-                        summaryLength: summary.length,
-                        compressionRatio: (summary.length / text.length * 100).toFixed(1) + '%'
-                    }
-                }
+                data: { summary }
             });
-        } catch (error: any) {
-            console.error('❌ Lỗi trong summarize:', error);
+        } catch (error) {
             next(error);
         }
     }
 
+    /**
+     * 3. CREATE NOTE ENDPOINT
+     * Tạo ghi chú cấu trúc Markdown.
+     * Route: POST /api/chat/note
+     */
     async createNote(req: Request, res: Response, next: NextFunction) {
         try {
             const { text, preferences } = req.body;
-
-            if (!text || text.trim().length === 0) {
-                return res.status(400).json({
-                    status: 'error',
-                    message: 'Văn bản không được để trống'
-                });
-            }
-
-            console.log(`📝 Create note request: text length=${text.length}`);
-
+            
+            console.log(`📝 [Create Note] Length: ${text?.length} chars`);
+            
             const note = await geminiService.createNote(text, preferences);
 
             res.json({
                 status: 'success',
-                data: {
-                    original: text,
-                    note,
-                    metadata: {
-                        originalLength: text.length,
-                        noteLength: note.length
-                    }
-                }
+                data: { note }
             });
-        } catch (error: any) {
-            console.error('❌ Lỗi trong createNote:', error);
+        } catch (error) {
             next(error);
         }
     }
 
+    /**
+     * 4. EXPLAIN ENDPOINT
+     * Giải thích khái niệm.
+     * Route: POST /api/chat/explain
+     */
     async explain(req: Request, res: Response, next: NextFunction) {
         try {
             const { text, preferences } = req.body;
-
-            if (!text || text.trim().length === 0) {
-                return res.status(400).json({
-                    status: 'error',
-                    message: 'Văn bản không được để trống'
-                });
-            }
-
-            console.log(`📝 Explain request: text length=${text.length}`);
-
+            
+            console.log(`🎓 [Explain] Length: ${text?.length} chars`);
+            
             const explanation = await geminiService.explain(text, preferences);
 
             res.json({
                 status: 'success',
-                data: {
-                    original: text,
-                    explanation,
-                    metadata: {
-                        originalLength: text.length,
-                        explanationLength: explanation.length
-                    }
-                }
+                data: { explanation }
             });
-        } catch (error: any) {
-            console.error('❌ Lỗi trong explain:', error);
+        } catch (error) {
             next(error);
         }
     }
 
+    /**
+     * 5. IMPROVE WRITING ENDPOINT
+     * Cải thiện văn phong.
+     * Route: POST /api/chat/improve
+     */
     async improveWriting(req: Request, res: Response, next: NextFunction) {
         try {
-            const { text, style = 'professional', preferences } = req.body;
-
-            if (!text || text.trim().length === 0) {
-                return res.status(400).json({
-                    status: 'error',
-                    message: 'Văn bản không được để trống'
-                });
-            }
-
-            console.log(`📝 Improve writing request: text length=${text.length}, style=${style}`);
-
+            const { text, style, preferences } = req.body;
+            
+            console.log(`✍️ [Improve] Style: ${style} | Length: ${text?.length}`);
+            
             const improved = await geminiService.improveWriting(text, style, preferences);
 
             res.json({
                 status: 'success',
-                data: {
-                    original: text,
-                    improved,
-                    style,
-                    metadata: {
-                        originalLength: text.length,
-                        improvedLength: improved.length
-                    }
-                }
+                data: { improved, style }
             });
-        } catch (error: any) {
-            console.error('❌ Lỗi trong improveWriting:', error);
+        } catch (error) {
             next(error);
         }
     }
 
+    /**
+     * 6. TRANSLATE ENDPOINT
+     * Dịch thuật.
+     * Route: POST /api/chat/translate
+     */
     async translate(req: Request, res: Response, next: NextFunction) {
         try {
-            const { text, targetLanguage = 'tiếng Anh', preferences } = req.body;
-
-            if (!text || text.trim().length === 0) {
-                return res.status(400).json({
-                    status: 'error',
-                    message: 'Văn bản không được để trống'
-                });
-            }
-
-            console.log(`📝 Translate request: text length=${text.length}, target=${targetLanguage}`);
-
+            const { text, targetLanguage, preferences } = req.body;
+            
+            console.log(`🌐 [Translate] Target: ${targetLanguage} | Length: ${text?.length}`);
+            
             const translated = await geminiService.translate(text, targetLanguage, preferences);
 
             res.json({
                 status: 'success',
-                data: {
-                    original: text,
-                    translated,
-                    targetLanguage,
-                    metadata: {
-                        originalLength: text.length,
-                        translatedLength: translated.length
-                    }
-                }
+                data: { translated, targetLanguage }
             });
-        } catch (error: any) {
-            console.error('❌ Lỗi trong translate:', error);
+        } catch (error) {
             next(error);
         }
     }
 
-    // API mới: Lấy preferences mặc định
+    /**
+     * 7. PREFERENCES CONFIG
+     * Lấy cấu hình mặc định cho Frontend.
+     * Route: GET /api/chat/preferences
+     */
     async getDefaultPreferences(req: Request, res: Response, next: NextFunction) {
-        try {
-            res.json({
-                status: 'success',
-                data: {
-                    availableOptions: {
-                        tone: ['formal', 'casual', 'friendly', 'professional'],
-                        responseLength: ['concise', 'detailed', 'comprehensive'],
-                        expertise: ['beginner', 'intermediate', 'expert']
-                    },
-                    defaultPreferences: {
-                        tone: 'professional',
-                        responseLength: 'detailed',
-                        expertise: 'intermediate'
-                    }
+        res.json({
+            status: 'success',
+            data: {
+                availableOptions: {
+                    tone: ['formal', 'casual', 'friendly', 'professional', 'witty'],
+                    responseLength: ['concise', 'detailed', 'comprehensive'],
+                    expertise: ['beginner', 'intermediate', 'expert']
+                },
+                defaultPreferences: {
+                    tone: 'professional',
+                    responseLength: 'detailed',
+                    expertise: 'intermediate'
                 }
-            });
-        } catch (error: any) {
-            next(error);
-        }
+            }
+        });
     }
 }
 
