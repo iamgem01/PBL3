@@ -1,66 +1,88 @@
 import { Request, Response, NextFunction } from 'express';
-import { geminiService } from '../services/gemini.service.js';
+import { geminiService, UserPreferences } from '../services/gemini.service.js';
 import multer from 'multer';
 
+// --- CẤU HÌNH UPLOAD ---
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
-        fileSize: 20 * 1024 * 1024,
+        fileSize: 20 * 1024 * 1024, // Giới hạn 20MB mỗi file
     },
     fileFilter: (req, file, cb) => {
-
+        // Chấp nhận: Ảnh, PDF, Text, Word, Excel
         const allowedMimes = [
             'image/jpeg', 'image/png', 'image/gif', 'image/webp',
             'application/pdf',
             'text/plain', 'text/markdown',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ];
 
         if (allowedMimes.includes(file.mimetype)) {
             cb(null, true);
         } else {
-            cb(new Error(`Loại file ${file.mimetype} không được hỗ trợ`));
+            cb(new Error(`Định dạng file ${file.mimetype} không được hỗ trợ`));
         }
     }
 });
 
+// --- HELPER: Chuẩn hóa dữ liệu file ---
+const processUploadedFiles = (files: Express.Multer.File[] | undefined) => {
+    if (!files || files.length === 0) return undefined;
+    return files.map(file => ({
+        mimeType: file.mimetype,
+        data: file.buffer,
+        fileName: file.originalname
+    }));
+};
+
 class ChatController {
 
+    /**
+     * 1. MAIN CHAT ENDPOINT
+     * Xử lý hội thoại thông minh, hỗ trợ Context và File đính kèm.
+     * Route: POST /api/chat/message
+     */
     async sendMessage(req: Request, res: Response, next: NextFunction) {
         try {
-            const { message, action = 'chat', context } = req.body;
-
+            const { 
+                message, 
+                context,
+                preferences,
+                action = 'chat' // Hỗ trợ fallback nếu frontend gửi action trong body
+            } = req.body;
 
             const files = req.files as Express.Multer.File[];
-            const fileData = files?.map(file => ({
-                mimeType: file.mimetype,
-                data: file.buffer,
-                fileName: file.originalname
-            }));
+            const fileData = processUploadedFiles(files);
+
+            console.log(`📨 [Request] Action: ${action} | Msg Length: ${message?.length} | Files: ${files?.length || 0}`);
 
             let response: string;
 
+            // Router mini để điều hướng nếu frontend dùng chung 1 endpoint
+            // (Tốt nhất vẫn nên dùng các endpoint riêng biệt bên dưới)
             switch (action) {
                 case 'summarize':
-                    response = await geminiService.summarize(message);
+                    response = await geminiService.summarize(message, 300, preferences);
                     break;
                 case 'note':
-                    response = await geminiService.createNote(message);
+                    response = await geminiService.createNote(message, preferences);
                     break;
                 case 'explain':
-                    response = await geminiService.explain(message);
+                    response = await geminiService.explain(message, preferences);
                     break;
                 case 'improve':
-                    response = await geminiService.improveWriting(message);
+                    const { style } = req.body;
+                    response = await geminiService.improveWriting(message, style, preferences);
                     break;
                 case 'translate':
-                    const { targetLanguage = 'English' } = req.body;
-                    response = await geminiService.translate(message, targetLanguage);
+                    const { targetLanguage } = req.body;
+                    response = await geminiService.translate(message, targetLanguage, preferences);
                     break;
                 case 'chat':
                 default:
-                    response = await geminiService.chat(message, context, fileData);
+                    // Mặc định gọi hàm Chat (Fast Model)
+                    response = await geminiService.chat(message, context, fileData, preferences);
                     break;
             }
 
@@ -68,113 +90,149 @@ class ChatController {
                 status: 'success',
                 data: {
                     response,
-                    action
+                    action,
+                    timestamp: new Date().toISOString()
                 }
             });
-        } catch (error: any) {
+        } catch (error) {
+            console.error('❌ Error in sendMessage:', error);
             next(error);
         }
     }
 
-
+    /**
+     * 2. SUMMARIZE ENDPOINT
+     * Tóm tắt văn bản chuyên sâu.
+     * Route: POST /api/chat/summarize
+     */
     async summarize(req: Request, res: Response, next: NextFunction) {
         try {
-            const { text, maxLength = 200 } = req.body;
-
-            const summary = await geminiService.summarize(text, maxLength);
+            const { text, maxLength, preferences } = req.body;
+            
+            console.log(`📝 [Summarize] Length: ${text?.length} chars`);
+            
+            const summary = await geminiService.summarize(text, maxLength, preferences);
 
             res.json({
                 status: 'success',
-                data: {
-                    original: text,
-                    summary,
-                    maxLength
-                }
+                data: { summary }
             });
-        } catch (error: any) {
+        } catch (error) {
             next(error);
         }
     }
 
-
+    /**
+     * 3. CREATE NOTE ENDPOINT
+     * Tạo ghi chú cấu trúc Markdown.
+     * Route: POST /api/chat/note
+     */
     async createNote(req: Request, res: Response, next: NextFunction) {
         try {
-            const { text } = req.body;
-
-            const note = await geminiService.createNote(text);
+            const { text, preferences } = req.body;
+            
+            console.log(`📝 [Create Note] Length: ${text?.length} chars`);
+            
+            const note = await geminiService.createNote(text, preferences);
 
             res.json({
                 status: 'success',
-                data: {
-                    original: text,
-                    note
-                }
+                data: { note }
             });
-        } catch (error: any) {
+        } catch (error) {
             next(error);
         }
     }
 
-
+    /**
+     * 4. EXPLAIN ENDPOINT
+     * Giải thích khái niệm.
+     * Route: POST /api/chat/explain
+     */
     async explain(req: Request, res: Response, next: NextFunction) {
         try {
-            const { text } = req.body;
-
-            const explanation = await geminiService.explain(text);
+            const { text, preferences } = req.body;
+            
+            console.log(`🎓 [Explain] Length: ${text?.length} chars`);
+            
+            const explanation = await geminiService.explain(text, preferences);
 
             res.json({
                 status: 'success',
-                data: {
-                    original: text,
-                    explanation
-                }
+                data: { explanation }
             });
-        } catch (error: any) {
+        } catch (error) {
             next(error);
         }
     }
 
-
+    /**
+     * 5. IMPROVE WRITING ENDPOINT
+     * Cải thiện văn phong.
+     * Route: POST /api/chat/improve
+     */
     async improveWriting(req: Request, res: Response, next: NextFunction) {
         try {
-            const { text, style = 'professional' } = req.body;
-
-            const improved = await geminiService.improveWriting(text, style);
+            const { text, style, preferences } = req.body;
+            
+            console.log(`✍️ [Improve] Style: ${style} | Length: ${text?.length}`);
+            
+            const improved = await geminiService.improveWriting(text, style, preferences);
 
             res.json({
                 status: 'success',
-                data: {
-                    original: text,
-                    improved,
-                    style
-                }
+                data: { improved, style }
             });
-        } catch (error: any) {
+        } catch (error) {
             next(error);
         }
     }
 
-
+    /**
+     * 6. TRANSLATE ENDPOINT
+     * Dịch thuật.
+     * Route: POST /api/chat/translate
+     */
     async translate(req: Request, res: Response, next: NextFunction) {
         try {
-            const { text, targetLanguage = 'tiếng Anh' } = req.body;
-
-            const translated = await geminiService.translate(text, targetLanguage);
+            const { text, targetLanguage, preferences } = req.body;
+            
+            console.log(`🌐 [Translate] Target: ${targetLanguage} | Length: ${text?.length}`);
+            
+            const translated = await geminiService.translate(text, targetLanguage, preferences);
 
             res.json({
                 status: 'success',
-                data: {
-                    original: text,
-                    translated,
-                    targetLanguage
-                }
+                data: { translated, targetLanguage }
             });
-        } catch (error: any) {
+        } catch (error) {
             next(error);
         }
+    }
+
+    /**
+     * 7. PREFERENCES CONFIG
+     * Lấy cấu hình mặc định cho Frontend.
+     * Route: GET /api/chat/preferences
+     */
+    async getDefaultPreferences(req: Request, res: Response, next: NextFunction) {
+        res.json({
+            status: 'success',
+            data: {
+                availableOptions: {
+                    tone: ['formal', 'casual', 'friendly', 'professional', 'witty'],
+                    responseLength: ['concise', 'detailed', 'comprehensive'],
+                    expertise: ['beginner', 'intermediate', 'expert']
+                },
+                defaultPreferences: {
+                    tone: 'professional',
+                    responseLength: 'detailed',
+                    expertise: 'intermediate'
+                }
+            }
+        });
     }
 }
 
 export const chatController = new ChatController();
 export { upload };
-

@@ -11,6 +11,13 @@ export interface ChatMessageRequest {
   action?: "chat" | "summarize" | "note" | "explain" | "improve" | "translate";
   context?: string;
   targetLanguage?: string;
+  files?: File[];
+  preferences?: {
+    tone?: string;
+    responseLength?: string;
+    language?: string;
+    expertise?: string;
+  };
 }
 // ... (Giữ nguyên các interface Chat/Note/Summarize khác của bạn) ...
 export interface ChatMessageResponse {
@@ -53,13 +60,16 @@ async function fetchAPI<T>(
   // Endpoint backend AI/Chat cũng đi qua Gateway
   const url = `${API_GATEWAY_URL}${endpoint}`;
 
+  const headers: HeadersInit = { ...options.headers};
+
+  if(!(options.body instanceof FormData)) {
+    (headers as any)["Content-Type"] = "application/json";
+  }
+
   const config: RequestInit = {
     ...options,
     credentials: "include", // QUAN TRỌNG: Luôn gửi cookie SESSION_TOKEN
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
+    headers: headers,
   };
 
   try {
@@ -92,9 +102,27 @@ async function fetchAPI<T>(
 // --- API SERVICE CHO CHAT/AI ---
 export const apiService = {
   async sendMessage(request: ChatMessageRequest): Promise<ChatMessageResponse> {
+    const formData = new FormData();
+    formData.append("message", request.message);
+    if(request.action) formData.append("action", request.action);
+    if(request.context) formData.append("context", request.context);
+    if(request.targetLanguage) formData.append("targetLanguage", request.targetLanguage);
+
+    if (request.preferences) {
+        formData.append("preferences", JSON.stringify(request.preferences));
+    }
+
+    if(request.files && request.files.length > 0) {
+      request.files.forEach((file) => {
+        formData.append("files", file);
+      });
+    }
     return fetchAPI<ChatMessageResponse>("/api/ai/message", { // Giả định route AI
       method: "POST",
-      body: JSON.stringify(request),
+      body: formData,
+      headers: {
+
+      } as any,
     });
   },
   // ... (Các hàm summarize, createNote giữ nguyên logic nhưng dùng fetchAPI đã sửa)

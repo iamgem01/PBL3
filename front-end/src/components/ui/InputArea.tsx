@@ -12,6 +12,7 @@ interface InputAreaProps {
       | "explain"
       | "improve"
       | "translate",
+    files?: File[],
     notes?: Note[]
   ) => void;
   disabled?: boolean;
@@ -42,7 +43,7 @@ const InputArea: React.FC<InputAreaProps> = ({
 
   const handleSubmit = () => {
     if (message.trim() && !disabled) {
-      onSendMessage(message, selectedAction || "chat", selectedNotes);
+      onSendMessage(message, selectedAction || "chat", attachedFiles, selectedNotes);
       setMessage("");
       setSelectedAction(null);
       setSelectedNotes([]); // Reset selected notes after sending

@@ -28,6 +28,7 @@ const ChatPage: React.FC = () => {
       | "explain"
       | "improve"
       | "translate" = "chat",
+    files: File[] = [],
     notes?: Array<{ id: string; title: string; content?: string }>
   ) => {
     const userMessage = {
@@ -35,6 +36,7 @@ const ChatPage: React.FC = () => {
       text,
       isUser: true,
       timestamp: new Date(),
+      files: files
     };
 
     // Tạo context từ selected notes
@@ -74,6 +76,7 @@ const ChatPage: React.FC = () => {
         message: text,
         action,
         context,
+        files: files
       });
 
       // Tạo phản hồi từ AI
@@ -177,8 +180,8 @@ const ChatPage: React.FC = () => {
           hasMessages={hasMessages}
         />
         <InputArea
-          onSendMessage={(text, action) =>
-            handleSendMessage(text, action || "chat")
+          onSendMessage={(text, action, files, notes) =>
+            handleSendMessage(text, action || "chat", files || [], notes)
           }
           disabled={isTyping}
           hasMessages={hasMessages}
