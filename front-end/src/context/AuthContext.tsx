@@ -112,3 +112,30 @@ export const useAuth = () => {
   }
   return context;
 };
+
+// Hook để lấy current user ID với validation
+export const useCurrentUserId = () => {
+  const { user } = useAuth();
+  
+  if (!user || !user.id) {
+    console.error('❌ No authenticated user found');
+    throw new Error('User not authenticated');
+  }
+  
+  return user.id;
+};
+
+// Hook để validate user ownership
+export const useUserOwnership = () => {
+  const currentUserId = useCurrentUserId();
+  
+  const isOwner = (item: any) => {
+    return item.createdBy === currentUserId;
+  };
+  
+  const filterOwnedItems = (items: any[]) => {
+    return items.filter(item => isOwner(item));
+  };
+  
+  return { isOwner, filterOwnedItems, currentUserId };
+};

@@ -10,8 +10,9 @@ interface Note {
   content: string;
   createdAt: string;
   updatedAt: string;
-  isImportant?: boolean;
-  shares?: any[];
+  createdBy: string;
+  isImportant: boolean;
+  shares?: any[]; // Thêm thuộc tính shares từ collab-service
 }
 
 interface SidebarTeamspaceProps {
@@ -29,58 +30,86 @@ interface TeamspaceItem {
 export default function SidebarTeamspace({ collapsed }: SidebarTeamspaceProps) {
     const navigate = useNavigate();
     const [notes, setNotes] = useState<Note[]>([]);
-    const [sharedNotes, setSharedNotes] = useState<Note[]>([]);
+    const [sharedNotes, setSharedNotes] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isLoadingShared, setIsLoadingShared] = useState(true);
+    const [sharedLoading, setSharedLoading] = useState(true);
     const [sharedError, setSharedError] = useState<string | null>(null);
 
-    // Fetch all notes từ note-service
+    // Cache key dựa trên user ID để tránh cache conflict
+    const getCacheKey = () => {
+        const userData = localStorage.getItem('user');
+        if (!userData) return 'notes-anonymous';
+        const user = JSON.parse(userData);
+        return `notes-${user.id}`;
+    };
+
+    // Fetch all notes từ note-service với error handling tốt hơn
     useEffect(() => {
         const fetchNotes = async () => {
             try {
-                console.log('📋 Fetching all notes from note-service...');
+                setIsLoading(true);
+                console.log('📋 Fetching personal notes...');
+                
                 const notesData = await getAllNotes();
-                setNotes(notesData);
-                console.log('✅ Fetched', notesData.length, 'notes');
+                
+                // Double-check: Chỉ hiển thị notes của user hiện tại
+                const userData = localStorage.getItem('user');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    // Backend sử dụng SNAKE_CASE, nên field là created_by
+                    const userNotes = notesData.filter((note: any) => 
+                        note.created_by === user.id
+                    );
+                    
+                    if (userNotes.length !== notesData.length) {
+                        console.warn(`🚨 Filtered ${notesData.length - userNotes.length} notes that don't belong to current user`);
+                    }
+                    
+                    setNotes(userNotes);
+                    console.log(`✅ Loaded ${userNotes.length} personal notes for user ${user.id}`);
+                } else {
+                    console.error('❌ No user data available');
+                    setNotes([]);
+                }
+                
             } catch (err: any) {
-                console.error("❌ Failed to fetch notes:", err);
+                console.error("❌ Failed to fetch personal notes:", err);
+                setNotes([]);
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchNotes();
-    }, []);
+    }, []); // Không có dependencies để tránh re-fetch không cần thiết
 
-    // Fetch shared notes từ collab-service
+    // Fetch shared notes từ collab-service sử dụng service function có sẵn
     useEffect(() => {
         const fetchSharedNotes = async () => {
             try {
-                console.log('🔄 Fetching shared notes from collab-service...');
-                setSharedError(null);
+                setSharedLoading(true);
+                console.log('🔄 Fetching shared notes...');
                 
-                const sharedNotesData = await getSharedNotes();
-                setSharedNotes(sharedNotesData);
+                // Sử dụng function getSharedNotes có sẵn thay vì gọi API trực tiếp
+                const sharedData = await getSharedNotes();
+                setSharedNotes(sharedData);
+                console.log(`✅ Loaded ${sharedData.length} shared notes`);
                 
-                console.log('✅ Fetched', sharedNotesData.length, 'shared notes');
             } catch (err: any) {
                 console.error("❌ Failed to fetch shared notes:", err);
-                setSharedError(err.message || 'Failed to load shared notes');
+                setSharedError(err.message);
+                setSharedNotes([]);
             } finally {
-                setIsLoadingShared(false);
+                setSharedLoading(false);
             }
         };
 
         fetchSharedNotes();
-        
-        // Auto-refresh shared notes every 30 seconds
-        const interval = setInterval(fetchSharedNotes, 30000);
-        return () => clearInterval(interval);
     }, []);
 
     // Refresh shared notes manually
     const handleRefreshShared = async () => {
-        setIsLoadingShared(true);
+        setSharedLoading(true);
         setSharedError(null);
         
         try {
@@ -91,7 +120,7 @@ export default function SidebarTeamspace({ collapsed }: SidebarTeamspaceProps) {
             console.error("❌ Refresh failed:", err);
             setSharedError(err.message);
         } finally {
-            setIsLoadingShared(false);
+            setSharedLoading(false);
         }
     };
 
@@ -137,7 +166,7 @@ export default function SidebarTeamspace({ collapsed }: SidebarTeamspaceProps) {
                     )}
                     <button
                         onClick={handleRefreshShared}
-                        disabled={isLoadingShared}
+                        disabled={sharedLoading}
                         className={`p-1 rounded hover:bg-muted transition-colors ${
                             collapsed ? 'mx-auto' : ''
                         }`}
@@ -145,13 +174,13 @@ export default function SidebarTeamspace({ collapsed }: SidebarTeamspaceProps) {
                     >
                         <RefreshCw 
                             size={14} 
-                            className={`text-muted-foreground ${isLoadingShared ? 'animate-spin' : ''}`}
+                            className={`text-muted-foreground ${sharedLoading ? 'animate-spin' : ''}`}
                         />
                     </button>
                 </div>
 
                 <div className="space-y-1">
-                    {isLoadingShared ? (
+                    {sharedLoading ? (
                         <div className="flex items-center justify-center py-4">
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
                         </div>

@@ -25,13 +25,24 @@ public class InvitationService {
     /**
      * Tạo invitation và gửi email
      */
-    public Invitation createInvitation(String noteId, String inviterEmail, String inviteeEmail) {
+    public Invitation createInvitation(String noteId, String inviterEmail, String inviteeEmail, String currentUserId) {
         System.out.println("========================================");
         System.out.println("📧 CREATING INVITATION");
         System.out.println("========================================");
         System.out.println("Note ID: " + noteId);
         System.out.println("From: " + inviterEmail);
         System.out.println("To: " + inviteeEmail);
+        System.out.println("Current User: " + currentUserId);
+        
+        // Check if current user is the owner of the note
+        com.java.smartnote.collabservice.model.Note note = noteService.getNoteById(noteId);
+        if (note == null) {
+            throw new RuntimeException("Note not found");
+        }
+        
+        if (!note.getCreatedBy().equals(currentUserId)) {
+            throw new RuntimeException("Only the note owner can send invitations");
+        }
         
         // Kiểm tra xem đã invite chưa
         List<Invitation> existingInvitations = invitationRepository

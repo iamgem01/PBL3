@@ -1,18 +1,64 @@
 import { handleResponse, NOTE_SERVICE_URL, COLLAB_SERVICE_URL } from './utils';
 
 /**
- * Lấy tất cả các ghi chú từ server.
+ * Lấy tất cả các ghi chú từ server với validation nghiêm ngặt.
  */
 export const getAllNotes = async () => {
-  const response = await fetch(`${NOTE_SERVICE_URL}/api/notes`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include',
-  });
+  try {
+    // Lấy user info từ localStorage
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      console.error('❌ No user data in localStorage');
+      throw new Error('User not authenticated');
+    }
 
-  return handleResponse(response);
+    const user = JSON.parse(userData);
+    const userId = user.id;
+
+    if (!userId) {
+      console.error('❌ No user ID found in localStorage user data');
+      throw new Error('User ID not found');
+    }
+
+    console.log(`🌐 [FRONTEND] Sending request for user: ${userId} (${user.email})`);
+
+    const response = await fetch(`${NOTE_SERVICE_URL}/api/notes`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId, // Đảm bảo truyền đúng userId
+      },
+      credentials: 'include',
+    });
+
+    const data = await handleResponse(response);
+    
+    // Tạm thời disable validation để test
+    console.log(`🔍 [FRONTEND] Checking notes for user: ${userId}`);
+    console.log(`📦 [FRONTEND] First note sample:`, data[0]);
+    
+    // Validation: Đảm bảo tất cả notes đều thuộc về user hiện tại
+    // Backend sử dụng SNAKE_CASE, nên field là created_by
+    const invalidNotes = data.filter((note: any) => {
+      console.log(`🔍 [FRONTEND] Note ${note.id}: created_by='${note.created_by}' vs userId='${userId}' - Match: ${note.created_by === userId}`);
+      return note.created_by !== userId;
+    });
+    
+    if (invalidNotes.length > 0) {
+      console.error('🚨 SECURITY ISSUE: Received notes not owned by current user:', invalidNotes);
+      // Filter out invalid notes ở client-side làm backup
+      const validNotes = data.filter((note: any) => note.created_by === userId);
+      console.log(`✅ Filtered ${data.length - validNotes.length} invalid notes`);
+      return validNotes;
+    }
+
+    console.log(`✅ Successfully fetched ${data.length} notes for user ${userId}`);
+    return data;
+
+  } catch (error) {
+    console.error('❌ Error fetching notes:', error);
+    throw error;
+  }
 };
 
 /**
@@ -53,20 +99,43 @@ export const getNoteById = async (id: string) => {
 };
 
 /**
- * Tạo một ghi chú mới.
+ * Tạo một ghi chú mới với validation.
  */
-export const createNote = async (noteData: any, userId: string = 'user_001') => {
-  const response = await fetch(`${NOTE_SERVICE_URL}/api/notes`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-User-Id': userId,
-    },
-    credentials: 'include',
-    body: JSON.stringify(noteData),
-  });
+export const createNote = async (noteData: any) => {
+  try {
+    // Lấy user info từ localStorage
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      throw new Error('User not authenticated');
+    }
 
-  return handleResponse(response);
+    const user = JSON.parse(userData);
+    const userId = user.id;
+
+    if (!userId) {
+      throw new Error('User ID not found');
+    }
+
+    console.log(`📝 Creating note for user: ${userId} (${user.email})`);
+
+    const response = await fetch(`${NOTE_SERVICE_URL}/api/notes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+      },
+      credentials: 'include',
+      body: JSON.stringify(noteData),
+    });
+
+    const result = await handleResponse(response);
+    console.log(`✅ Note created successfully: ${result.id}`);
+    return result;
+
+  } catch (error) {
+    console.error('❌ Error creating note:', error);
+    throw error;
+  }
 };
 
 /**

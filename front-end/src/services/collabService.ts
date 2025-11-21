@@ -45,10 +45,24 @@ const handleResponse = async (response: Response): Promise<any> => {
 /**
  * Lấy tất cả documents đã được share từ collab-service
  */
+
+/**
+ * Lấy tất cả documents đã được share với current user
+ */
 export const getSharedNotes = async (): Promise<any[]> => {
     try {
+        // Get current user ID
+        const userData = localStorage.getItem('user');
+        if (!userData) {
+            console.error('❌ No user data in localStorage for shared notes');
+            return [];
+        }
+        
+        const user = JSON.parse(userData);
+        const userId = user.id;
+        
         console.log('========================================');
-        console.log('📤 FETCHING SHARED NOTES');
+        console.log('📤 FETCHING SHARED NOTES FOR USER:', userId);
         console.log('========================================');
         console.log('URL:', `${COLLAB_SERVICE_URL}/api/notes/shared`);
         
@@ -56,6 +70,7 @@ export const getSharedNotes = async (): Promise<any[]> => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
+                'X-User-Id': userId, // Pass user ID for filtering
             },
             credentials: 'include',
         });

@@ -1,10 +1,12 @@
 package com.java.smartnote.collabservice.controller;
 
 import com.java.smartnote.collabservice.dto.InviteUserRequest;
+import com.fasterxml.jackson.databind.JsonDeserializer.None;
 import com.java.smartnote.collabservice.dto.AcceptInvitationRequest;
 import com.java.smartnote.collabservice.model.Invitation;
 import com.java.smartnote.collabservice.service.InvitationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,7 +26,10 @@ public class InvitationController {
      * Gửi invitation qua email
      */
     @PostMapping("/invite")
-    public ResponseEntity<?> inviteUser(@RequestBody InviteUserRequest request) {
+    public ResponseEntity<?> inviteUser(
+            @RequestBody InviteUserRequest request,
+            @RequestHeader("X-User-Id") String currentUserId) {
+        
         System.out.println("========================================");
         System.out.println("📨 INVITE USER REQUEST");
         System.out.println("========================================");
@@ -36,7 +41,8 @@ public class InvitationController {
             Invitation invitation = invitationService.createInvitation(
                 request.getNoteId(),
                 request.getInviterEmail(),
-                request.getInviteeEmail()
+                request.getInviteeEmail(),
+                currentUserId
             );
             
             Map<String, Object> response = new HashMap<>();

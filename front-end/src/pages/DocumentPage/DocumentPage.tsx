@@ -147,9 +147,11 @@ export default function DocumentPage() {
               </button>
             ) : (
               <>
-                <button onClick={() => setShowInviteModal(true)} className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
-                  <Mail size={16} /> <span className="text-sm font-medium">Invite</span>
-                </button>
+                {note.createdBy === (JSON.parse(localStorage.getItem('user') || '{}').id || 'user_001') && (
+                  <button onClick={() => setShowInviteModal(true)} className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                    <Mail size={16} /> <span className="text-sm font-medium">Invite</span>
+                  </button>
+                )}
                 <button onClick={handleShareToggle} disabled={isSharing} className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-muted">
                   <X size={16} /> <span className="text-sm">Stop Sharing</span>
                 </button>

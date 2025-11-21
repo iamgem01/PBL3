@@ -66,8 +66,11 @@ public class NoteController {
     }
 
     @GetMapping
-    public ResponseEntity<List<NoteResponse>> getAllNotes() {
-        List<NoteResponse> notes = noteService.getAllNotes();
+    public ResponseEntity<List<NoteResponse>> getAllNotes(
+            @RequestHeader(value = "X-User-Id", defaultValue = "user_001") String userId) {
+        System.out.println("🌐 [CONTROLLER] Received request for user: " + userId);
+        List<NoteResponse> notes = noteService.getAllNotesByUser(userId);
+        System.out.println("📤 [CONTROLLER] Returning " + notes.size() + " notes for user: " + userId);
         return ResponseEntity.ok(notes);
     }
     

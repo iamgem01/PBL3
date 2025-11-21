@@ -30,7 +30,23 @@ public class NoteService {
     private String noteServiceUrl;
     
     /**
-     * Lấy tất cả notes đang được share
+     * Lấy tất cả notes đang được share với một user cụ thể
+     */
+    public List<Note> getSharedNotesForUser(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            // Return all shared notes if no user specified (for admin purposes)
+            return getSharedNotes();
+        }
+        
+        return noteRepository.findAll().stream()
+                .filter(note -> note.getShares() != null && !note.getShares().isEmpty())
+                .filter(note -> note.getShares().contains(userId)) // Only notes shared with this user
+                .filter(note -> !Boolean.TRUE.equals(note.getIsDeleted()))
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Lấy tất cả notes đang được share (legacy method)
      */
     public List<Note> getSharedNotes() {
         return noteRepository.findAll().stream()

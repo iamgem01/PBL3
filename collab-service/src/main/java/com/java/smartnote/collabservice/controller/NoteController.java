@@ -44,10 +44,10 @@ public class NoteController {
      * Lấy danh sách tất cả notes đang được share
      */
     @GetMapping("/api/notes/shared")
-    public ResponseEntity<?> getSharedNotes() {
+    public ResponseEntity<?> getSharedNotes(@RequestHeader(value = "X-User-Id", required = false) String userId) {
         try {
-            System.out.println("📋 Fetching shared notes...");
-            List<Note> sharedNotes = noteService.getSharedNotes();
+            System.out.println("📋 Fetching shared notes for user: " + (userId != null ? userId : "all users"));
+            List<Note> sharedNotes = noteService.getSharedNotesForUser(userId);
             System.out.println("✅ Found " + sharedNotes.size() + " shared notes");
             return ResponseEntity.ok(sharedNotes);
         } catch (Exception e) {
