@@ -1,263 +1,212 @@
 import { Editor } from '@tiptap/react';
 import {
-  Bold, 
-  Italic,
-  Underline,
-  Strikethrough,
-  Code,
-  List,
-  ListOrdered,
-  Quote,
-  Undo,
-  Redo,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Palette,
-  Highlighter
+  Bold, Italic, Underline, Strikethrough, Code,
+  List, ListOrdered, Quote, Undo, Redo,
+  AlignLeft, AlignCenter, AlignRight, Palette, Sparkles,
+  X, ChevronDown
 } from 'lucide-react';
-import { memo, useCallback } from 'react';
+import { memo, useState, useEffect } from 'react';
+import { AIModal } from '../../components/modals/AIModal';
+
+// --- CUSTOM HOOK: Bắt dính trạng thái Editor ---
+const useEditorState = (editor: Editor | null) => {
+  const [state, setState] = useState({
+    isBold: false,
+    isItalic: false,
+    isUnderline: false,
+    isStrike: false,
+    isCode: false,
+    isBulletList: false,
+    isOrderedList: false,
+    isBlockquote: false,
+    align: 'left',
+    headingLevel: 'paragraph', // String để bind vào select
+    canUndo: false,
+    canRedo: false,
+  });
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleUpdate = () => {
+      // Logic Heading
+      let currentHeading = 'paragraph';
+      if (editor.isActive('heading', { level: 1 })) currentHeading = '1';
+      else if (editor.isActive('heading', { level: 2 })) currentHeading = '2';
+      else if (editor.isActive('heading', { level: 3 })) currentHeading = '3';
+
+      // Logic Align
+      let currentAlign = 'left';
+      if (editor.isActive({ textAlign: 'center' })) currentAlign = 'center';
+      else if (editor.isActive({ textAlign: 'right' })) currentAlign = 'right';
+
+      setState({
+        isBold: editor.isActive('bold'),
+        isItalic: editor.isActive('italic'),
+        isUnderline: editor.isActive('underline'),
+        isStrike: editor.isActive('strike'),
+        isCode: editor.isActive('code'),
+        isBulletList: editor.isActive('bulletList'),
+        isOrderedList: editor.isActive('orderedList'),
+        isBlockquote: editor.isActive('blockquote'),
+        align: currentAlign,
+        headingLevel: currentHeading,
+        canUndo: editor.can().undo(),
+        canRedo: editor.can().redo(),
+      });
+    };
+
+    // Gọi ngay lần đầu và lắng nghe sự kiện
+    handleUpdate();
+    editor.on('selectionUpdate', handleUpdate);
+    editor.on('transaction', handleUpdate);
+    editor.on('focus', handleUpdate);
+
+    return () => {
+      editor.off('selectionUpdate', handleUpdate);
+      editor.off('transaction', handleUpdate);
+      editor.off('focus', handleUpdate);
+    };
+  }, [editor]);
+
+  return state;
+};
 
 interface EditorToolbarProps {
   editor: Editor;
 }
 
 export const EditorToolbar = memo(({ editor }: EditorToolbarProps) => {
-  const textColors = [
-    '#000000', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
-    '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD'
-  ];
+  const selectionState = useEditorState(editor);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
 
   if (!editor) return null;
 
-  const handleUndo = useCallback(() => {
-    editor.chain().focus().undo().run();
-  }, [editor]);
-
-  const handleRedo = useCallback(() => {
-    editor.chain().focus().redo().run();
-  }, [editor]);
-
-  const handleBold = useCallback(() => {
-    editor.chain().focus().toggleBold().run();
-  }, [editor]);
-
-  const handleItalic = useCallback(() => {
-    editor.chain().focus().toggleItalic().run();
-  }, [editor]);
-
-  const handleUnderline = useCallback(() => {
-    editor.chain().focus().toggleUnderline().run();
-  }, [editor]);
-
-  const handleStrike = useCallback(() => {
-    editor.chain().focus().toggleStrike().run();
-  }, [editor]);
-
-  const handleCode = useCallback(() => {
-    editor.chain().focus().toggleCode().run();
-  }, [editor]);
-
-  const handleBulletList = useCallback(() => {
-    editor.chain().focus().toggleBulletList().run();
-  }, [editor]);
-
-  const handleOrderedList = useCallback(() => {
-    editor.chain().focus().toggleOrderedList().run();
-  }, [editor]);
-
-  const handleBlockquote = useCallback(() => {
-    editor.chain().focus().toggleBlockquote().run();
-  }, [editor]);
-
-  const handleAlignLeft = useCallback(() => {
-    editor.chain().focus().setTextAlign('left').run();
-  }, [editor]);
-
-  const handleAlignCenter = useCallback(() => {
-    editor.chain().focus().setTextAlign('center').run();
-  }, [editor]);
-
-  const handleAlignRight = useCallback(() => {
-    editor.chain().focus().setTextAlign('right').run();
-  }, [editor]);
-
-  const handleColorClick = useCallback((color: string) => {
-    editor.chain().focus().setColor(color).run();
-  }, [editor]);
-
-  const handleHeadingChange = useCallback((level: string) => {
-    if (level === 'paragraph') {
+  // --- HANDLERS (Quan trọng: e.preventDefault để không mất focus) ---
+  
+  const handleHeadingChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+    const value = e.target.value;
+    if (value === 'paragraph') {
       editor.chain().focus().setParagraph().run();
     } else {
-      editor.chain().focus().toggleHeading({ level: parseInt(level) as 1 | 2 | 3 | 4 | 5 | 6 }).run();
+      const level = parseInt(value) as 1 | 2 | 3;
+      editor.chain().focus().toggleHeading({ level }).run();
     }
-  }, [editor]);
+  };
+
+  const handleList = (type: 'bullet' | 'ordered') => {
+    if (type === 'bullet') editor.chain().focus().toggleBulletList().run();
+    else editor.chain().focus().toggleOrderedList().run();
+  };
+
+  const handleAlign = (align: string) => {
+    editor.chain().focus().setTextAlign(align).run();
+  };
+
+  const handleColorChange = (color: string) => {
+    editor.chain().focus().setColor(color).run();
+    setShowColorPicker(false);
+  };
+
+  const colors = ['#000000', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3', '#54A0FF'];
+
+  // UI Button Wrapper
+  const ToolButton = ({ icon: Icon, onClick, active, disabled, title }: any) => (
+    <button
+      onClick={(e) => { e.preventDefault(); onClick(); }}
+      disabled={disabled}
+      title={title}
+      type="button"
+      className={`
+        relative p-2 rounded-md transition-all duration-200 flex items-center justify-center
+        ${disabled ? 'opacity-30 cursor-not-allowed' : 'hover:bg-muted'}
+        ${active 
+          ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-800 shadow-sm scale-105 z-10' 
+          : 'text-muted-foreground hover:text-foreground'
+        }
+      `}
+    >
+      <Icon size={18} strokeWidth={active ? 2.5 : 2} />
+    </button>
+  );
 
   return (
-    <div className="border-b border-border bg-background p-3 sticky top-0 z-10 editor-toolbar">
-      <div className="flex items-center gap-1 flex-wrap">
-        {/* History */}
-        <button
-          onClick={handleUndo}
-          disabled={!editor.can().chain().focus().undo().run()}
-          className="p-2 hover:bg-muted rounded transition-colors"
-          title="Undo"
-        >
-          <Undo size={18} />
-        </button>
-        <button
-          onClick={handleRedo}
-          disabled={!editor.can().chain().focus().redo().run()}
-          className="p-2 hover:bg-muted rounded transition-colors"
-          title="Redo"
-        >
-          <Redo size={18} />
-        </button>
-
-        <div className="w-px h-6 bg-border mx-2" />
-
-        {/* Text Formatting */}
-        <button
-          onClick={handleBold}
-          className={`p-2 rounded transition-colors ${
-            editor.isActive('bold') ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-          }`}
-          title="Bold"
-        >
-          <Bold size={18} />
-        </button>
-        <button
-          onClick={handleItalic}
-          className={`p-2 rounded transition-colors ${
-            editor.isActive('italic') ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-          }`}
-          title="Italic"
-        >
-          <Italic size={18} />
-        </button>
-        <button
-          onClick={handleUnderline}
-          className={`p-2 rounded transition-colors ${
-            editor.isActive('underline') ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-          }`}
-          title="Underline"
-        >
-          <Underline size={18} />
-        </button>
-        <button
-          onClick={handleStrike}
-          className={`p-2 rounded transition-colors ${
-            editor.isActive('strike') ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-          }`}
-          title="Strikethrough"
-        >
-          <Strikethrough size={18} />
-        </button>
-        <button
-          onClick={handleCode}
-          className={`p-2 rounded transition-colors ${
-            editor.isActive('code') ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-          }`}
-          title="Code"
-        >
-          <Code size={18} />
-        </button>
-
-        <div className="w-px h-6 bg-border mx-2" />
-
-        {/* Lists */}
-        <button
-          onClick={handleBulletList}
-          className={`p-2 rounded transition-colors ${
-            editor.isActive('bulletList') ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-          }`}
-          title="Bullet List"
-        >
-          <List size={18} />
-        </button>
-        <button
-          onClick={handleOrderedList}
-          className={`p-2 rounded transition-colors ${
-            editor.isActive('orderedList') ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-          }`}
-          title="Numbered List"
-        >
-          <ListOrdered size={18} />
-        </button>
-        <button
-          onClick={handleBlockquote}
-          className={`p-2 rounded transition-colors ${
-            editor.isActive('blockquote') ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-          }`}
-          title="Quote"
-        >
-          <Quote size={18} />
-        </button>
-
-        <div className="w-px h-6 bg-border mx-2" />
-
-        {/* Alignment */}
-        <button
-          onClick={handleAlignLeft}
-          className={`p-2 rounded transition-colors ${
-            editor.isActive({ textAlign: 'left' }) ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-          }`}
-          title="Align Left"
-        >
-          <AlignLeft size={18} />
-        </button>
-        <button
-          onClick={handleAlignCenter}
-          className={`p-2 rounded transition-colors ${
-            editor.isActive({ textAlign: 'center' }) ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-          }`}
-          title="Align Center"
-        >
-          <AlignCenter size={18} />
-        </button>
-        <button
-          onClick={handleAlignRight}
-          className={`p-2 rounded transition-colors ${
-            editor.isActive({ textAlign: 'right' }) ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-          }`}
-          title="Align Right"
-        >
-          <AlignRight size={18} />
-        </button>
-
-        <div className="w-px h-6 bg-border mx-2" />
-
-        {/* Headings */}
-        <select
-          value={editor.getAttributes('heading').level || 'paragraph'}
-          onChange={(e) => handleHeadingChange(e.target.value)}
-          className="p-2 bg-background border border-border rounded text-sm"
-        >
-          <option value="paragraph">Paragraph</option>
-          <option value="1">Heading 1</option>
-          <option value="2">Heading 2</option>
-          <option value="3">Heading 3</option>
-        </select>
-
-        {/* Text Color */}
-        <div className="relative group">
-          <button className="p-2 hover:bg-muted rounded transition-colors" title="Text Color">
-            <Palette size={18} />
+    <>
+      <div className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex items-center gap-1 px-4 py-2 flex-wrap">
+          {/* AI Button */}
+          <button onClick={() => setShowAIModal(true)} className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-md hover:shadow-md hover:scale-105 transition-all mr-2 font-medium text-sm">
+            <Sparkles size={14} /><span>AI Ask</span>
           </button>
-          <div className="absolute top-full left-0 mt-1 bg-card border border-border rounded-lg shadow-xl p-2 hidden group-hover:flex flex-wrap gap-1 w-32 z-50">
-            {textColors.map((color) => (
-              <button
-                key={color}
-                onClick={() => handleColorClick(color)}
-                className="w-6 h-6 rounded border border-border"
-                style={{ backgroundColor: color }}
-                title={color}
-              />
-            ))}
+
+          <div className="w-px h-5 bg-border mx-1" />
+
+          <ToolButton icon={Undo} onClick={() => editor.chain().focus().undo().run()} disabled={!selectionState.canUndo} title="Undo" />
+          <ToolButton icon={Redo} onClick={() => editor.chain().focus().redo().run()} disabled={!selectionState.canRedo} title="Redo" />
+
+          <div className="w-px h-5 bg-border mx-1" />
+
+          {/* HEADING DROPDOWN */}
+          <div className="relative group">
+            <select
+              value={selectionState.headingLevel}
+              onChange={handleHeadingChange}
+              className="appearance-none pl-2 pr-8 py-1.5 text-sm border border-transparent hover:bg-muted rounded-md bg-transparent text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20 font-medium w-32 transition-colors"
+            >
+              <option value="paragraph">Paragraph</option>
+              <option value="1">Heading 1</option>
+              <option value="2">Heading 2</option>
+              <option value="3">Heading 3</option>
+            </select>
+            <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
+          </div>
+
+          <div className="w-px h-5 bg-border mx-1" />
+
+          {/* BASIC FORMATTING */}
+          <ToolButton icon={Bold} onClick={() => editor.chain().focus().toggleBold().run()} active={selectionState.isBold} title="Bold" />
+          <ToolButton icon={Italic} onClick={() => editor.chain().focus().toggleItalic().run()} active={selectionState.isItalic} title="Italic" />
+          <ToolButton icon={Underline} onClick={() => editor.chain().focus().toggleUnderline().run()} active={selectionState.isUnderline} title="Underline" />
+          <ToolButton icon={Strikethrough} onClick={() => editor.chain().focus().toggleStrike().run()} active={selectionState.isStrike} title="Strike" />
+          <ToolButton icon={Code} onClick={() => editor.chain().focus().toggleCode().run()} active={selectionState.isCode} title="Code" />
+
+          <div className="w-px h-5 bg-border mx-1" />
+
+          {/* LISTS */}
+          <ToolButton icon={List} onClick={() => handleList('bullet')} active={selectionState.isBulletList} title="Bullet List" />
+          <ToolButton icon={ListOrdered} onClick={() => handleList('ordered')} active={selectionState.isOrderedList} title="Numbered List" />
+          <ToolButton icon={Quote} onClick={() => editor.chain().focus().toggleBlockquote().run()} active={selectionState.isBlockquote} title="Quote" />
+
+          <div className="w-px h-5 bg-border mx-1" />
+
+          <ToolButton icon={AlignLeft} onClick={() => handleAlign('left')} active={selectionState.align === 'left'} title="Align Left" />
+          <ToolButton icon={AlignCenter} onClick={() => handleAlign('center')} active={selectionState.align === 'center'} title="Align Center" />
+          <ToolButton icon={AlignRight} onClick={() => handleAlign('right')} active={selectionState.align === 'right'} title="Align Right" />
+
+          <div className="w-px h-5 bg-border mx-1" />
+
+          {/* COLOR PICKER */}
+          <div className="relative">
+            <ToolButton icon={Palette} onClick={() => setShowColorPicker(!showColorPicker)} active={showColorPicker} title="Text Color" />
+            {showColorPicker && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowColorPicker(false)} />
+                <div className="absolute top-full right-0 mt-2 p-3 bg-popover border border-border rounded-lg shadow-xl flex gap-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+                  {colors.map((color) => (
+                    <button key={color} onClick={() => handleColorChange(color)} className="w-6 h-6 rounded-full border border-border hover:scale-110 transition-transform" style={{ backgroundColor: color }} title={color} />
+                  ))}
+                  <button onClick={() => handleColorChange('inherit')} className="w-6 h-6 rounded-full border border-border hover:scale-110 transition-transform flex items-center justify-center bg-muted" title="Reset Color"><X size={12} /></button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
-    </div>
+      <AIModal isOpen={showAIModal} onClose={() => setShowAIModal(false)} editor={editor} />
+    </>
   );
 });
+
+EditorToolbar.displayName = 'EditorToolbar';

@@ -8,58 +8,45 @@ export const useDocumentState = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  // State
   const [note, setNote] = useState<Note | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   
-  // Toolbar state
   const [showToolbar, setShowToolbar] = useState(false);
   const [toolbarPosition, setToolbarPosition] = useState<ToolbarPosition>({ x: 0, y: 0 });
   
-  // Modal states
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isImportantLoading, setIsImportantLoading] = useState(false);
 
-  // Fetch note
   useEffect(() => {
     const fetchNote = async () => {
       if (!id) {
         setError("Note ID is missing");
-        setIsLoading(false);
         return;
       }
-
       try {
         setIsLoading(true);
-        
-        // Thử lấy từ collab-service trước
-        let noteData;
+        // Thử lấy từ collab service (ưu tiên)
         try {
-          const collabResponse = await fetch(`${COLLAB_SERVICE_URL}/api/notes/${id}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-          });
-          
-          if (collabResponse.ok) {
-            noteData = await handleResponse(collabResponse);
-          }
-        } catch (collabError) {
-          // Fallback to note-service
+           const res = await fetch(`${COLLAB_SERVICE_URL}/api/notes/${id}`, { 
+             headers: {'Content-Type': 'application/json'}, credentials: 'include' 
+           });
+           if(res.ok) {
+             const data = await handleResponse(res);
+             setNote(data);
+             setIsLoading(false);
+             return;
+           }
+        } catch (e) {
+          console.log('⚠️ Collab service failed, falling back to local API');
         }
 
-        // Nếu không có trong collab-service, lấy từ note-service
-        if (!noteData) {
-          noteData = await getNoteById(id);
-        }
-        
+        // Fallback
+        const noteData = await getNoteById(id);
         setNote(noteData);
       } catch (err: any) {
         setError(err.message || "Failed to load note");
@@ -70,53 +57,62 @@ export const useDocumentState = () => {
     fetchNote();
   }, [id]);
 
-  // Handlers
+  // ✅ FIX: Update note ngầm, chỉ update timestamp trên UI
   const handleUpdateNote = useCallback(async (newContent: string) => {
     if (!note || !id) return;
 
-    setIsUpdating(true);
+    // Không set isUpdating (loading) toàn màn hình để tránh unmount editor
     try {
-      const updatedNote = await updateNote(id, {
+      await updateNote(id, {
         ...note,
         content: newContent,
-        contentType: 'richtext',
         updatedAt: new Date().toISOString()
       });
-      setNote(updatedNote);
+      
+      // Update local state nhẹ nhàng
+      setNote(prev => prev ? { 
+        ...prev, 
+        content: newContent, 
+        updatedAt: new Date().toISOString() 
+      } : null);
     } catch (error: any) {
-      setError("Failed to update note: " + error.message);
-    } finally {
-      setIsUpdating(false);
+      console.error("Failed to auto-save:", error);
     }
   }, [note, id]);
 
+  // ✅ FIX: Function để lấy initial content thông minh
+  const getInitialContent = useCallback(() => {
+    // Nếu là shared document, để Yjs tự load từ persistence
+    // Chỉ dùng initialContent cho local documents
+    if (note?.shares && note.shares.length > 0) {
+      console.log('🔄 Shared document - Yjs will load content from persistence');
+      return ''; // Yjs sẽ tự load từ IndexedDB
+    } else {
+      console.log('📝 Local document - using content from API');
+      return note?.content || '';
+    }
+  }, [note]);
+
   const handleMoveToTrash = useCallback(async () => {
     if (!id) return;
-    
     setIsDeleting(true);
     try {
       await moveToTrash(id, 'NOTE');
       navigate(-1);
     } catch (error: any) {
-      setError("Failed to move note to trash: " + error.message);
+      setError("Failed to move to trash: " + error.message);
       setIsDeleting(false);
     }
   }, [id, navigate]);
 
   const handleToggleImportant = useCallback(async () => {
     if (!note || !id) return;
-
     setIsImportantLoading(true);
     try {
-      let updatedNote;
-      if (note.isImportant) {
-        updatedNote = await removeAsImportant(id);
-      } else {
-        updatedNote = await markAsImportant(id);
-      }
+      const updatedNote = note.isImportant ? await removeAsImportant(id) : await markAsImportant(id);
       setNote(updatedNote);
     } catch (error: any) {
-      setError("Failed to update important status: " + error.message);
+      alert(error.message);
     } finally {
       setIsImportantLoading(false);
     }
@@ -124,7 +120,6 @@ export const useDocumentState = () => {
 
   const handleExportPdf = useCallback(async () => {
     if (!id) return;
-
     setIsExporting(true);
     try {
       const blob = await exportNoteAsPdf(id);
@@ -132,59 +127,40 @@ export const useDocumentState = () => {
       const a = document.createElement('a');
       a.href = url;
       a.download = `${note?.title || 'note'}.pdf`;
-      document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
     } catch (error: any) {
-      setError("Failed to export note: " + error.message);
+      alert(error.message);
     } finally {
       setIsExporting(false);
     }
   }, [id, note?.title]);
 
   return useMemo(() => ({
-    // State
-    note,
-    isLoading,
-    error,
-    collapsed,
+    note, 
+    isLoading, 
+    error, 
+    collapsed, 
     setCollapsed,
-    showToolbar,
-    setShowToolbar,
-    toolbarPosition,
+    showToolbar, 
+    setShowToolbar, 
+    toolbarPosition, 
     setToolbarPosition,
-    isUpdating,
-    isDeleting,
-    isExporting,
-    showDeleteConfirm,
-    setShowDeleteConfirm,
+    isUpdating, 
+    isDeleting, 
+    isExporting, 
+    showDeleteConfirm, 
+    setShowDeleteConfirm, 
     isImportantLoading,
-
-    // Handlers
-    handleUpdateNote,
-    handleMoveToTrash,
-    handleToggleImportant,
+    handleUpdateNote, 
+    handleMoveToTrash, 
+    handleToggleImportant, 
     handleExportPdf,
-
-    // Return noteId for collaboration features
+    getInitialContent, // ✅ Export function mới
     noteId: id
   }), [
-    note,
-    isLoading,
-    error,
-    collapsed,
-    showToolbar,
-    toolbarPosition,
-    isUpdating,
-    isDeleting,
-    isExporting,
-    showDeleteConfirm,
-    isImportantLoading,
-    handleUpdateNote,
-    handleMoveToTrash,
-    handleToggleImportant,
-    handleExportPdf,
-    id,
+    note, isLoading, error, collapsed, showToolbar, toolbarPosition, 
+    isUpdating, isDeleting, isExporting, showDeleteConfirm, isImportantLoading,
+    handleUpdateNote, handleMoveToTrash, handleToggleImportant, handleExportPdf,
+    getInitialContent, id
   ]);
 };
