@@ -46,10 +46,10 @@ export const useYjs = (documentId: string, isShared: boolean) => {
         setYjsService(service);
         setDoc(service.getDocument());
 
-        // âœ… Äá»¢I PERSISTENCE SYNC TRÆ¯á»šC KHI TIáº¾P Tá»¤C
-        console.log('â³ Waiting for persistence sync...');
+        // ✅ ĐỢI PERSISTENCE SYNC TRƯỚC KHI TIẾP TỤC
+        console.log('⏳ Waiting for persistence sync...');
         await service.waitForPersistence();
-        console.log('âœ… Persistence ready, continuing initialization...');
+        console.log('✅ Persistence ready, continuing initialization...');
         setPersistenceReady(true);
 
         if (isShared) {
@@ -64,7 +64,7 @@ export const useYjs = (documentId: string, isShared: boolean) => {
             setAwareness(result.awareness);
             setProvider(result.provider);
             
-            // âœ… FIX: Äáº£m báº£o awareness Ä‘Æ°á»£c thiáº¿t láº­p Ä‘Ãºng cÃ¡ch
+            // ✅ FIX: Đảm bảo awareness được thiết lập đúng cách
             setTimeout(() => {
               if (result.awareness) {
                 try {
@@ -73,16 +73,16 @@ export const useYjs = (documentId: string, isShared: boolean) => {
                     cursor: null,
                     selection: null,
                   });
-                  console.log('âœ… Initial awareness state set');
+                  console.log('✅ Initial awareness state set');
                 } catch (error) {
-                  console.error('âŒ Error setting initial awareness state:', error);
+                  console.error('❌ Error setting initial awareness state:', error);
                 }
               }
             }, 100);
             
-            // âœ… Láº¯ng nghe sá»± kiá»‡n sync tá»« provider
+            // ✅ Lắng nghe sự kiện sync từ provider
             result.provider.on('sync', (synced: boolean) => {
-              console.log('ðŸ”„ Yjs Provider Synced:', synced);
+              console.log('📡 Yjs Provider Synced:', synced);
               setIsSynced(synced);
             });
 
@@ -91,7 +91,7 @@ export const useYjs = (documentId: string, isShared: boolean) => {
             retryCount.current = 0;
             
           } catch (error) {
-            console.error('âŒ WebSocket connection failed:', error);
+            console.error('❌ WebSocket connection failed:', error);
             if (retryCount.current < maxRetries) {
               retryCount.current++;
               const delay = Math.min(1000 * Math.pow(2, retryCount.current), 10000);
@@ -101,6 +101,10 @@ export const useYjs = (documentId: string, isShared: boolean) => {
               }, delay);
             } else {
               setConnected(false);
+              // Vẫn tiếp tục với local mode nếu collaboration failed
+              console.warn('⚠️ Falling back to local mode due to collaboration failure');
+              setConnected(true);
+              setIsSynced(true);
             }
           }
         } else {
@@ -108,8 +112,11 @@ export const useYjs = (documentId: string, isShared: boolean) => {
           setIsSynced(true);
         }
       } catch (error) {
-        console.error('âŒ Failed to initialize Yjs:', error);
+        console.error('❌ Failed to initialize Yjs:', error);
         initializingRef.current = false;
+        // Fallback to local mode
+        setConnected(true);
+        setIsSynced(true);
       }
     };
 
@@ -142,7 +149,7 @@ export const useYjs = (documentId: string, isShared: boolean) => {
   ) => {
     if (!awareness) return;
     try {
-      // âœ… FIX: Äáº£m báº£o chá»‰ update khi awareness Ä‘Ã£ sáºµn sÃ ng
+      // ✅ FIX: Đảm bảo chỉ update khi awareness đã sẵn sàng
       const currentState = awareness.getLocalState();
       if (currentState) {
         awareness.setLocalState({
@@ -152,7 +159,7 @@ export const useYjs = (documentId: string, isShared: boolean) => {
         });
       }
     } catch (error) {
-      console.error('âŒ Failed to update awareness:', error);
+      console.error('❌ Failed to update awareness:', error);
     }
   }, [awareness]);
 
@@ -164,7 +171,7 @@ export const useYjs = (documentId: string, isShared: boolean) => {
         const states = Array.from(awareness.getStates().values());
         const currentUserId = JSON.parse(localStorage.getItem('user') || '{}').id;
         
-        // âœ… FIX: Sá»­ dá»¥ng Set Ä‘á»ƒ loáº¡i bá» duplicate users
+        // ✅ FIX: Sử dụng Set để loại bỏ duplicate users
         const uniqueUsers = new Map();
         
         states.forEach((state: any) => {
@@ -182,7 +189,7 @@ export const useYjs = (documentId: string, isShared: boolean) => {
         
         setUsers(Array.from(uniqueUsers.values()));
       } catch (error) {
-        console.error('âŒ Error handling awareness change:', error);
+        console.error('❌ Error handling awareness change:', error);
       }
     };
 

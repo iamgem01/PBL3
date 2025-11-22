@@ -25,7 +25,7 @@ export default function DocumentPage() {
     handleMoveToTrash,
     handleToggleImportant,
     handleExportPdf,
-    getInitialContent, // âœ… Nháº­n function má»›i
+    getInitialContent,
     noteId
   } = useDocumentState();
 
@@ -36,17 +36,24 @@ export default function DocumentPage() {
   const [isInviting, setIsInviting] = useState(false);
   const [inviteSuccess, setInviteSuccess] = useState(false);
 
+  // FIXED: Stabilize sharing status detection
   useEffect(() => {
     if (note?.shares && Array.isArray(note.shares)) {
-      setIsShared(prev => {
-        const newState = (note.shares?.length ?? 0) > 0;
-        console.log('ðŸ”„ Sharing status:', { prev, newState, shares: note.shares?.length });
-        return prev !== newState ? newState : prev;
+      const newIsShared = (note.shares?.length ?? 0) > 0;
+      console.log('📊 Sharing status update:', { 
+        previous: isShared, 
+        new: newIsShared, 
+        sharesCount: note.shares?.length 
       });
+      
+      // Only update if actually changed to avoid unnecessary re-renders
+      if (isShared !== newIsShared) {
+        setIsShared(newIsShared);
+      }
     }
-  }, [note?.shares]);
+  }, [note?.shares]); // Removed isShared from dependencies to avoid loop
 
-  // âœ… FIX: Sá»­ dá»¥ng function thay vÃ¬ memo Ä‘á»ƒ láº¥y initial content
+  // ✅ FIX: Sử dụng function thay vì memo để lấy initial content
   const initialContent = useMemo(() => {
     return getInitialContent();
   }, [getInitialContent]);
@@ -58,11 +65,11 @@ export default function DocumentPage() {
       if (isShared) {
         await unshareNote(note.id);
         setIsShared(false);
-        alert('âœ… Document unshared successfully!');
+        alert('✅ Document unshared successfully!');
       } else {
         await shareNote(note.id, ["all"]);
         setIsShared(true);
-        alert('âœ… Document shared successfully!');
+        alert('✅ Document shared successfully!');
       }
     } catch (error: any) {
       alert(`Action failed: ${error.message}`);
@@ -115,7 +122,7 @@ export default function DocumentPage() {
         <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
         <main className={`transition-all duration-300 flex-1 flex items-center justify-center ${collapsed ? "ml-20" : "ml-64"}`}>
           <div className="text-center text-red-500">
-            <p className="mb-4">âš ï¸ {error || "Note not found"}</p>
+            <p className="mb-4">⚠️ {error || "Note not found"}</p>
             <button onClick={() => window.history.back()} className="px-4 py-2 bg-muted rounded-lg">Go back</button>
           </div>
         </main>
@@ -179,7 +186,7 @@ export default function DocumentPage() {
             key={noteId} 
             documentId={noteId || ''}
             isShared={isShared}
-            initialContent={initialContent} // âœ… Sá»­ dá»¥ng initial content thÃ´ng minh
+            initialContent={initialContent}
             onContentChange={handleContentChange}
           />
         </div>

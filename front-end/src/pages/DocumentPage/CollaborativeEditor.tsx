@@ -39,23 +39,18 @@ export const CollaborativeEditor = memo(({
   initialContent,
   onContentChange,
 }: CollaborativeEditorProps) => {
-  const { 
-    doc, 
-    users, 
-    updateAwareness, 
-    yjsService, 
-    awareness, 
-    provider, 
-    isSynced, 
-    persistenceReady 
-  } = useYjs(documentId, isShared);
-  
+  // ✅ FIXED: Đảm bảo thứ tự hook ổn định
   const [isEditorReady, setIsEditorReady] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'offline'>('connecting');
   const [collaborationReady, setCollaborationReady] = useState(false);
+  const [editorError, setEditorError] = useState<string | null>(null);
   
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const editorInitializedRef = useRef(false);
+  const initAttemptRef = useRef(0);
+  const editorRef = useRef<Editor | null>(null);
+
+  const MAX_INIT_ATTEMPTS = 3;
 
   const currentUser = useMemo(() => {
     try {
@@ -75,6 +70,17 @@ export const CollaborativeEditor = memo(({
       }; 
     }
   }, []);
+
+  const { 
+    doc, 
+    users, 
+    updateAwareness, 
+    yjsService, 
+    awareness, 
+    provider, 
+    isSynced, 
+    persistenceReady 
+  } = useYjs(documentId, isShared);
 
   useEffect(() => {
     if (!isShared) {
@@ -104,25 +110,31 @@ export const CollaborativeEditor = memo(({
   }, [onContentChange]);
 
   const extensions = useMemo(() => {
-    const base: any[] = [
-      StarterKit.configure({ 
-        history: isShared ? false : undefined
-      }),
-      Placeholder.configure({ placeholder: 'Start writing...' }),
-      Underline,
-      TextAlign.configure({ types: ['heading', 'paragraph'] }),
-      TextStyle,
-      Color,
-    ];
+    try {
+      const base: any[] = [
+        StarterKit.configure({ 
+          history: isShared ? false : undefined
+        }),
+        Placeholder.configure({ placeholder: 'Start writing...' }),
+        Underline,
+        TextAlign.configure({ types: ['heading', 'paragraph'] }),
+        TextStyle,
+        Color,
+      ];
 
-    if (isShared && doc && persistenceReady) {
-      console.log('✅ Adding Collaboration extension (basic mode)');
-      base.push(Collaboration.configure({ 
-        document: doc 
-      }));
+      if (isShared && doc && persistenceReady) {
+        console.log('✅ Adding Collaboration extension (basic mode)');
+        base.push(Collaboration.configure({ 
+          document: doc 
+        }));
+      }
+      
+      return base;
+    } catch (error) {
+      console.error('❌ Error setting up extensions:', error);
+      setEditorError('Failed to initialize editor extensions');
+      return [];
     }
-    
-    return base;
   }, [isShared, doc, persistenceReady]);
 
   const editor = useEditor({
@@ -135,6 +147,13 @@ export const CollaborativeEditor = memo(({
     onCreate: ({ editor }) => {
       console.log('✅ Editor created successfully');
       editorInitializedRef.current = true;
+      editorRef.current = editor;
+      setEditorError(null);
+    },
+    onDestroy: () => {
+      console.log('🔌 Editor destroyed');
+      editorInitializedRef.current = false;
+      editorRef.current = null;
     },
     editorProps: {
       attributes: {
@@ -143,34 +162,85 @@ export const CollaborativeEditor = memo(({
     }
   }, [extensions]);
 
-  // ⭐ NEW: Hook tích hợp STOMP cho cursor/selection (BỎ typing)
+  // ⭐ NEW: Hook tích hợp STOMP cho cursor/selection
   const { cursorUsers, isConnected: stompConnected } = useCollaboration({
     noteId: documentId,
     isShared,
-    editor,
+    editor: editorRef.current,
   });
 
+  // FIXED: Improved editor ready check với retry logic và ổn định hơn
   useEffect(() => {
-    if (isShared) {
-      const ready = !!doc && !!yjsService && persistenceReady && editorInitializedRef.current && collaborationReady;
-      console.log('🔄 Editor ready check:', { 
-        doc: !!doc, 
-        yjsService: !!yjsService, 
-        persistenceReady, 
-        editorInitialized: editorInitializedRef.current,
-        collaborationReady,
-        ready 
-      });
-      setIsEditorReady(ready);
-    } else {
-      setIsEditorReady(!!editor);
-    }
+    let mounted = true;
+
+    const checkEditorReady = () => {
+      if (!mounted) return;
+
+      if (isShared) {
+        const ready = !!doc && !!yjsService && persistenceReady && editorInitializedRef.current && collaborationReady;
+        console.log('🔄 Editor ready check:', { 
+          doc: !!doc, 
+          yjsService: !!yjsService, 
+          persistenceReady, 
+          editorInitialized: editorInitializedRef.current,
+          collaborationReady,
+          ready,
+          attempt: initAttemptRef.current
+        });
+        
+        if (ready) {
+          setIsEditorReady(true);
+          setEditorError(null);
+        } else if (initAttemptRef.current < MAX_INIT_ATTEMPTS) {
+          initAttemptRef.current += 1;
+          // Retry after delay
+          setTimeout(checkEditorReady, 1000 * initAttemptRef.current);
+        } else {
+          console.warn('⚠️ Editor initialization timeout after max attempts');
+          // Vẫn hiển thị editor ngay cả khi collaboration chưa ready
+          if (editorInitializedRef.current && editor) {
+            setIsEditorReady(true);
+          }
+        }
+      } else {
+        // Local mode - chỉ cần editor
+        setIsEditorReady(!!editor);
+      }
+    };
+
+    // Delay check để tránh race condition
+    const timeoutId = setTimeout(checkEditorReady, 100);
+
+    return () => {
+      mounted = false;
+      clearTimeout(timeoutId);
+    };
   }, [doc, yjsService, isShared, persistenceReady, editor, collaborationReady]);
 
+  // Cleanup effect
   useEffect(() => () => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     editorInitializedRef.current = false;
+    initAttemptRef.current = 0;
   }, []);
+
+  // Error boundary fallback
+  if (editorError) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 space-y-4 h-full">
+        <div className="text-center text-red-500">
+          <p className="text-lg font-medium">Editor Error</p>
+          <p className="text-sm mt-2">{editorError}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!isEditorReady || !editor) {
     console.log('⏳ Editor not ready:', { isEditorReady, editor: !!editor });

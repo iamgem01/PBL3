@@ -52,42 +52,59 @@ export const CursorOverlay = memo(({ users, editor }: CursorOverlayProps) => {
     }
 
     const updateCursors = () => {
-      const editorElement = editor.view.dom;
-      const editorRect = editorElement.getBoundingClientRect();
+      try {
+        const editorElement = editor.view.dom;
+        const editorRect = editorElement.getBoundingClientRect();
 
-      const newCursors: CursorPosition[] = users
-        .filter(user => user.cursor && user.cursor.pos !== undefined)
-        .map(user => {
-          try {
-            const pos = user.cursor!.pos;
-            
-            if (pos < 0 || pos > editor.state.doc.content.size) {
+        const newCursors: CursorPosition[] = users
+          .filter(user => user.cursor && user.cursor.pos !== undefined && user.cursor.pos !== null)
+          .map(user => {
+            try {
+              const pos = user.cursor!.pos;
+              
+              // ✅ FIXED: Better position validation
+              if (pos < 0 || pos > editor.state.doc.content.size) {
+                return null;
+              }
+
+              const coords = editor.view.coordsAtPos(pos);
+              
+              // ✅ FIXED: Validate coordinates
+              if (!coords || (coords.left === 0 && coords.top === 0)) {
+                return null;
+              }
+
+              const x = coords.left - editorRect.left;
+              const y = coords.top - editorRect.top;
+
+              // ✅ Validate final positions
+              if (x < 0 || y < 0 || x > editorRect.width || y > editorRect.height) {
+                return null;
+              }
+
+              // ✅ Sử dụng màu vibrant
+              const vibrantColor = getVibrantColor(user.id);
+
+              return {
+                userId: user.id,
+                name: user.name || 'Unknown',
+                color: vibrantColor,
+                x,
+                y,
+                visible: true,
+              };
+            } catch (error) {
+              console.error('❌ Error calculating cursor position:', error);
               return null;
             }
+          })
+          .filter((cursor): cursor is CursorPosition => cursor !== null);
 
-            const coords = editor.view.coordsAtPos(pos);
-            const x = coords.left - editorRect.left;
-            const y = coords.top - editorRect.top;
-
-            // ✅ Sử dụng màu vibrant
-            const vibrantColor = getVibrantColor(user.id);
-
-            return {
-              userId: user.id,
-              name: user.name,
-              color: vibrantColor,
-              x,
-              y,
-              visible: true,
-            };
-          } catch (error) {
-            console.error('Error calculating cursor position:', error);
-            return null;
-          }
-        })
-        .filter((cursor): cursor is CursorPosition => cursor !== null);
-
-      setCursors(newCursors);
+        setCursors(newCursors);
+      } catch (error) {
+        console.error('❌ Error updating cursors:', error);
+        setCursors([]);
+      }
     };
 
     updateCursors();

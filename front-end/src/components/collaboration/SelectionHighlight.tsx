@@ -34,64 +34,79 @@ export const SelectionHighlight = memo(({ users, editor }: SelectionHighlightPro
     }
 
     const updateHighlights = () => {
-      const editorElement = editor.view.dom;
-      const editorRect = editorElement.getBoundingClientRect();
+      try {
+        const editorElement = editor.view.dom;
+        const editorRect = editorElement.getBoundingClientRect();
 
-      const newHighlights: HighlightRect[] = [];
+        const newHighlights: HighlightRect[] = [];
 
-      users.forEach(user => {
-        if (!user.selection || user.selection.from === user.selection.to) {
-          return; // Không có selection hoặc selection rỗng
-        }
-
-        try {
-          const { from, to } = user.selection;
-          
-          // Đảm bảo positions hợp lệ
-          if (from < 0 || to > editor.state.doc.content.size || from >= to) {
-            return;
+        users.forEach(user => {
+          if (!user.selection || user.selection.from === user.selection.to) {
+            return; // Không có selection hoặc selection rỗng
           }
 
-          // Lấy tọa độ của selection
-          const fromCoords = editor.view.coordsAtPos(from);
-          const toCoords = editor.view.coordsAtPos(to);
+          try {
+            const { from, to } = user.selection;
+            
+            // ✅ FIXED: Better position validation
+            if (from < 0 || to > editor.state.doc.content.size || from >= to) {
+              return;
+            }
 
-          // Tính toán vị trí relative
-          const x = fromCoords.left - editorRect.left;
-          const y = fromCoords.top - editorRect.top;
-          const width = toCoords.right - fromCoords.left;
-          const height = toCoords.bottom - fromCoords.top;
+            // Lấy tọa độ của selection
+            const fromCoords = editor.view.coordsAtPos(from);
+            const toCoords = editor.view.coordsAtPos(to);
 
-          // Xử lý multi-line selection (đơn giản hóa - chỉ highlight first line)
-          if (height > 30) {
-            // Multi-line: highlight toàn bộ chiều rộng của dòng đầu
-            newHighlights.push({
-              userId: user.id,
-              name: user.name,
-              color: user.color,
-              x,
-              y,
-              width: editorRect.width - x,
-              height: 24, // Height của một dòng
-            });
-          } else {
-            // Single line
-            newHighlights.push({
-              userId: user.id,
-              name: user.name,
-              color: user.color,
-              x,
-              y,
-              width,
-              height: 24,
-            });
+            // Validate coordinates
+            if (!fromCoords || !toCoords) {
+              return;
+            }
+
+            // Tính toán vị trí relative
+            const x = fromCoords.left - editorRect.left;
+            const y = fromCoords.top - editorRect.top;
+            const width = toCoords.right - fromCoords.left;
+            const height = toCoords.bottom - fromCoords.top;
+
+            // Validate final dimensions
+            if (x < 0 || y < 0 || width <= 0 || height <= 0) {
+              return;
+            }
+
+            // Xử lý multi-line selection (đơn giản hóa - chỉ highlight first line)
+            if (height > 30) {
+              // Multi-line: highlight toàn bộ chiều rộng của dòng đầu
+              newHighlights.push({
+                userId: user.id,
+                name: user.name,
+                color: user.color,
+                x,
+                y,
+                width: Math.min(editorRect.width - x, editorRect.width),
+                height: 24, // Height của một dòng
+              });
+            } else {
+              // Single line
+              newHighlights.push({
+                userId: user.id,
+                name: user.name,
+                color: user.color,
+                x,
+                y,
+                width: Math.min(width, editorRect.width - x),
+                height: 24,
+              });
+            }
+          } catch (error) {
+            console.error('❌ Error calculating selection highlight:', error);
           }
-        } catch (error) {
-          console.error('Error calculating selection highlight:', error);
-        }
-      });
+        });
 
-      setHighlights(newHighlights);
+        setHighlights(newHighlights);
+      } catch (error) {
+        console.error('❌ Error updating selection highlights:', error);
+        setHighlights([]);
+      }
     };
 
     // Update khi có thay đổi
