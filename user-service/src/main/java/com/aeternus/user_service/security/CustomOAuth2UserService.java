@@ -1,10 +1,12 @@
 package com.aeternus.user_service.security; 
 
+import com.aeternus.user_service.dto.UserRegisteredEvent;
 import com.aeternus.user_service.model.*;
 import com.aeternus.user_service.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -22,6 +24,7 @@ public class CustomOAuth2UserService extends OidcUserService { // SỬA: Kế th
 
     private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2UserService.class);
 
+    private final KafkaTemplate<String, Object> kafkaTemplate;
     private final UserRepository userRepository;
     private final EmailRepository emailRepository;
     private final RoleRepository roleRepository;
@@ -87,6 +90,15 @@ public class CustomOAuth2UserService extends OidcUserService { // SỬA: Kế th
             
             userRoleRepository.save(userRole);
             logger.info("Successfully created user {} with ROLE_USER", savedUser.getUserId());
+
+            UserRegisteredEvent event = new UserRegisteredEvent(
+                savedUser.getUserId().toString(),
+                email,
+                name
+            );
+
+            kafkaTemplate.send("user", savedUser.getUserId().toString(), event);
+            logger.info("Sent UserRegisteredEvent to Kafka: {}", email);
 
         } else {
             // --- TRƯỜNG HỢP USER CŨ ---
