@@ -14,24 +14,28 @@ export interface ISession extends Document {
   files: IFileData[];
   lastAccessed: Date;
   metadata: {
-    userId?: string;
+    userId: string; // 🔥 Bắt buộc có userId
     action?: string;
+    createdAt: Date;
   };
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const sessionSchema = new Schema<ISession>({
   sessionId: { type: String, required: true, unique: true, index: true },
   context: { type: String },
   files: [{
-    fileName: String,
-    mimeType: String,
-    size: Number,
-    content: Buffer
+    fileName: { type: String, required: true },
+    mimeType: { type: String, required: true },
+    size: { type: Number, required: true },
+    content: { type: Buffer, required: true }
   }],
   lastAccessed: { type: Date, default: Date.now },
   metadata: {
-    userId: { type: String, index: true },
-    action: String
+    userId: { type: String, required: true, index: true },
+    action: { type: String },
+    createdAt: { type: Date, default: Date.now }
   }
 }, {
   timestamps: true
@@ -39,5 +43,8 @@ const sessionSchema = new Schema<ISession>({
 
 // Tự động xóa session sau 24h không hoạt động
 sessionSchema.index({ lastAccessed: 1 }, { expireAfterSeconds: 86400 });
+
+// Index cho hiệu năng truy vấn
+sessionSchema.index({ sessionId: 1, 'metadata.userId': 1 });
 
 export const Session = model<ISession>('Session', sessionSchema);

@@ -41,7 +41,7 @@ const processUploadedFiles = (files: Express.Multer.File[] | undefined) => {
   }));
 };
 
-// 🔥 IMPROVED: Helper function to process session data
+// 🔥 FIXED: Helper function to process session data - LOGIC MỚI HOÀN TOÀN
 const processSession = async (
   sessionId: string | undefined,
   context: string | undefined,
@@ -53,30 +53,32 @@ const processSession = async (
   let finalContext = context;
   let finalFiles = files;
 
-  if (sessionId) {
-    // 🔍 Kiểm tra session có tồn tại không
-    const session = await SessionService.getSession(sessionId);
-    
-    if (session) {
-      console.log(`✅ Found existing session: ${sessionId}`);
-      
-      // 🔥 Chỉ update context nếu có context mới
-      if (context && context !== session.context) {
-        await SessionService.updateContext(sessionId, context);
-        console.log(`📝 Updated context for session: ${sessionId}`);
-      } else {
-        // Sử dụng context từ session cũ
-        finalContext = session.context || context;
-        console.log(`📖 Using existing context from session`);
-      }
+  // 🔥 VALIDATION: Đảm bảo userId hợp lệ
+  const validUserId = userId && userId !== "anonymous" ? userId : `anon-${Date.now()}`;
 
-      // 🔥 Chỉ add files nếu có files mới
-      if (files && files.length > 0) {
-        await SessionService.addFiles(sessionId, files);
-        console.log(`📎 Added ${files.length} new files to session`);
-      } else {
-        // 🔥 Sử dụng files từ session cũ
-        const sessionFiles = await SessionService.getFiles(sessionId);
+  if (sessionId) {
+    try {
+      // 🔍 Kiểm tra session có tồn tại không
+      const session = await SessionService.getSession(sessionId, validUserId);
+      
+      if (session) {
+        console.log(`✅ Found existing session: ${sessionId} for user: ${validUserId}`);
+        
+        // 🔥 QUAN TRỌNG: LUÔN ƯU TIÊN CONTEXT TỪ SESSION TRƯỚC
+        if (session.context) {
+          finalContext = session.context;
+          console.log(`📖 Using existing context from session: ${finalContext.length} chars`);
+        } 
+        
+        // 🔥 Nếu có context mới VÀ session chưa có context -> thêm mới
+        else if (context && context.trim().length > 0) {
+          await SessionService.updateContext(sessionId, context, validUserId);
+          finalContext = context;
+          console.log(`📝 Added new context to existing session: ${context.length} chars`);
+        }
+
+        // 🔥 QUAN TRỌNG: LUÔN ƯU TIÊN FILES TỪ SESSION TRƯỚC
+        const sessionFiles = await SessionService.getFiles(sessionId, validUserId);
         if (sessionFiles.length > 0) {
           finalFiles = sessionFiles.map((file) => ({
             ...file,
@@ -87,43 +89,61 @@ const processSession = async (
             fieldname: "files",
           })) as unknown as Express.Multer.File[];
           console.log(`📚 Using ${finalFiles.length} existing files from session`);
+        } 
+        
+        // 🔥 Nếu có files mới VÀ session chưa có files -> thêm mới
+        else if (files && files.length > 0) {
+          await SessionService.addFiles(sessionId, files, validUserId);
+          finalFiles = files;
+          console.log(`📎 Added ${files.length} new files to existing session`);
+        }
+        
+        // Update lastAccessed
+        await SessionService.updateLastAccessed(sessionId, validUserId);
+        
+      } else {
+        // Session ID không tồn tại hoặc không thuộc về user -> Tạo mới
+        console.log(`⚠️ Session ${sessionId} not found or access denied, creating new session for user: ${validUserId}`);
+        finalSessionId = await SessionService.createSession(validUserId, action);
+        
+        if (context && context.trim().length > 0) {
+          await SessionService.updateContext(finalSessionId, context, validUserId);
+          finalContext = context;
+        }
+        if (files && files.length > 0) {
+          await SessionService.addFiles(finalSessionId, files, validUserId);
+          finalFiles = files;
         }
       }
-      
-      // Update lastAccessed
-      await SessionService.updateLastAccessed(sessionId);
-      
-    } else {
-      // Session ID không tồn tại -> Tạo mới
-      console.log(`⚠️ Session ${sessionId} not found, creating new session`);
-      finalSessionId = await SessionService.createSession(userId, action);
-      
-      if (context) {
-        await SessionService.updateContext(finalSessionId, context);
-      }
-      if (files && files.length > 0) {
-        await SessionService.addFiles(finalSessionId, files);
-      }
+    } catch (error) {
+      console.error(`❌ Error processing session ${sessionId}:`, error);
+      // Fallback: tạo session mới
+      finalSessionId = await SessionService.createSession(validUserId, action);
+      if (context) finalContext = context;
+      if (files) finalFiles = files;
     }
   } else {
     // 🆕 Không có sessionId -> Tạo session mới
-    console.log(`🆕 Creating new session for user: ${userId}`);
-    finalSessionId = await SessionService.createSession(userId, action);
+    console.log(`🆕 Creating new session for user: ${validUserId}`);
+    finalSessionId = await SessionService.createSession(validUserId, action);
     
-    if (context) {
-      await SessionService.updateContext(finalSessionId, context);
-      console.log(`📝 Added context to new session`);
+    if (context && context.trim().length > 0) {
+      await SessionService.updateContext(finalSessionId, context, validUserId);
+      finalContext = context;
+      console.log(`📝 Added context to new session: ${context.length} chars`);
     }
     if (files && files.length > 0) {
-      await SessionService.addFiles(finalSessionId, files);
+      await SessionService.addFiles(finalSessionId, files, validUserId);
+      finalFiles = files;
       console.log(`📎 Added ${files.length} files to new session`);
     }
   }
 
   return {
-    sessionId: finalSessionId,
+    sessionId: finalSessionId!,
     context: finalContext,
     files: finalFiles || [],
+    userId: validUserId
   };
 };
 
@@ -148,18 +168,21 @@ class ChatController {
 
       console.log(`📨 [Request] SessionId: ${sessionId || 'NEW'} | Action: ${action} | User: ${userId}`);
       console.log(`📊 [Request] HasContext: ${!!context} | HasFiles: ${files?.length || 0}`);
+      console.log(`💬 [Message] Length: ${message?.length || 0} chars`);
 
-      // 🔥 Xử lý session - Chỉ gửi context/files nếu cần
+      // 🔥 Xử lý session - LUÔN sử dụng context/files từ session nếu có
       const {
         sessionId: finalSessionId,
         context: finalContext,
         files: finalFiles,
+        userId: finalUserId
       } = await processSession(sessionId, context, files, userId, action);
 
       const fileData = processUploadedFiles(finalFiles);
 
       console.log(`🎯 [Processing] FinalSessionId: ${finalSessionId}`);
-      console.log(`📚 [Processing] Using Context: ${!!finalContext} | Using Files: ${fileData?.length || 0}`);
+      console.log(`📚 [Processing] Using Context: ${!!finalContext} (${finalContext?.length || 0} chars) | Using Files: ${fileData?.length || 0}`);
+      console.log(`👤 [User] Final UserId: ${finalUserId}`);
 
       let response: string;
 
@@ -192,11 +215,11 @@ class ChatController {
           break;
         case "chat":
         default:
-          // 🔥 Sử dụng context và files từ session
+          // 🔥 QUAN TRỌNG: LUÔN sử dụng context và files từ session
           response = await geminiService.chat(
             message,
-            finalContext,
-            fileData,
+            finalContext, // 🔥 Đây có thể là context từ session cũ
+            fileData,     // 🔥 Đây có thể là files từ session cũ
             preferences
           );
           break;
@@ -204,13 +227,24 @@ class ChatController {
 
       console.log(`✅ [Response] Success | SessionId: ${finalSessionId} | ResponseLength: ${response.length}`);
 
+      // 🔥 Lấy session summary để trả về metadata
+      const sessionSummary = await SessionService.getSessionSummary(finalSessionId, finalUserId);
+
       res.json({
         status: "success",
         data: {
           response,
           action,
-          sessionId: finalSessionId, // 🔥 Trả về sessionId cho frontend
+          sessionId: finalSessionId,
           timestamp: new Date().toISOString(),
+          metadata: {
+            hasContext: !!finalContext,
+            contextLength: finalContext?.length || 0,
+            hasFiles: !!fileData && fileData.length > 0,
+            filesCount: fileData?.length || 0,
+            userId: finalUserId,
+            sessionSummary: sessionSummary
+          }
         },
       });
     } catch (error) {
@@ -228,7 +262,7 @@ class ChatController {
     try {
       const { text, maxLength, preferences } = req.body;
 
-      console.log(`📄 [Summarize] Length: ${text?.length} chars`);
+      console.log(`📄 [Summarize] Length: ${text?.length} chars | MaxLength: ${maxLength}`);
 
       const summary = await geminiService.summarize(
         text,
@@ -298,7 +332,7 @@ class ChatController {
     try {
       const { text, style, preferences } = req.body;
 
-      console.log(`✏️ [Improve] Style: ${style} | Length: ${text?.length}`);
+      console.log(`✏️ [Improve] Style: ${style} | Length: ${text?.length} chars`);
 
       const improved = await geminiService.improveWriting(
         text,
@@ -324,9 +358,7 @@ class ChatController {
     try {
       const { text, targetLanguage, preferences } = req.body;
 
-      console.log(
-        `🌍 [Translate] Target: ${targetLanguage} | Length: ${text?.length}`
-      );
+      console.log(`🌍 [Translate] Target: ${targetLanguage} | Length: ${text?.length} chars`);
 
       const translated = await geminiService.translate(
         text,
@@ -351,6 +383,8 @@ class ChatController {
   async getSessionData(req: Request, res: Response, next: NextFunction) {
     try {
       const { sessionId } = req.params;
+      const { userId } = req.query;
+
       if (!sessionId) {
         return res.status(400).json({
           status: "error",
@@ -358,13 +392,13 @@ class ChatController {
         });
       }
 
-      console.log(`🔍 [Get Session] SessionId: ${sessionId}`);
+      console.log(`🔍 [Get Session] SessionId: ${sessionId} | UserId: ${userId || 'not provided'}`);
 
-      const session = await SessionService.getSession(sessionId);
+      const session = await SessionService.getSession(sessionId, userId as string);
       if (!session) {
         return res.status(404).json({
           status: "error",
-          message: "Session not found",
+          message: "Session not found or access denied",
         });
       }
 
@@ -377,9 +411,16 @@ class ChatController {
             fileName: f.fileName,
             mimeType: f.mimeType,
             size: f.size,
+            uploadedAt: session.createdAt
           })),
           lastAccessed: session.lastAccessed,
           metadata: session.metadata,
+          summary: {
+            hasContext: !!session.context,
+            contextLength: session.context?.length || 0,
+            filesCount: session.files.length,
+            totalFilesSize: session.files.reduce((sum, file) => sum + file.size, 0)
+          }
         },
       });
     } catch (error) {
@@ -389,7 +430,90 @@ class ChatController {
   }
 
   /**
-   * 8. PREFERENCES CONFIG
+   * 8. UPDATE SESSION CONTEXT
+   * Cập nhật context cho session.
+   * Route: PUT /api/chat/session/:sessionId/context
+   */
+  async updateSessionContext(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { sessionId } = req.params;
+      const { context, userId } = req.body;
+
+      if (!sessionId || !context) {
+        return res.status(400).json({
+          status: "error",
+          message: "Session ID and context are required",
+        });
+      }
+
+      console.log(`📝 [Update Context] SessionId: ${sessionId} | ContextLength: ${context.length}`);
+
+      const result = await SessionService.updateContext(sessionId, context, userId);
+
+      if (!result) {
+        return res.status(404).json({
+          status: "error",
+          message: "Session not found or access denied",
+        });
+      }
+
+      res.json({
+        status: "success",
+        data: {
+          sessionId: result.sessionId,
+          context: result.context,
+          updatedAt: result.updatedAt
+        },
+      });
+    } catch (error) {
+      console.error("❌ Error updating session context:", error);
+      next(error);
+    }
+  }
+
+  /**
+   * 9. CLEAR SESSION CONTEXT
+   * Xóa context của session.
+   * Route: DELETE /api/chat/session/:sessionId/context
+   */
+  async clearSessionContext(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { sessionId } = req.params;
+      const { userId } = req.body;
+
+      if (!sessionId) {
+        return res.status(400).json({
+          status: "error",
+          message: "Session ID is required",
+        });
+      }
+
+      console.log(`🗑️ [Clear Context] SessionId: ${sessionId}`);
+
+      const result = await SessionService.updateContext(sessionId, '', userId);
+
+      if (!result) {
+        return res.status(404).json({
+          status: "error",
+          message: "Session not found or access denied",
+        });
+      }
+
+      res.json({
+        status: "success",
+        data: {
+          sessionId: result.sessionId,
+          message: "Context cleared successfully"
+        },
+      });
+    } catch (error) {
+      console.error("❌ Error clearing session context:", error);
+      next(error);
+    }
+  }
+
+  /**
+   * 10. PREFERENCES CONFIG
    * Lấy cấu hình mặc định cho Frontend.
    * Route: GET /api/chat/preferences
    */
