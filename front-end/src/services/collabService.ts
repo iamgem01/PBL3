@@ -1,22 +1,22 @@
 const COLLAB_SERVICE_URL = import.meta.env.VITE_COLLAB_SERVICE_URL || 'http://localhost:8083';
 
 /**
- * Xử lý response từ API
+ * Xá»­ lÃ½ response tá»« API
  */
 const handleResponse = async (response: Response): Promise<any> => {
-    console.log('📥 Response status:', response.status);
-    console.log('📥 Response ok:', response.ok);
+    console.log('ðŸ“¥ Response status:', response.status);
+    console.log('ðŸ“¥ Response ok:', response.ok);
 
     if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Error response:', errorText);
+        console.error('âŒ Error response:', errorText);
         
         let errorMessage = `Request failed with status ${response.status}`;
         
         try {
             const errorData = JSON.parse(errorText);
             errorMessage = errorData.message || errorData.error || errorMessage;
-            console.error('❌ Parsed error:', errorData);
+            console.error('âŒ Parsed error:', errorData);
         } catch {
             errorMessage = errorText || errorMessage;
         }
@@ -25,36 +25,36 @@ const handleResponse = async (response: Response): Promise<any> => {
     }
 
     const text = await response.text();
-    console.log('📥 Response text length:', text.length);
+    console.log('ðŸ“¥ Response text length:', text.length);
     
     if (!text) {
-        console.log('ℹ️ Empty response body');
+        console.log('â„¹ï¸ Empty response body');
         return {};
     }
     
     try {
         const data = JSON.parse(text);
-        console.log('✅ Parsed response data:', data);
+        console.log('âœ… Parsed response data:', data);
         return data;
     } catch (e) {
-        console.log('⚠️ Non-JSON response:', text);
+        console.log('âš ï¸ Non-JSON response:', text);
         return { message: text };
     }
 };
 
 /**
- * Lấy tất cả documents đã được share từ collab-service
+ * Láº¥y táº¥t cáº£ documents Ä‘Ã£ Ä‘Æ°á»£c share tá»« collab-service
  */
 
 /**
- * Lấy tất cả documents đã được share với current user
+ * Láº¥y táº¥t cáº£ documents Ä‘Ã£ Ä‘Æ°á»£c share vá»›i current user
  */
 export const getSharedNotes = async (): Promise<any[]> => {
     try {
         // Get current user ID
         const userData = localStorage.getItem('user');
         if (!userData) {
-            console.error('❌ No user data in localStorage for shared notes');
+            console.error('âŒ No user data in localStorage for shared notes');
             return [];
         }
         
@@ -62,7 +62,7 @@ export const getSharedNotes = async (): Promise<any[]> => {
         const userId = user.id;
         
         console.log('========================================');
-        console.log('📤 FETCHING SHARED NOTES FOR USER:', userId);
+        console.log('ðŸ“¤ FETCHING SHARED NOTES FOR USER:', userId);
         console.log('========================================');
         console.log('URL:', `${COLLAB_SERVICE_URL}/api/notes/shared`);
         
@@ -76,13 +76,13 @@ export const getSharedNotes = async (): Promise<any[]> => {
         });
         
         const data = await handleResponse(response);
-        console.log('✅ Fetched shared notes:', data.length);
+        console.log('âœ… Fetched shared notes:', data.length);
         console.log('========================================');
         
         return data;
     } catch (error) {
         console.error('========================================');
-        console.error('❌ ERROR FETCHING SHARED NOTES');
+        console.error('âŒ ERROR FETCHING SHARED NOTES');
         console.error('========================================');
         console.error('Error:', error);
         console.error('========================================');
@@ -91,12 +91,12 @@ export const getSharedNotes = async (): Promise<any[]> => {
 };
 
 /**
- * Share một document với danh sách users
+ * Share má»™t document vá»›i danh sÃ¡ch users
  */
 export const shareNote = async (noteId: string, userIds: string[]): Promise<any> => {
     try {
         console.log('========================================');
-        console.log('📤 SHARING NOTE');
+        console.log('ðŸ“¤ SHARING NOTE');
         console.log('========================================');
         console.log('URL:', `${COLLAB_SERVICE_URL}/api/notes/${noteId}/share`);
         console.log('Note ID:', noteId);
@@ -115,14 +115,14 @@ export const shareNote = async (noteId: string, userIds: string[]): Promise<any>
         });
         
         const data = await handleResponse(response);
-        console.log('✅ Share successful');
+        console.log('âœ… Share successful');
         console.log('Response data:', data);
         console.log('========================================');
         
         return data;
     } catch (error) {
         console.error('========================================');
-        console.error('❌ ERROR SHARING NOTE');
+        console.error('âŒ ERROR SHARING NOTE');
         console.error('========================================');
         console.error('Note ID:', noteId);
         console.error('Error:', error);
@@ -132,12 +132,12 @@ export const shareNote = async (noteId: string, userIds: string[]): Promise<any>
 };
 
 /**
- * Unshare một document
+ * Unshare má»™t document
  */
 export const unshareNote = async (noteId: string): Promise<any> => {
     try {
         console.log('========================================');
-        console.log('📤 UNSHARING NOTE');
+        console.log('ðŸ“¤ UNSHARING NOTE');
         console.log('========================================');
         console.log('URL:', `${COLLAB_SERVICE_URL}/api/notes/${noteId}/unshare`);
         console.log('Note ID:', noteId);
@@ -151,13 +151,13 @@ export const unshareNote = async (noteId: string): Promise<any> => {
         });
         
         const data = await handleResponse(response);
-        console.log('✅ Unshare successful');
+        console.log('âœ… Unshare successful');
         console.log('========================================');
         
         return data;
     } catch (error) {
         console.error('========================================');
-        console.error('❌ ERROR UNSHARING NOTE');
+        console.error('âŒ ERROR UNSHARING NOTE');
         console.error('========================================');
         console.error('Note ID:', noteId);
         console.error('Error:', error);
@@ -167,7 +167,7 @@ export const unshareNote = async (noteId: string): Promise<any> => {
 };
 
 /**
- * Mời user qua email để collaborate
+ * Má»i user qua email Ä‘á»ƒ collaborate
  */
 export const inviteUser = async (
     noteId: string, 
@@ -178,7 +178,7 @@ export const inviteUser = async (
         // Get current user ID
         const userData = localStorage.getItem('user');
         if (!userData) {
-            console.error('❌ No user data in localStorage for invitation');
+            console.error('âŒ No user data in localStorage for invitation');
             throw new Error('User not authenticated');
         }
         
@@ -186,7 +186,7 @@ export const inviteUser = async (
         const userId = user.id;
         
         console.log('========================================');
-        console.log('📧 INVITING USER');
+        console.log('ðŸ“§ INVITING USER');
         console.log('========================================');
         console.log('Note ID:', noteId);
         console.log('From:', inviterEmail);
@@ -207,13 +207,13 @@ export const inviteUser = async (
         });
         
         const data = await handleResponse(response);
-        console.log('✅ Invitation sent successfully');
+        console.log('âœ… Invitation sent successfully');
         console.log('========================================');
         
         return data;
     } catch (error) {
         console.error('========================================');
-        console.error('❌ ERROR SENDING INVITATION');
+        console.error('âŒ ERROR SENDING INVITATION');
         console.error('========================================');
         console.error('Error:', error);
         console.error('========================================');
@@ -222,12 +222,12 @@ export const inviteUser = async (
 };
 
 /**
- * Accept invitation (người được mời click vào link)
+ * Accept invitation (ngÆ°á»i Ä‘Æ°á»£c má»i click vÃ o link)
  */
 export const acceptInvitation = async (token: string, userEmail: string): Promise<any> => {
     try {
         console.log('========================================');
-        console.log('✅ ACCEPTING INVITATION');
+        console.log('âœ… ACCEPTING INVITATION');
         console.log('========================================');
         console.log('Token:', token);
         console.log('User Email:', userEmail);
@@ -245,13 +245,13 @@ export const acceptInvitation = async (token: string, userEmail: string): Promis
         });
         
         const data = await handleResponse(response);
-        console.log('✅ Invitation accepted');
+        console.log('âœ… Invitation accepted');
         console.log('========================================');
         
         return data;
     } catch (error) {
         console.error('========================================');
-        console.error('❌ ERROR ACCEPTING INVITATION');
+        console.error('âŒ ERROR ACCEPTING INVITATION');
         console.error('========================================');
         console.error('Error:', error);
         console.error('========================================');
@@ -260,7 +260,7 @@ export const acceptInvitation = async (token: string, userEmail: string): Promis
 };
 
 /**
- * Lấy danh sách invitations cho một note
+ * Láº¥y danh sÃ¡ch invitations cho má»™t note
  */
 export const getInvitationsByNote = async (noteId: string): Promise<any[]> => {
     try {
@@ -274,13 +274,13 @@ export const getInvitationsByNote = async (noteId: string): Promise<any[]> => {
         
         return await handleResponse(response);
     } catch (error) {
-        console.error('❌ Error fetching invitations:', error);
+        console.error('âŒ Error fetching invitations:', error);
         throw error;
     }
 };
 
 /**
- * Lấy pending invitations cho current user
+ * Láº¥y pending invitations cho current user
  */
 export const getPendingInvitations = async (email: string): Promise<any[]> => {
     try {
@@ -294,17 +294,17 @@ export const getPendingInvitations = async (email: string): Promise<any[]> => {
         
         return await handleResponse(response);
     } catch (error) {
-        console.error('❌ Error fetching pending invitations:', error);
+        console.error('âŒ Error fetching pending invitations:', error);
         throw error;
     }
 };
 
 /**
- * Lấy chi tiết một note từ collab-service
+ * Láº¥y chi tiáº¿t má»™t note tá»« collab-service
  */
 export const getNoteById = async (noteId: string): Promise<any> => {
     try {
-        console.log('📤 Fetching note from collab-service:', noteId);
+        console.log('ðŸ“¤ Fetching note from collab-service:', noteId);
         
         const response = await fetch(`${COLLAB_SERVICE_URL}/api/notes/${noteId}`, {
             method: 'GET',
@@ -315,11 +315,11 @@ export const getNoteById = async (noteId: string): Promise<any> => {
         });
         
         const data = await handleResponse(response);
-        console.log('✅ Note fetched successfully');
+        console.log('âœ… Note fetched successfully');
         
         return data;
     } catch (error) {
-        console.error('❌ Error fetching note from collab-service:', error);
+        console.error('âŒ Error fetching note from collab-service:', error);
         throw error;
     }
 };
@@ -329,7 +329,7 @@ export const getNoteById = async (noteId: string): Promise<any> => {
  */
 export const checkCollabServiceHealth = async (): Promise<boolean> => {
     try {
-        console.log('🏥 Checking collab-service health...');
+        console.log('ðŸ¥ Checking collab-service health...');
         
         const response = await fetch(`${COLLAB_SERVICE_URL}/health`, {
             method: 'GET',
@@ -337,13 +337,13 @@ export const checkCollabServiceHealth = async (): Promise<boolean> => {
         
         if (response.ok) {
             const data = await response.json();
-            console.log('✅ Collab-service is healthy:', data);
+            console.log('âœ… Collab-service is healthy:', data);
             return true;
         }
         
         return false;
     } catch (error) {
-        console.error('❌ Collab-service health check failed:', error);
+        console.error('âŒ Collab-service health check failed:', error);
         return false;
     }
 };

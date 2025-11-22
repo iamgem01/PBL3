@@ -30,7 +30,7 @@ public class WebSocketController {
             @Payload Map<String, Object> message,
             SimpMessageHeaderAccessor headerAccessor) {
         
-        System.out.println("📨 Received note edit for note: " + noteId);
+        System.out.println("ðŸ“¨ Received note edit for note: " + noteId);
         System.out.println("Message: " + message);
         
         // Add server timestamp
@@ -48,7 +48,7 @@ public class WebSocketController {
             @DestinationVariable String noteId,
             @Payload Map<String, Object> userInfo) {
         
-        System.out.println("👤 User joined note: " + noteId);
+        System.out.println("ðŸ‘¤ User joined note: " + noteId);
         System.out.println("User: " + userInfo);
         
         return userInfo;
@@ -78,7 +78,7 @@ public class WebSocketController {
             @DestinationVariable String noteId,
             @Payload Map<String, Object> presenceInfo) {
         
-        System.out.println("👁️ Presence update for note: " + noteId);
+        System.out.println("ðŸ‘ï¸ Presence update for note: " + noteId);
         presenceInfo.put("timestamp", System.currentTimeMillis());
         
         return presenceInfo;

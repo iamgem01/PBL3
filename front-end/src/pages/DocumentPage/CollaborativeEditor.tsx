@@ -7,8 +7,11 @@ import { TextAlign } from '@tiptap/extension-text-align';
 import { Color } from '@tiptap/extension-color';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { useYjs } from '@/hooks/useYjs';
+import { useCollaboration } from '@/hooks/useCollaboration';
 import { EditorToolbar } from './EditorToolbar';
 import { PresenceIndicator } from '../../components/PresenceIndicator';
+import { CursorOverlay } from '../../components/collaboration/CursorOverlay';
+import { SelectionHighlight } from '../../components/collaboration/SelectionHighlight';
 import { useEffect, useState, useCallback, memo, useRef, useMemo } from 'react';
 
 const DEBOUNCE_DELAY = 1000;
@@ -112,7 +115,6 @@ export const CollaborativeEditor = memo(({
       Color,
     ];
 
-    // ✅ CHỈ sử dụng Collaboration cơ bản, KHÔNG dùng CollaborationCursor
     if (isShared && doc && persistenceReady) {
       console.log('✅ Adding Collaboration extension (basic mode)');
       base.push(Collaboration.configure({ 
@@ -140,6 +142,13 @@ export const CollaborativeEditor = memo(({
       }
     }
   }, [extensions]);
+
+  // ⭐ NEW: Hook tích hợp STOMP cho cursor/selection (BỎ typing)
+  const { cursorUsers, isConnected: stompConnected } = useCollaboration({
+    noteId: documentId,
+    isShared,
+    editor,
+  });
 
   useEffect(() => {
     if (isShared) {
@@ -187,6 +196,7 @@ export const CollaborativeEditor = memo(({
 
   return (
     <div className="flex flex-col h-full bg-background">
+      {/* ✅ FIXED: Chỉ hiển thị presence, BỎ typing indicator */}
       {isShared && users.length > 0 && (
         <div className="border-b border-border bg-blue-50 dark:bg-blue-900/20">
           <PresenceIndicator users={users} />
@@ -195,8 +205,16 @@ export const CollaborativeEditor = memo(({
       
       <EditorToolbar editor={editor} />
       
-      <div className="flex-1 overflow-auto">
-        <div className="max-w-4xl mx-auto">
+      <div className="flex-1 overflow-auto relative">
+        <div className="max-w-4xl mx-auto relative">
+          {/* ✅ Overlays với vibrant colors */}
+          {isShared && editor && cursorUsers.length > 0 && (
+            <>
+              <SelectionHighlight users={cursorUsers} editor={editor} />
+              <CursorOverlay users={cursorUsers} editor={editor} />
+            </>
+          )}
+          
           <EditorContent editor={editor} />
         </div>
       </div>
@@ -207,7 +225,10 @@ export const CollaborativeEditor = memo(({
             <span>{isShared ? '🟢 Collaborative Mode' : '🔵 Local Mode'}</span>
             <ConnectionStatus />
             {isShared && (
-              <span>Collaboration: {collaborationReady ? '✅ Ready' : '⏳ Loading'}</span>
+              <>
+                <span>Collaboration: {collaborationReady ? '✅ Ready' : '⏳ Loading'}</span>
+                {stompConnected && <span className="text-green-600">• Cursor tracking active</span>}
+              </>
             )}
           </div>
           <span>{editor.storage.characterCount?.characters() || 0} characters</span>

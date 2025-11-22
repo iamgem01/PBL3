@@ -19,7 +19,7 @@ export const PresenceIndicator = memo(({ users }: PresenceIndicatorProps) => {
     return null;
   }
 
-  // ✅ FIX: Đảm bảo không có duplicate users bằng cách sử dụng Map
+  // ✅ Đảm bảo không có duplicate users
   const uniqueUsers = Array.from(
     new Map(users.map(user => [user.id, user])).values()
   );
@@ -30,15 +30,15 @@ export const PresenceIndicator = memo(({ users }: PresenceIndicatorProps) => {
         <User size={14} />
         <span>Active collaborators:</span>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         {uniqueUsers.map((user) => (
           <div
-            key={`${user.id}-${user.email}`} // ✅ FIX: Sử dụng composite key
-            className="flex items-center gap-2 px-2 py-1 rounded-md bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs"
+            key={`${user.id}-${user.email}`}
+            className="flex items-center gap-2 px-2 py-1 rounded-md bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs transition-all hover:scale-105"
             title={`${user.name} (${user.email})`}
           >
             <div
-              className="w-2 h-2 rounded-full"
+              className="w-2 h-2 rounded-full animate-pulse"
               style={{ backgroundColor: user.color }}
             />
             <span className="font-medium">{user.name}</span>

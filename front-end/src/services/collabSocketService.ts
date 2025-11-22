@@ -186,13 +186,13 @@ class CollabSocketService {
             };
             
             this.client.publish({
-                destination: `/app/ws/note.edit/${noteId}`, // Thêm /ws prefix
+                destination: `/app/ws/note.edit/${noteId}`, // ThÃªm /ws prefix
                 body: JSON.stringify(payload),
             });
 
-            console.log('📤 Note update sent');
+            console.log('ðŸ“¤ Note update sent');
         } else {
-            console.warn('⚠️ Cannot send message: WebSocket is not connected');
+            console.warn('âš ï¸ Cannot send message: WebSocket is not connected');
         }
     }
 
@@ -211,13 +211,13 @@ class CollabSocketService {
             };
             
             this.client.publish({
-                destination: `/app/ws/note.join/${noteId}`, // Thêm /ws prefix
+                destination: `/app/ws/note.join/${noteId}`, // ThÃªm /ws prefix
                 body: JSON.stringify(payload),
             });
 
-            console.log('📤 User join event sent');
+            console.log('ðŸ“¤ User join event sent');
         } else {
-            console.warn('⚠️ Cannot send join: WebSocket is not connected');
+            console.warn('âš ï¸ Cannot send join: WebSocket is not connected');
         }
     }
 
@@ -236,13 +236,13 @@ class CollabSocketService {
             };
             
             this.client.publish({
-                destination: `/app/ws/note.leave/${noteId}`, // Thêm /ws prefix
+                destination: `/app/ws/note.leave/${noteId}`, // ThÃªm /ws prefix
                 body: JSON.stringify(payload),
             });
 
-            console.log('📤 User leave event sent');
+            console.log('ðŸ“¤ User leave event sent');
         } else {
-            console.warn('⚠️ Cannot send leave: WebSocket is not connected');
+            console.warn('âš ï¸ Cannot send leave: WebSocket is not connected');
         }
     }
 
@@ -261,7 +261,7 @@ class CollabSocketService {
             };
             
             this.client.publish({
-                destination: `/app/ws/note.cursor/${noteId}`, // Thêm /ws prefix
+                destination: `/app/ws/note.cursor/${noteId}`, // ThÃªm /ws prefix
                 body: JSON.stringify(payload),
             });
         }

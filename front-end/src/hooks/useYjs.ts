@@ -46,10 +46,10 @@ export const useYjs = (documentId: string, isShared: boolean) => {
         setYjsService(service);
         setDoc(service.getDocument());
 
-        // ✅ ĐỢI PERSISTENCE SYNC TRƯỚC KHI TIẾP TỤC
-        console.log('⏳ Waiting for persistence sync...');
+        // âœ… Äá»¢I PERSISTENCE SYNC TRÆ¯á»šC KHI TIáº¾P Tá»¤C
+        console.log('â³ Waiting for persistence sync...');
         await service.waitForPersistence();
-        console.log('✅ Persistence ready, continuing initialization...');
+        console.log('âœ… Persistence ready, continuing initialization...');
         setPersistenceReady(true);
 
         if (isShared) {
@@ -64,7 +64,7 @@ export const useYjs = (documentId: string, isShared: boolean) => {
             setAwareness(result.awareness);
             setProvider(result.provider);
             
-            // ✅ FIX: Đảm bảo awareness được thiết lập đúng cách
+            // âœ… FIX: Äáº£m báº£o awareness Ä‘Æ°á»£c thiáº¿t láº­p Ä‘Ãºng cÃ¡ch
             setTimeout(() => {
               if (result.awareness) {
                 try {
@@ -73,16 +73,16 @@ export const useYjs = (documentId: string, isShared: boolean) => {
                     cursor: null,
                     selection: null,
                   });
-                  console.log('✅ Initial awareness state set');
+                  console.log('âœ… Initial awareness state set');
                 } catch (error) {
-                  console.error('❌ Error setting initial awareness state:', error);
+                  console.error('âŒ Error setting initial awareness state:', error);
                 }
               }
             }, 100);
             
-            // ✅ Lắng nghe sự kiện sync từ provider
+            // âœ… Láº¯ng nghe sá»± kiá»‡n sync tá»« provider
             result.provider.on('sync', (synced: boolean) => {
-              console.log('🔄 Yjs Provider Synced:', synced);
+              console.log('ðŸ”„ Yjs Provider Synced:', synced);
               setIsSynced(synced);
             });
 
@@ -91,7 +91,7 @@ export const useYjs = (documentId: string, isShared: boolean) => {
             retryCount.current = 0;
             
           } catch (error) {
-            console.error('❌ WebSocket connection failed:', error);
+            console.error('âŒ WebSocket connection failed:', error);
             if (retryCount.current < maxRetries) {
               retryCount.current++;
               const delay = Math.min(1000 * Math.pow(2, retryCount.current), 10000);
@@ -108,7 +108,7 @@ export const useYjs = (documentId: string, isShared: boolean) => {
           setIsSynced(true);
         }
       } catch (error) {
-        console.error('❌ Failed to initialize Yjs:', error);
+        console.error('âŒ Failed to initialize Yjs:', error);
         initializingRef.current = false;
       }
     };
@@ -142,7 +142,7 @@ export const useYjs = (documentId: string, isShared: boolean) => {
   ) => {
     if (!awareness) return;
     try {
-      // ✅ FIX: Đảm bảo chỉ update khi awareness đã sẵn sàng
+      // âœ… FIX: Äáº£m báº£o chá»‰ update khi awareness Ä‘Ã£ sáºµn sÃ ng
       const currentState = awareness.getLocalState();
       if (currentState) {
         awareness.setLocalState({
@@ -152,7 +152,7 @@ export const useYjs = (documentId: string, isShared: boolean) => {
         });
       }
     } catch (error) {
-      console.error('❌ Failed to update awareness:', error);
+      console.error('âŒ Failed to update awareness:', error);
     }
   }, [awareness]);
 
@@ -164,7 +164,7 @@ export const useYjs = (documentId: string, isShared: boolean) => {
         const states = Array.from(awareness.getStates().values());
         const currentUserId = JSON.parse(localStorage.getItem('user') || '{}').id;
         
-        // ✅ FIX: Sử dụng Set để loại bỏ duplicate users
+        // âœ… FIX: Sá»­ dá»¥ng Set Ä‘á»ƒ loáº¡i bá» duplicate users
         const uniqueUsers = new Map();
         
         states.forEach((state: any) => {
@@ -182,7 +182,7 @@ export const useYjs = (documentId: string, isShared: boolean) => {
         
         setUsers(Array.from(uniqueUsers.values()));
       } catch (error) {
-        console.error('❌ Error handling awareness change:', error);
+        console.error('âŒ Error handling awareness change:', error);
       }
     };
 

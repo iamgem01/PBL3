@@ -114,7 +114,7 @@ export class YjsService {
           throw new Error('Failed to get awareness from provider');
         }
 
-        // ✅ FIX: Khởi tạo awareness state với delay để đảm bảo document đã sẵn sàng
+        // ✅ FIX: Khởi tạo awareness state với vibrant color
         setTimeout(() => {
           try {
             this.awareness!.setLocalState({
@@ -242,10 +242,19 @@ export class YjsService {
     }
   }
 
+  // ✅ FIXED: Generate vibrant colors
   private generateUserColor(userId: string): string {
     const colors = [
-      '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
-      '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD'
+      '#FF6B6B', // Red
+      '#4ECDC4', // Cyan
+      '#45B7D1', // Blue
+      '#96CEB4', // Green
+      '#FECA57', // Yellow
+      '#FF9FF3', // Pink
+      '#54A0FF', // Light Blue
+      '#5F27CD', // Purple
+      '#00D2D3', // Turquoise
+      '#FF6348', // Orange
     ];
     const index = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
     return colors[index];
