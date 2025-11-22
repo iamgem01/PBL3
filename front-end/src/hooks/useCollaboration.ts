@@ -49,7 +49,7 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
     }
   }, []);
 
-  // Connect to STOMP WebSocket - FIXED: Thêm cleanup và stability
+  // Connect to STOMP WebSocket - FIXED: Thêm validation mạnh mẽ hơn
   useEffect(() => {
     if (!isShared || !noteId || !editor) {
       return;
@@ -60,27 +60,42 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
 
     console.log('🔌 Connecting to collaboration service...');
 
-    // Handle cursor updates from other users - FIXED: Thêm validation mạnh mẽ
+    // Handle cursor updates from other users - FIXED: Thêm validation cực kỳ mạnh mẽ
     const handleCursorUpdate = (message: CursorUpdateMessage) => {
       if (!mounted) return;
       
       try {
+        // ✅ FIXED: Validate message structure cực kỹ
+        if (!message || typeof message !== 'object') {
+          console.warn('⚠️ Invalid cursor message: not an object');
+          return;
+        }
+
         const currentUserId = getCurrentUser().id;
         
         // Ignore own cursor updates
         if (message.userId === currentUserId) return;
 
-        // ✅ FIXED: Validate message data
-        if (!message.userId || !message.name || message.position === undefined) {
-          console.warn('⚠️ Invalid cursor update message:', message);
+        // ✅ FIXED: Validate required fields
+        if (!message.userId || typeof message.userId !== 'string') {
+          console.warn('⚠️ Invalid cursor message: missing userId');
+          return;
+        }
+
+        if (message.position === undefined || message.position === null) {
+          console.warn('⚠️ Invalid cursor message: missing position');
+          return;
+        }
+
+        // ✅ FIXED: Validate position type and range
+        const position = Number(message.position);
+        if (isNaN(position) || position < 0) {
+          console.warn('⚠️ Invalid cursor position:', message.position);
           return;
         }
 
         setCursorUsers((prev: CollaborativeUser[]) => {
           const filtered = prev.filter((u: CollaborativeUser) => u.id !== message.userId);
-          
-          // ✅ FIXED: Ensure valid cursor position
-          const validPosition = Math.max(0, message.position || 0);
           
           return [
             ...filtered,
@@ -89,7 +104,7 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
               name: message.name || 'Unknown',
               email: message.email || 'unknown@example.com',
               color: message.color || '#FF6B6B',
-              cursor: { pos: validPosition },
+              cursor: { pos: position },
             },
           ];
         });
@@ -98,28 +113,40 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
       }
     };
 
-    // Handle selection updates - FIXED: Thêm validation mạnh mẽ
+    // Handle selection updates - FIXED: Thêm validation cực kỳ mạnh mẽ
     const handleSelectionUpdate = (message: SelectionMessage) => {
       if (!mounted) return;
       
       try {
+        // ✅ FIXED: Validate message structure cực kỹ
+        if (!message || typeof message !== 'object') {
+          console.warn('⚠️ Invalid selection message: not an object');
+          return;
+        }
+
         const currentUserId = getCurrentUser().id;
         
         // Ignore own selection
         if (message.userId === currentUserId) return;
 
-        // ✅ FIXED: Validate message data
-        if (!message.userId || !message.selection) {
-          console.warn('⚠️ Invalid selection update message:', message);
+        // ✅ FIXED: Validate required fields
+        if (!message.userId || typeof message.userId !== 'string') {
+          console.warn('⚠️ Invalid selection message: missing userId');
+          return;
+        }
+
+        if (!message.selection || typeof message.selection !== 'object') {
+          console.warn('⚠️ Invalid selection message: missing selection object');
           return;
         }
 
         // Validate selection range
-        const start = Math.max(0, message.selection.start || 0);
-        const end = Math.max(0, message.selection.end || 0);
+        const start = Number(message.selection.start);
+        const end = Number(message.selection.end);
         
-        if (start >= end) {
-          return; // Invalid selection range
+        if (isNaN(start) || isNaN(end) || start < 0 || end < 0 || start >= end) {
+          console.warn('⚠️ Invalid selection range:', { start, end });
+          return;
         }
 
         setCursorUsers((prev: CollaborativeUser[]) => {
@@ -171,7 +198,7 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
           );
         }
       );
-    }, 1000); // Increased delay to ensure stability
+    }, 1500); // Increased delay to ensure stability
 
     return () => {
       mounted = false;
@@ -196,7 +223,7 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
     };
   }, [isShared, noteId, editor, getCurrentUser]);
 
-  // Track cursor position changes - FIXED: Improved error handling
+  // Track cursor position changes - FIXED: Improved error handling và validation
   useEffect(() => {
     if (!isConnected || !editor || !isShared) return;
 
@@ -210,14 +237,14 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
           return;
         }
 
-        // Debounce cursor updates (150ms)
+        // Debounce cursor updates (200ms) - Increased for stability
         if (cursorUpdateTimeoutRef.current) {
           clearTimeout(cursorUpdateTimeoutRef.current);
         }
 
         cursorUpdateTimeoutRef.current = setTimeout(() => {
-          // Only send if position changed
-          if (lastCursorPos.current !== from) {
+          // Only send if position changed significantly (avoid spam)
+          if (lastCursorPos.current === null || Math.abs(lastCursorPos.current - from) > 1) {
             lastCursorPos.current = from;
             
             collabSocketService.sendCursorUpdate(
@@ -228,7 +255,7 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
               from
             );
           }
-        }, 150);
+        }, 200);
       } catch (error) {
         console.error('❌ Error tracking cursor position:', error);
       }
@@ -267,17 +294,17 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
           return;
         }
 
-        // Debounce selection updates (200ms)
+        // Debounce selection updates (300ms) - Increased for stability
         if (selectionUpdateTimeoutRef.current) {
           clearTimeout(selectionUpdateTimeoutRef.current);
         }
 
         selectionUpdateTimeoutRef.current = setTimeout(() => {
-          // Only send if selection changed
+          // Only send if selection changed significantly
           const selectionChanged = 
             !lastSelection.current ||
-            lastSelection.current.from !== from ||
-            lastSelection.current.to !== to;
+            Math.abs(lastSelection.current.from - from) > 1 ||
+            Math.abs(lastSelection.current.to - to) > 1;
 
           if (selectionChanged) {
             lastSelection.current = { from, to };
@@ -290,7 +317,7 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
               text: selectedText,
             });
           }
-        }, 200);
+        }, 300);
       } catch (error) {
         console.error('❌ Error tracking text selection:', error);
       }

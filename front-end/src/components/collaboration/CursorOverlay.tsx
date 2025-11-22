@@ -26,6 +26,7 @@ interface CursorPosition {
 export const CursorOverlay = memo(({ users, editor }: CursorOverlayProps) => {
   const [cursors, setCursors] = useState<CursorPosition[]>([]);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const updateTimeoutRef = useRef<number | null>(null);
 
   // ✅ Generate vibrant colors cho cursor
   const getVibrantColor = (userId: string): string => {
@@ -56,49 +57,52 @@ export const CursorOverlay = memo(({ users, editor }: CursorOverlayProps) => {
         const editorElement = editor.view.dom;
         const editorRect = editorElement.getBoundingClientRect();
 
-        const newCursors: CursorPosition[] = users
-          .filter(user => user.cursor && user.cursor.pos !== undefined && user.cursor.pos !== null)
-          .map(user => {
-            try {
-              const pos = user.cursor!.pos;
-              
-              // ✅ FIXED: Better position validation
-              if (pos < 0 || pos > editor.state.doc.content.size) {
-                return null;
-              }
+        const newCursors: CursorPosition[] = [];
 
-              const coords = editor.view.coordsAtPos(pos);
-              
-              // ✅ FIXED: Validate coordinates
-              if (!coords || (coords.left === 0 && coords.top === 0)) {
-                return null;
-              }
-
-              const x = coords.left - editorRect.left;
-              const y = coords.top - editorRect.top;
-
-              // ✅ Validate final positions
-              if (x < 0 || y < 0 || x > editorRect.width || y > editorRect.height) {
-                return null;
-              }
-
-              // ✅ Sử dụng màu vibrant
-              const vibrantColor = getVibrantColor(user.id);
-
-              return {
-                userId: user.id,
-                name: user.name || 'Unknown',
-                color: vibrantColor,
-                x,
-                y,
-                visible: true,
-              };
-            } catch (error) {
-              console.error('❌ Error calculating cursor position:', error);
-              return null;
+        users.forEach(user => {
+          try {
+            // ✅ FIXED: Validate user data cực kỹ
+            if (!user || !user.id || !user.cursor || user.cursor.pos === undefined || user.cursor.pos === null) {
+              return;
             }
-          })
-          .filter((cursor): cursor is CursorPosition => cursor !== null);
+
+            const pos = user.cursor.pos;
+            
+            // ✅ FIXED: Better position validation
+            if (pos < 0 || pos > editor.state.doc.content.size) {
+              return;
+            }
+
+            const coords = editor.view.coordsAtPos(pos);
+            
+            // ✅ FIXED: Validate coordinates
+            if (!coords || (coords.left === 0 && coords.top === 0)) {
+              return;
+            }
+
+            const x = coords.left - editorRect.left;
+            const y = coords.top - editorRect.top;
+
+            // ✅ Validate final positions
+            if (x < 0 || y < 0 || x > editorRect.width || y > editorRect.height) {
+              return;
+            }
+
+            // ✅ Sử dụng màu vibrant
+            const vibrantColor = getVibrantColor(user.id);
+
+            newCursors.push({
+              userId: user.id,
+              name: user.name || 'Unknown',
+              color: vibrantColor,
+              x,
+              y,
+              visible: true,
+            });
+          } catch (error) {
+            console.error('❌ Error calculating cursor position for user:', user.id, error);
+          }
+        });
 
         setCursors(newCursors);
       } catch (error) {
@@ -107,10 +111,18 @@ export const CursorOverlay = memo(({ users, editor }: CursorOverlayProps) => {
       }
     };
 
-    updateCursors();
+    // Debounce cursor updates để tránh spam
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+    }
+
+    updateTimeoutRef.current = setTimeout(updateCursors, 50);
 
     const handleUpdate = () => {
-      updateCursors();
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+      updateTimeoutRef.current = setTimeout(updateCursors, 50);
     };
 
     editor.on('update', handleUpdate);
@@ -119,6 +131,9 @@ export const CursorOverlay = memo(({ users, editor }: CursorOverlayProps) => {
     return () => {
       editor.off('update', handleUpdate);
       editor.off('selectionUpdate', handleUpdate);
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
     };
   }, [users, editor]);
 

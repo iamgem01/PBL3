@@ -1,7 +1,6 @@
 import type { Item } from "../types/Item";
 import { recentlyVisited, upcomingEvents } from "./mockData";
 
-// Giả lập gọi API backend
 export async function fetchItemsByCategory(category: string): Promise<Item[]> {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -18,14 +17,13 @@ export async function fetchItemsByCategory(category: string): Promise<Item[]> {
         default:
           resolve([]);
       }
-    }, 400); // mô phỏng network delay
+    }, 400);
   });
 }
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
-// User Preferences Interface
 export interface UserPreferences {
   tone?: 'professional' | 'casual' | 'friendly' | 'technical';
   responseLength?: 'concise' | 'detailed' | 'comprehensive';
@@ -39,6 +37,8 @@ export interface ChatMessageRequest {
   targetLanguage?: string;
   files?: File[];
   preferences?: UserPreferences;
+  sessionId?: string;
+  userId?: string;
 }
 
 export interface ChatMessageResponse {
@@ -46,6 +46,8 @@ export interface ChatMessageResponse {
   data: {
     response: string;
     action: string;
+    sessionId: string;
+    timestamp: string;
     metadata?: any;
   };
 }
@@ -123,6 +125,24 @@ export interface DefaultPreferencesResponse {
   };
 }
 
+export interface SessionDataResponse {
+  status: string;
+  data: {
+    sessionId: string;
+    context?: string;
+    files: Array<{
+      fileName: string;
+      mimeType: string;
+      size: number;
+    }>;
+    lastAccessed: Date;
+    metadata: {
+      userId?: string;
+      action?: string;
+    };
+  };
+}
+
 class ApiError extends Error {
   statusCode?: number;
   errors?: Array<{ field: string; message: string }>;
@@ -175,13 +195,9 @@ async function fetchAPI<T>(
 }
 
 export const apiService = {
-  /**
-   * Gửi tin nhắn chat
-   */
   async sendMessage(request: ChatMessageRequest): Promise<ChatMessageResponse> {
     const formData = new FormData();
     
-    // Validate message
     const messageText = request.message?.trim() || '';
     if (!messageText && (!request.files || request.files.length === 0)) {
       throw new ApiError('Message or files are required', 400);
@@ -193,44 +209,56 @@ export const apiService = {
       formData.append('action', request.action);
     }
 
+    // 🔥 Gửi sessionId nếu có
+    if (request.sessionId) {
+      formData.append('sessionId', request.sessionId);
+      console.log('📌 Using existing sessionId:', request.sessionId);
+    }
+
+    if (request.userId) {
+      formData.append('userId', request.userId);
+    }
+
+    // 🔥 CHỈ gửi context nếu được chỉ định
     if (request.context) {
       formData.append('context', request.context);
+      console.log('📝 Sending context (length):', request.context.length);
     }
 
     if (request.targetLanguage) {
       formData.append('targetLanguage', request.targetLanguage);
     }
 
-    // Thêm preferences
     if (request.preferences) {
       formData.append('preferences', JSON.stringify(request.preferences));
     }
 
-    // Thêm files nếu có
+    // 🔥 CHỈ gửi files nếu có
     if (request.files && request.files.length > 0) {
       request.files.forEach((file) => {
         formData.append('files', file);
       });
+      console.log('📎 Sending files:', request.files.length);
     }
 
     const url = `${API_BASE_URL}/chat/message`;
 
-    // Debug: Log what we're sending
     console.log('📤 Sending FormData:', {
       message: messageText.substring(0, 50) + (messageText.length > 50 ? '...' : ''),
       action: request.action,
       hasContext: !!request.context,
       hasPreferences: !!request.preferences,
+      hasSessionId: !!request.sessionId,
       filesCount: request.files?.length || 0
     });
 
     try {
       const response = await fetch(url, {
         method: 'POST',
-        body: formData, // Không set Content-Type, browser sẽ tự set với boundary
+        body: formData,
+        credentials: 'include',
       });
 
-      // Try to parse response
       let data;
       try {
         data = await response.json();
@@ -248,6 +276,12 @@ export const apiService = {
         );
       }
 
+      console.log('✅ Response received:', {
+        status: data.status,
+        sessionId: data.data.sessionId,
+        responseLength: data.data.response?.length || 0
+      });
+
       return data;
     } catch (error) {
       console.error('❌ Request failed:', error);
@@ -258,10 +292,41 @@ export const apiService = {
     }
   },
 
-  /**
-   * Lấy default preferences
-   * Returns fallback values if API endpoint doesn't exist
-   */
+  async getSessionData(sessionId: string): Promise<SessionDataResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/chat/session/${sessionId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new ApiError(
+          data.message || "Không thể lấy thông tin session",
+          response.status
+        );
+      }
+
+      console.log('✅ Session data retrieved:', {
+        sessionId: data.data.sessionId,
+        hasContext: !!data.data.context,
+        filesCount: data.data.files?.length || 0
+      });
+
+      return data;
+    } catch (error) {
+      console.error('❌ Failed to get session data:', error);
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError("Không thể lấy thông tin session");
+    }
+  },
+
   async getDefaultPreferences(): Promise<DefaultPreferencesResponse> {
     try {
       const response = await fetch(`${API_BASE_URL}/chat/preferences`, {
@@ -271,7 +336,6 @@ export const apiService = {
         },
       });
 
-      // If endpoint doesn't exist (404), use fallback
       if (response.status === 404) {
         console.log('ℹ️ Preferences endpoint not available, using defaults');
         return {
@@ -297,7 +361,6 @@ export const apiService = {
 
       return data;
     } catch (error) {
-      // Silently fallback to default if any error occurs
       console.log('ℹ️ Using default preferences due to error:', error instanceof ApiError ? error.message : 'Network error');
       return {
         status: 'success',
@@ -312,9 +375,6 @@ export const apiService = {
     }
   },
 
-  /**
-   * Tóm tắt văn bản
-   */
   async summarize(request: SummarizeRequest): Promise<SummarizeResponse> {
     return fetchAPI<SummarizeResponse>("/chat/summarize", {
       method: "POST",
@@ -322,9 +382,6 @@ export const apiService = {
     });
   },
 
-  /**
-   * Tạo ghi chú
-   */
   async createNote(request: NoteRequest): Promise<NoteResponse> {
     return fetchAPI<NoteResponse>("/chat/note", {
       method: "POST",
@@ -332,9 +389,6 @@ export const apiService = {
     });
   },
 
-  /**
-   * Giải thích văn bản
-   */
   async explain(request: ExplainRequest): Promise<ExplainResponse> {
     return fetchAPI<ExplainResponse>("/chat/explain", {
       method: "POST",
@@ -342,9 +396,6 @@ export const apiService = {
     });
   },
 
-  /**
-   * Cải thiện văn phong
-   */
   async improveWriting(request: ImproveRequest): Promise<ImproveResponse> {
     return fetchAPI<ImproveResponse>("/chat/improve", {
       method: "POST",
@@ -352,9 +403,6 @@ export const apiService = {
     });
   },
 
-  /**
-   * Dịch thuật văn bản
-   */
   async translate(request: TranslateRequest): Promise<TranslateResponse> {
     return fetchAPI<TranslateResponse>("/chat/translate", {
       method: "POST",

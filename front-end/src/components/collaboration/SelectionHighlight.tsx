@@ -1,5 +1,6 @@
 import { memo, useEffect, useState } from 'react';
 import { Editor } from '@tiptap/react';
+import React, {  useRef } from 'react';
 
 interface CollaborativeUser {
   id: string;
@@ -26,6 +27,7 @@ interface HighlightRect {
 
 export const SelectionHighlight = memo(({ users, editor }: SelectionHighlightProps) => {
   const [highlights, setHighlights] = useState<HighlightRect[]>([]);
+  const updateTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!editor || !users.length) {
@@ -41,15 +43,16 @@ export const SelectionHighlight = memo(({ users, editor }: SelectionHighlightPro
         const newHighlights: HighlightRect[] = [];
 
         users.forEach(user => {
-          if (!user.selection || user.selection.from === user.selection.to) {
-            return; // Không có selection hoặc selection rỗng
-          }
-
           try {
+            // ✅ FIXED: Validate user data cực kỹ
+            if (!user || !user.id || !user.selection) {
+              return;
+            }
+
             const { from, to } = user.selection;
             
             // ✅ FIXED: Better position validation
-            if (from < 0 || to > editor.state.doc.content.size || from >= to) {
+            if (from === undefined || to === undefined || from < 0 || to > editor.state.doc.content.size || from >= to) {
               return;
             }
 
@@ -78,8 +81,8 @@ export const SelectionHighlight = memo(({ users, editor }: SelectionHighlightPro
               // Multi-line: highlight toàn bộ chiều rộng của dòng đầu
               newHighlights.push({
                 userId: user.id,
-                name: user.name,
-                color: user.color,
+                name: user.name || 'Unknown',
+                color: user.color || '#FF6B6B',
                 x,
                 y,
                 width: Math.min(editorRect.width - x, editorRect.width),
@@ -89,8 +92,8 @@ export const SelectionHighlight = memo(({ users, editor }: SelectionHighlightPro
               // Single line
               newHighlights.push({
                 userId: user.id,
-                name: user.name,
-                color: user.color,
+                name: user.name || 'Unknown',
+                color: user.color || '#FF6B6B',
                 x,
                 y,
                 width: Math.min(width, editorRect.width - x),
@@ -98,7 +101,7 @@ export const SelectionHighlight = memo(({ users, editor }: SelectionHighlightPro
               });
             }
           } catch (error) {
-            console.error('❌ Error calculating selection highlight:', error);
+            console.error('❌ Error calculating selection highlight for user:', user.id, error);
           }
         });
 
@@ -109,11 +112,18 @@ export const SelectionHighlight = memo(({ users, editor }: SelectionHighlightPro
       }
     };
 
-    // Update khi có thay đổi
-    updateHighlights();
+    // Debounce highlight updates
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+    }
+
+    updateTimeoutRef.current = setTimeout(updateHighlights, 50);
 
     const handleUpdate = () => {
-      updateHighlights();
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+      updateTimeoutRef.current = setTimeout(updateHighlights, 50);
     };
 
     editor.on('update', handleUpdate);
@@ -122,6 +132,9 @@ export const SelectionHighlight = memo(({ users, editor }: SelectionHighlightPro
     return () => {
       editor.off('update', handleUpdate);
       editor.off('selectionUpdate', handleUpdate);
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
     };
   }, [users, editor]);
 

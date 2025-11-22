@@ -20,7 +20,10 @@ export const chatMessageSchema = z.object({
     }).optional().default('chat'),
     context: z.string().max(50000, 'Context không được vượt quá 50000 ký tự').optional(),
     targetLanguage: z.string().max(100, 'Ngôn ngữ đích không được vượt quá 100 ký tự').optional(),
+    sessionId: z.string().uuid().optional(),  
+    userId: z.string().optional(),
     preferences: userPreferencesSchema
+
 });
 
 // Schema validation cho summarize

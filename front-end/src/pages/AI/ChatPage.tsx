@@ -33,7 +33,6 @@ const ChatPage: React.FC = () => {
                 console.log('✅ Loaded default preferences:', response.data.defaultPreferences);
             }
         } catch (error) {
-            // Use fallback preferences if API fails
             console.log('ℹ️ Using default preferences (API not available)');
             setUserPreferences({
                 tone: 'professional',
@@ -47,14 +46,22 @@ const ChatPage: React.FC = () => {
         setIsPersonalizeOpen(true);
     };
 
-    const [chats, setChats] = useState<Chat[]>([
-        { id: 1, title: "Hi", messages: [] },
+    // Extended Chat interface with sessionId
+    interface ExtendedChat extends Chat {
+        sessionId?: string;
+        hasContext?: boolean;
+        hasFiles?: boolean;
+        filesInfo?: Array<{ name: string; type: string; size: number }>;
+    }
+
+    const [chats, setChats] = useState<ExtendedChat[]>([
+        { id: 1, title: "Hi", messages: [], sessionId: undefined },
     ]);
     const [selectedChatId, setSelectedChatId] = useState(1);
     const [isTyping, setIsTyping] = useState(false);
     const [, setError] = useState<string | null>(null);
 
-    const selectedChat = chats.find((chat) => chat.id === selectedChatId);
+    const selectedChat = chats.find((chat) => chat.id === selectedChatId) as ExtendedChat | undefined;
 
     const handleSendMessage = async (
         text: string,
@@ -81,7 +88,7 @@ const ChatPage: React.FC = () => {
             })) : undefined
         };
 
-        // Tạo context từ selected notes
+        // 🔥 FIX: Tạo context từ selected notes
         const context =
             notes && notes.length > 0
                 ? notes
@@ -92,7 +99,7 @@ const ChatPage: React.FC = () => {
                     .join("\n\n---\n\n")
                 : undefined;
 
-        // Lưu thông tin về context và files để hiển thị trong AI response
+        // Lưu thông tin về context và files để hiển thị
         const contextSummary = notes && notes.length > 0 
             ? `Đã sử dụng ${notes.length} ghi chú làm context`
             : undefined;
@@ -130,18 +137,72 @@ const ChatPage: React.FC = () => {
 
             const shouldSendPreferences = false;
 
+            // 🔥 KEY FIX: Logic để quyết định gửi context/files
+            const isFirstMessage = !selectedChat?.sessionId;
+            
+            // 🔥 IMPORTANT: 
+            // - Lần đầu: Gửi context/files + tạo session
+            // - Lần sau: CHỈ gửi sessionId, backend sẽ lấy context/files từ DB
+            const shouldSendContext = isFirstMessage && context;
+            const shouldSendFiles = isFirstMessage && files && files.length > 0;
+
+            console.log('📊 Session info:', {
+                sessionId: selectedChat?.sessionId,
+                isFirstMessage,
+                shouldSendContext,
+                shouldSendFiles,
+                hasExistingContext: selectedChat?.hasContext,
+                hasExistingFiles: selectedChat?.hasFiles,
+                contextLength: context?.length
+            });
+
             const response = await apiService.sendMessage({
                 message: text || "Hãy phân tích các file tôi gửi",
                 action,
-                context,
-                files,
-                preferences: shouldSendPreferences ? userPreferences : undefined
+                context: shouldSendContext ? context : undefined,  // 🔥 Chỉ gửi lần đầu
+                files: shouldSendFiles ? files : undefined,        // 🔥 Chỉ gửi lần đầu
+                preferences: shouldSendPreferences ? userPreferences : undefined,
+                sessionId: selectedChat?.sessionId, // 🔥 Gửi sessionId nếu có
+                userId: "user-" + Date.now(),
             });
 
             console.log('✅ Received response:', {
                 responseLength: response.data.response?.length || 0,
+                sessionId: response.data.sessionId,
                 metadata: response.data.metadata
             });
+
+            // 🔥 FIX: Cập nhật sessionId và flags NGAY sau message đầu tiên
+            setChats((prev) =>
+                prev.map((chat) => {
+                    if (chat.id === selectedChatId) {
+                        const updatedChat = {
+                            ...chat,
+                            sessionId: response.data.sessionId,
+                        };
+
+                        // 🔥 Set flags nếu đây là lần đầu gửi context/files
+                        if (isFirstMessage) {
+                            if (context) {
+                                updatedChat.hasContext = true;
+                            }
+                            if (files && files.length > 0) {
+                                updatedChat.hasFiles = true;
+                                updatedChat.filesInfo = filesInfo;
+                            }
+                        }
+
+                        console.log('💾 Updated chat state:', {
+                            sessionId: updatedChat.sessionId,
+                            hasContext: updatedChat.hasContext,
+                            hasFiles: updatedChat.hasFiles
+                        });
+
+                        return updatedChat;
+                    }
+                    return chat;
+                })
+            );
 
             const aiResponse: MessageItem = {
                 id: Date.now() + 1,
@@ -149,10 +210,10 @@ const ChatPage: React.FC = () => {
                 isUser: false,
                 timestamp: new Date(),
                 metadata: response.data.metadata,
-                // Thêm thông tin về context và files đã sử dụng
-                contextUsed: contextSummary,
-                notesUsed: notes,
-                filesUsed: filesInfo
+                // 🔥 Chỉ hiển thị context/files info ở message đầu tiên
+                contextUsed: isFirstMessage ? contextSummary : undefined,
+                notesUsed: isFirstMessage ? notes : undefined,
+                filesUsed: isFirstMessage ? filesInfo : undefined
             };
 
             setChats((prev) =>
@@ -206,14 +267,18 @@ const ChatPage: React.FC = () => {
     };
 
     const handleNewChat = () => {
-        const newChat: Chat = {
+        const newChat: ExtendedChat = {
             id: Date.now(),
             title: "New chat",
             messages: [],
+            sessionId: undefined, // Reset sessionId cho chat mới
+            hasContext: false,
+            hasFiles: false,
         };
         setChats((prev) => [newChat, ...prev]);
         setSelectedChatId(newChat.id);
         setError(null);
+        console.log('🆕 Created new chat, session will be created on first message');
     };
 
     const handleDeleteChat = (id: number) => {
@@ -230,7 +295,7 @@ const ChatPage: React.FC = () => {
     const getMainContentStyle = () => {
         if (isHistoryOpen) {
             return {
-                marginLeft: '20rem', // HistoryPanel width 80 (20rem)
+                marginLeft: '20rem',
                 width: sidebarCollapsed
                     ? 'calc(100% - 20rem)'
                     : 'calc(100% - 20rem)'
@@ -271,7 +336,6 @@ const ChatPage: React.FC = () => {
                 selectedChatId={selectedChatId}
             />
 
-            {/* Personalize Modal */}
             <PersonalizeModal
                 isOpen={isPersonalizeOpen}
                 onClose={() => setIsPersonalizeOpen(false)}
@@ -292,6 +356,29 @@ const ChatPage: React.FC = () => {
                 />
 
                 <div className="flex-1 overflow-hidden flex flex-col pt-14 w-full">
+                    {/* 🔥 Session Info Badge - Hiển thị khi có session */}
+                    {selectedChat?.sessionId && (
+                        <div className="px-4 py-2 bg-blue-50 border-b border-blue-100">
+                            <div className="max-w-3xl mx-auto flex items-center gap-2 text-xs text-blue-700">
+                                <span className="font-medium">📌 Session Active:</span>
+                                <span className="font-mono">{selectedChat.sessionId.substring(0, 8)}...</span>
+                                {selectedChat.hasContext && (
+                                    <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded">
+                                        Context ✓
+                                    </span>
+                                )}
+                                {selectedChat.hasFiles && (
+                                    <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded">
+                                        Files ({selectedChat.filesInfo?.length || 0}) ✓
+                                    </span>
+                                )}
+                                <span className="text-gray-500 ml-auto">
+                                    💡 Context và files đã được lưu - Bạn có thể hỏi tiếp mà không cần gửi lại
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
                     <ChatArea
                         messages={selectedChat?.messages || []}
                         isTyping={isTyping}
