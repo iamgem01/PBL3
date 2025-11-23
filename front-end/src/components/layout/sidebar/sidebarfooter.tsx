@@ -1,5 +1,7 @@
+// src/components/layout/sidebar/sidebarfooter.tsx
 import { Settings, Trash, LayoutPanelTop } from "lucide-react";
 import { UserMenu } from "./userpopup";
+import { useNavigate } from "react-router-dom";
 
 interface SidebarFooterProps {
     collapsed: boolean;
@@ -8,8 +10,14 @@ interface SidebarFooterProps {
 }
 
 export function SidebarFooter({ collapsed, onOpenTrashModal, onOpenSettingsModal }: SidebarFooterProps) {
+    const navigate = useNavigate();
+
     const footerButtons = [
-        { label: "Template", icon: <LayoutPanelTop size={16} /> },
+        { 
+            label: "Template", 
+            icon: <LayoutPanelTop size={16} />,
+            onClick: () => navigate('/template')
+        },
         { 
             label: "Settings", 
             icon: <Settings size={16} />, 

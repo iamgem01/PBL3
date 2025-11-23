@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-
+import TemplatePage from "@/pages/TemplatePage/TemplatePage";
 import LandingPage from "@/pages/Landing/LandingPage";
 import LoginPage from "@/pages/Login/LoginPage";
 import SignUpPage from "@/pages/SignUp/SignUpPage";
@@ -215,7 +215,14 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
+        <Route
+          path="/template"
+          element={
+            <ProtectedRoute>
+              <TemplatePage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/new-note"
           element={
