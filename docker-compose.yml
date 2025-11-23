@@ -105,18 +105,17 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - PORT=3001
-      - NODE_ENV=production
-      - CORS_ORIGIN=http://localhost:5173
-      - GEMINI_API_KEY=AIzaSyCc_u1WvsiEZZryDMv1y8cOqCjHKKtNHgk
-      - GEMINI_API_SECRET=your_gemini_api_secret_here
-      - GEMINI_MODE=gemini-1.5-flash
+    
+      GEMINI_API_KEY: AIzaSyCd1XwO0kHPsYbhVuCff4Wb8hHXWbY-XCg
+      MONGODB_URI: mongodb://mongodb:27017/ai-service
     networks:
       - my-network
     deploy:
       replicas: 1
       restart_policy:
         condition: on-failure
+    depends_on:
+      - mongodb
 
   # User Service #
   user-service:

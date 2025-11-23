@@ -43,7 +43,6 @@ export const verifyAuth = async (): Promise<User | null> => {
         if (response.ok) {
             const data: User = await response.json();
             localStorage.setItem('user', JSON.stringify(data));
-            console.log("Googges");
             return data;
         } else {
             localStorage.removeItem('user');

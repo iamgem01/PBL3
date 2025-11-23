@@ -20,6 +20,8 @@ export const chatMessageSchema = z.object({
     }).optional().default('chat'),
     context: z.string().max(50000, 'Context không được vượt quá 50000 ký tự').optional(),
     targetLanguage: z.string().max(100, 'Ngôn ngữ đích không được vượt quá 100 ký tự').optional(),
+    sessionId: z.string().uuid('Session ID không hợp lệ').optional(),  
+    userId: z.string().min(1, 'User ID không được để trống').optional().default('anonymous'),
     preferences: userPreferencesSchema
 });
 
@@ -71,6 +73,12 @@ export const translateSchema = z.object({
         .optional()
         .default('tiếng Anh'),
     preferences: userPreferencesSchema
+});
+
+// 🔥 NEW: Schema cho session operations
+export const sessionOperationSchema = z.object({
+    userId: z.string().min(1, 'User ID là bắt buộc'),
+    context: z.string().optional()
 });
 
 // Middleware validation với error handling chi tiết
@@ -136,6 +144,29 @@ export const validateFiles = (req: Request, res: Response, next: NextFunction) =
         }
 
         console.log(`📎 Uploaded ${files.length} file(s), total size: ${(totalSize / 1024 / 1024).toFixed(2)}MB`);
+    }
+
+    next();
+};
+
+// 🔥 NEW: Middleware validate session parameters
+export const validateSessionParams = (req: Request, res: Response, next: NextFunction) => {
+    const { sessionId } = req.params;
+    
+    if (!sessionId) {
+        return res.status(400).json({
+            status: 'error',
+            message: 'Session ID là bắt buộc'
+        });
+    }
+
+    // Basic UUID validation
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(sessionId)) {
+        return res.status(400).json({
+            status: 'error',
+            message: 'Session ID không hợp lệ'
+        });
     }
 
     next();

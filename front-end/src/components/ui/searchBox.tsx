@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"; // Thêm useEffect import
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getAllNotes } from "@/services";
+import { getAllNotes } from "@/services/noteService";
 
 interface Note {
     id: string;

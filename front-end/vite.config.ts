@@ -21,12 +21,14 @@ export default defineConfig({
             '@pages': path.resolve(__dirname, './src/pages'),
         },
     },
+    define: {
+        global: 'globalThis',
+    },
     server: {
-        host: '0.0.0.0',
         port: 5000,
         proxy: {
             '/api': {
-                target: process.env.VITE_API_URL || 'http://localhost:8080',
+                target: 'http://localhost:3001',
                 changeOrigin: true,
             },
         },

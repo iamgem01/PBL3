@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllNotes } from "@/services";
+import { getAllNotes } from "@/services/noteService";
 
 interface Note {
     id: string;

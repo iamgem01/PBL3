@@ -20,7 +20,7 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
 
     const openTrashModal = () => setIsTrashModalOpen(true);
     const closeTrashModal = () => setIsTrashModalOpen(false);
-    
+
     const openSettingsModal = () => setIsSettingsModalOpen(true);
     const closeSettingsModal = () => setIsSettingsModalOpen(false);
 
@@ -35,7 +35,7 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
         transition-all duration-300 ${collapsed ? "w-25" : "w-58"}`}
             >
                 {/* Header */}
-                <div className={`flex items-center justify-between p-2 ${collapsed ? "justify-center" : "justify-between"}`}>
+                <div className={`flex items-center p-2 ${collapsed ? "justify-center" : "justify-between"}`}>
                     {!collapsed && (
                         <div className="flex items-center gap-2 p-2">
                             <span className="font-bold font-gabarito text-lg bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
@@ -44,22 +44,25 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                         </div>
                     )}
 
-                    {/* Action buttons */}
-                    <div className="flex items-center gap-1">
+                    {/* Action buttons - ĐỔI VỊ TRÍ Ở ĐÂY */}
+                    <div className={`flex items-center gap-1 ${collapsed ? "justify-center" : ""}`}>
+                        {/* Add Note button - chỉ hiển thị khi sidebar mở rộng */}
+                        {!collapsed && (
+                            <button
+                                onClick={handleCreateNewNote}
+                                className="p-1 rounded hover:bg-muted transition-colors text-foreground"
+                                title="Add new note"
+                            >
+                                <FilePlus size={16} />
+                            </button>
+                        )}
+
                         {/* Toggle button */}
                         <button
                             className="p-1 rounded hover:bg-muted transition-colors text-foreground"
                             onClick={() => setCollapsed(!collapsed)}
                         >
-                            <Menu size={20} />
-                        </button>
-                        {/* Add Note button */}
-                        <button
-                            onClick={handleCreateNewNote}
-                            className="p-1 rounded hover:bg-muted transition-colors text-foreground"
-                            title="Add new note"
-                        >
-                            <FilePlus size={20} />
+                            <Menu size={16} />
                         </button>
                     </div>
                 </div>
@@ -73,8 +76,8 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 </div>
                 {/* Footer */}
                 <div className={`${collapsed ? "items-center" : "items-stretch"} px-1`}>
-                    <SidebarFooter 
-                        collapsed={collapsed} 
+                    <SidebarFooter
+                        collapsed={collapsed}
                         onOpenTrashModal={openTrashModal}
                         onOpenSettingsModal={openSettingsModal}
                     />
@@ -82,15 +85,15 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
             </div>
 
             {/* Trash Modal */}
-            <TrashModal 
-                isOpen={isTrashModalOpen} 
-                onClose={closeTrashModal} 
+            <TrashModal
+                isOpen={isTrashModalOpen}
+                onClose={closeTrashModal}
             />
-            
+
             {/* Settings Modal */}
-            <SettingsModal 
-                isOpen={isSettingsModalOpen} 
-                onClose={closeSettingsModal} 
+            <SettingsModal
+                isOpen={isSettingsModalOpen}
+                onClose={closeSettingsModal}
             />
         </>
     );

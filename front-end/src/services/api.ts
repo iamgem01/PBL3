@@ -1,41 +1,148 @@
 import type { Item } from "../types/Item";
 import { recentlyVisited, upcomingEvents } from "./mockData";
 
-// --- CẤU HÌNH API GATEWAY ---
-// Mọi request đều phải đi qua Kong (Port 8000)
-const API_GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL || "http://localhost:8000";
+export async function fetchItemsByCategory(category: string): Promise<Item[]> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      switch (category) {
+        case "recent":
+          resolve(recentlyVisited);
+          break;
+        case "learn":
+          resolve([]);
+          break;
+        case "event":
+          resolve(upcomingEvents);
+          break;
+        default:
+          resolve([]);
+      }
+    }, 400);
+  });
+}
 
-// --- CÁC INTERFACE GIỮ NGUYÊN ---
+const API_BASE_URL =
+  import.meta.env.VITE_API_GATEWAY_URL || "http://localhost:8000";
+
+export interface UserPreferences {
+  tone?: 'professional' | 'casual' | 'friendly' | 'technical';
+  responseLength?: 'concise' | 'detailed' | 'comprehensive';
+  expertise?: 'beginner' | 'intermediate' | 'expert';
+}
+
 export interface ChatMessageRequest {
   message: string;
   action?: "chat" | "summarize" | "note" | "explain" | "improve" | "translate";
   context?: string;
   targetLanguage?: string;
   files?: File[];
-  preferences?: {
-    tone?: string;
-    responseLength?: string;
-    language?: string;
-    expertise?: string;
-  };
+  preferences?: UserPreferences;
+  sessionId?: string;
+  userId?: string;
 }
-// ... (Giữ nguyên các interface Chat/Note/Summarize khác của bạn) ...
+
 export interface ChatMessageResponse {
   status: string;
-  data: { response: string; action: string; };
+  data: {
+    response: string;
+    action: string;
+    sessionId: string;
+    timestamp: string;
+    metadata?: any;
+  };
 }
-export interface SummarizeRequest { text: string; maxLength?: number; }
-export interface SummarizeResponse { status: string; data: { original: string; summary: string; maxLength: number; }; }
-export interface NoteRequest { text: string; }
-export interface NoteResponse { status: string; data: { original: string; note: string; }; }
-export interface ExplainRequest { text: string; }
-export interface ExplainResponse { status: string; data: { original: string; explanation: string; }; }
-export interface ImproveRequest { text: string; style?: "formal" | "casual" | "academic" | "professional"; }
-export interface ImproveResponse { status: string; data: { original: string; improved: string; style: string; }; }
-export interface TranslateRequest { text: string; targetLanguage?: string; }
-export interface TranslateResponse { status: string; data: { original: string; translated: string; targetLanguage: string; }; }
 
-// Class xử lý lỗi
+export interface SummarizeRequest {
+  text: string;
+  maxLength?: number;
+}
+
+export interface SummarizeResponse {
+  status: string;
+  data: {
+    original: string;
+    summary: string;
+    maxLength: number;
+  };
+}
+
+export interface NoteRequest {
+  text: string;
+}
+
+export interface NoteResponse {
+  status: string;
+  data: {
+    original: string;
+    note: string;
+  };
+}
+
+export interface ExplainRequest {
+  text: string;
+}
+
+export interface ExplainResponse {
+  status: string;
+  data: {
+    original: string;
+    explanation: string;
+  };
+}
+
+export interface ImproveRequest {
+  text: string;
+  style?: "formal" | "casual" | "academic" | "professional";
+}
+
+export interface ImproveResponse {
+  status: string;
+  data: {
+    original: string;
+    improved: string;
+    style: string;
+  };
+}
+
+export interface TranslateRequest {
+  text: string;
+  targetLanguage?: string;
+}
+
+export interface TranslateResponse {
+  status: string;
+  data: {
+    original: string;
+    translated: string;
+    targetLanguage: string;
+  };
+}
+
+export interface DefaultPreferencesResponse {
+  status: string;
+  data: {
+    defaultPreferences: UserPreferences;
+  };
+}
+
+export interface SessionDataResponse {
+  status: string;
+  data: {
+    sessionId: string;
+    context?: string;
+    files: Array<{
+      fileName: string;
+      mimeType: string;
+      size: number;
+    }>;
+    lastAccessed: Date;
+    metadata: {
+      userId?: string;
+      action?: string;
+    };
+  };
+}
+
 class ApiError extends Error {
   statusCode?: number;
   errors?: Array<{ field: string; message: string }>;
@@ -52,13 +159,11 @@ class ApiError extends Error {
   }
 }
 
-// Hàm fetch chung (đã cấu hình credentials để gửi Cookie)
 async function fetchAPI<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  // Endpoint backend AI/Chat cũng đi qua Gateway
-  const url = `${API_GATEWAY_URL}${endpoint}`;
+  const url = `${API_BASE_URL}${endpoint}`;
 
   const headers: HeadersInit = { ...options.headers};
 
@@ -74,13 +179,11 @@ async function fetchAPI<T>(
 
   try {
     const response = await fetch(url, config);
-    
-    // Xử lý trường hợp 401 (Unauthorized) chung cho toàn app
+    const data = await response.json();
+
     if (response.status === 401) {
         throw new ApiError("Unauthorized", 401);
     }
-
-    const data = await response.json();
 
     if (!response.ok) {
       throw new ApiError(
@@ -95,55 +198,284 @@ async function fetchAPI<T>(
     if (error instanceof ApiError) {
       throw error;
     }
-    throw new ApiError("Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
+    throw new ApiError("Không thể kết nối đến server. Vui lòng thử lại sau.");
   }
 }
-
-// --- API SERVICE CHO CHAT/AI ---
+// API SERVICE FOR CHAT AI 
 export const apiService = {
   async sendMessage(request: ChatMessageRequest): Promise<ChatMessageResponse> {
     const formData = new FormData();
-    formData.append("message", request.message);
-    if(request.action) formData.append("action", request.action);
-    if(request.context) formData.append("context", request.context);
-    if(request.targetLanguage) formData.append("targetLanguage", request.targetLanguage);
+    
+    const messageText = request.message?.trim() || '';
+    if (!messageText && (!request.files || request.files.length === 0)) {
+      throw new ApiError('Message or files are required', 400);
+    }
+    
+    formData.append('message', messageText);
+
+    if (request.action) {
+      formData.append('action', request.action);
+    }
+
+    // 🔥 Gửi sessionId nếu có
+    if (request.sessionId) {
+      formData.append('sessionId', request.sessionId);
+      console.log('📌 Using existing sessionId:', request.sessionId);
+    }
+
+    if (request.userId) {
+      formData.append('userId', request.userId);
+    }
+
+    // 🔥 CHỈ gửi context nếu được chỉ định
+    if (request.context) {
+      formData.append('context', request.context);
+      console.log('📝 Sending context (length):', request.context.length);
+    }
+
+    if (request.targetLanguage) {
+      formData.append('targetLanguage', request.targetLanguage);
+    }
 
     if (request.preferences) {
-        formData.append("preferences", JSON.stringify(request.preferences));
+      formData.append('preferences', JSON.stringify(request.preferences));
     }
 
-    if(request.files && request.files.length > 0) {
+    // 🔥 CHỈ gửi files nếu có
+    if (request.files && request.files.length > 0) {
       request.files.forEach((file) => {
-        formData.append("files", file);
+        formData.append('files', file);
       });
+      console.log('📎 Sending files:', request.files.length);
     }
-    return fetchAPI<ChatMessageResponse>("/api/ai/message", { // Giả định route AI
-      method: "POST",
-      body: formData,
-      headers: {
 
-      } as any,
+    const url = `${API_BASE_URL}/api/chat/message`;
+
+    console.log('📤 Sending FormData:', {
+      message: messageText.substring(0, 50) + (messageText.length > 50 ? '...' : ''),
+      action: request.action,
+      hasContext: !!request.context,
+      hasPreferences: !!request.preferences,
+      hasSessionId: !!request.sessionId,
+      filesCount: request.files?.length || 0
+    });
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error('❌ Failed to parse response:', parseError);
+        throw new ApiError("Server trả về dữ liệu không hợp lệ", response.status);
+      }
+
+      if (!response.ok) {
+        console.error('❌ Server error response:', data);
+        throw new ApiError(
+          data.message || "Có lỗi xảy ra",
+          response.status,
+          data.errors
+        );
+      }
+
+      console.log('✅ Response received:', {
+        status: data.status,
+        sessionId: data.data.sessionId,
+        responseLength: data.data.response?.length || 0
+      });
+
+      return data;
+    } catch (error) {
+      console.error('❌ Request failed:', error);
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError("Không thể kết nối đến server. Vui lòng thử lại sau.");
+    }
+  },
+
+  async getSessionData(sessionId: string): Promise<SessionDataResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/chat/session/${sessionId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new ApiError(
+          data.message || "Không thể lấy thông tin session",
+          response.status
+        );
+      }
+
+      console.log('✅ Session data retrieved:', {
+        sessionId: data.data.sessionId,
+        hasContext: !!data.data.context,
+        filesCount: data.data.files?.length || 0
+      });
+
+      return data;
+    } catch (error) {
+      console.error('❌ Failed to get session data:', error);
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError("Không thể lấy thông tin session");
+    }
+  },
+
+  async getDefaultPreferences(): Promise<DefaultPreferencesResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/chat/preferences`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.status === 404) {
+        console.log('ℹ️ Preferences endpoint not available, using defaults');
+        return {
+          status: 'success',
+          data: {
+            defaultPreferences: {
+              tone: 'professional',
+              responseLength: 'detailed',
+              expertise: 'intermediate'
+            }
+          }
+        };
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new ApiError(
+          data.message || "Có lỗi xảy ra",
+          response.status
+        );
+      }
+
+      return data;
+    } catch (error) {
+      console.log('ℹ️ Using default preferences due to error:', error instanceof ApiError ? error.message : 'Network error');
+      return {
+        status: 'success',
+        data: {
+          defaultPreferences: {
+            tone: 'professional',
+            responseLength: 'detailed',
+            expertise: 'intermediate'
+          }
+        }
+      };
+    }
+  },
+
+  async summarize(request: SummarizeRequest): Promise<SummarizeResponse> {
+    return fetchAPI<SummarizeResponse>("/api/chat/summarize", {
+      method: "POST",
+      body: JSON.stringify(request),
     });
   },
-  // ... (Các hàm summarize, createNote giữ nguyên logic nhưng dùng fetchAPI đã sửa)
-  async summarize(request: SummarizeRequest): Promise<SummarizeResponse> {
-    return fetchAPI<SummarizeResponse>("/api/ai/summarize", { method: "POST", body: JSON.stringify(request) });
-  },
+
   async createNote(request: NoteRequest): Promise<NoteResponse> {
-    return fetchAPI<NoteResponse>("/api/ai/note", { method: "POST", body: JSON.stringify(request) });
+    return fetchAPI<NoteResponse>("/api/chat/note", {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
   },
+
   async explain(request: ExplainRequest): Promise<ExplainResponse> {
-    return fetchAPI<ExplainResponse>("/api/ai/explain", { method: "POST", body: JSON.stringify(request) });
+    return fetchAPI<ExplainResponse>("/api/chat/explain", {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
   },
+
   async improveWriting(request: ImproveRequest): Promise<ImproveResponse> {
-    return fetchAPI<ImproveResponse>("/api/ai/improve", { method: "POST", body: JSON.stringify(request) });
+    return fetchAPI<ImproveResponse>("/api/chat/improve", {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
   },
+
   async translate(request: TranslateRequest): Promise<TranslateResponse> {
-    return fetchAPI<TranslateResponse>("/api/ai/translate", { method: "POST", body: JSON.stringify(request) });
+    return fetchAPI<TranslateResponse>("/api/chat/translate", {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
   },
 };
 
-// --- USER API (ĐÃ SỬA CHO USER-SERVICE) ---
+const USER_SERVICE_URL = import.meta.env.VITE_API_GATEWAY_URL || "http://localhost:8000";
+
+// export const userApi = {
+//   async login(email: string, password: string) {
+//     const response = await fetch(`${USER_SERVICE_URL}/api/auth/login`, {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//       },
+//       credentials: 'include',
+//       body: JSON.stringify({ email, password }),
+//     });
+    
+//     if (!response.ok) {
+//       throw new Error('Login failed');
+//     }
+    
+//     return response.json();
+//   },
+
+//   async register(userData: any) {
+//     const response = await fetch(`${USER_SERVICE_URL}/api/auth/register`, {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//       },
+//       credentials: 'include',
+//       body: JSON.stringify(userData),
+//     });
+    
+//     if (!response.ok) {
+//       throw new Error('Registration failed');
+//     }
+    
+//     return response.json();
+//   },
+
+//   async logout() {
+//     return fetch(`${USER_SERVICE_URL}/api/auth/logout`, {
+//       method: 'POST',
+//       credentials: 'include',
+//     });
+//   },
+
+//   async getProfile() {
+//     const response = await fetch(`${USER_SERVICE_URL}/api/auth/profile`, {
+//       credentials: 'include',
+//     });
+    
+//     if (!response.ok) {
+//       throw new Error('Failed to get profile');
+//     }
+    
+//     return response.json();
+//   },
+// };
+
 export const userApi = {
   // User Service hiện tại KHÔNG hỗ trợ đăng nhập password, chỉ hỗ trợ OAuth2
   // Hàm này có thể bỏ hoặc giữ để placeholder
@@ -158,7 +490,7 @@ export const userApi = {
   // Đăng xuất: Gọi API logout của User Service
   async logout() {
     // Endpoint logout của User Service qua Gateway
-    return fetch(`${API_GATEWAY_URL}/api/auth/logout`, {
+    return fetch(`${USER_SERVICE_URL}/api/auth/logout`, {
       method: 'POST',
       credentials: 'include', // Gửi cookie để server xóa session
     });
@@ -167,7 +499,7 @@ export const userApi = {
   // Lấy thông tin user hiện tại
   async getProfile() {
     // Endpoint lấy profile của User Service qua Gateway
-    const response = await fetch(`${API_GATEWAY_URL}/api/users/me`, {
+    const response = await fetch(`${USER_SERVICE_URL}/api/users/me`, {
       method: 'GET',
       credentials: 'include', // BẮT BUỘC: Gửi cookie SESSION_TOKEN
     });
@@ -181,21 +513,8 @@ export const userApi = {
   
   // Helper để lấy URL bắt đầu OAuth2
   getGoogleLoginUrl() {
-    return `${API_GATEWAY_URL}/oauth2/authorization/google`;
+    return `${USER_SERVICE_URL}/oauth2/authorization/google`;
   }
 };
 
 export { ApiError };
-
-// Mock data fetcher (Giữ nguyên)
-export async function fetchItemsByCategory(category: string): Promise<Item[]> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      switch (category) {
-        case "recent": resolve(recentlyVisited); break;
-        case "event": resolve(upcomingEvents); break;
-        default: resolve([]);
-      }
-    }, 400);
-  });
-}

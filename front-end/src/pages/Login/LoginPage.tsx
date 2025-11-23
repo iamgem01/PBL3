@@ -1,115 +1,293 @@
 import React, { useEffect, useState } from "react";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Sparkles } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { RainbowButton } from "../../components/ui/rainbow-button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { loginWithGoogle, verifyAuth } from "../../utils/authUtils";
+import { FaSyncAlt, FaUsers } from "react-icons/fa";
 
 const LoginPage: React.FC = () => {
-  const navigate = useNavigate();
-  const [error, setError] = useState<string>("");
-  const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+    const [error, setError] = useState<string>("");
+    const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // Kiểm tra xem có lỗi từ backend redirect về không
-    const params = new URLSearchParams(window.location.search);
-    const errorParam = params.get("error");
-    if (errorParam) {
-      setError("Login failed: " + errorParam);
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const authStatus = params.get("auth");
+        const errorParam = params.get("error");
+
+        if (authStatus === "success") {
+            console.log("Google authentication successful");
+            setLoading(true);
+            verifyAuth();
+            window.history.replaceState({}, document.title, "/login");
+        } else if (errorParam) {
+            console.error("Authentication error:", errorParam);
+            setError(getErrorMessage(errorParam));
+            window.history.replaceState({}, document.title, "/login");
+        }
+    }, [navigate]);
+
+    const verifyAuth = async () => {
+        try {
+            const BACKEND = import.meta.env.VITE_USER_SERVICE_URL || "http://localhost:5000";
+            const response = await fetch(`${BACKEND}/api/auth/me`, {
+                credentials: "include",
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem("user", JSON.stringify(data.user));
+                navigate("/home");
+            } else {
+                throw new Error("Authentication verification failed");
+            }
+        } catch (error) {
+            console.error("Verify auth error:", error);
+            setError("Failed to verify authentication. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getErrorMessage = (errorCode: string): string => {
+        const errorMessages: Record<string, string> = {
+            authentication_failed: "Authentication failed. Please try again.",
+            token_creation_failed: "Failed to create session. Please try again.",
+            no_email: "No email found in Google account.",
+        };
+        return errorMessages[errorCode] || "An unexpected error occurred.";
+    };
+
+    const handleGoogleLogin = () => {
+        console.log("Redirecting to Google OAuth...");
+        setError("");
+        const BACKEND = import.meta.env.VITE_USER_SERVICE_URL || "http://localhost:8000";
+        window.location.href = `${BACKEND}/oauth2/authorization/google`;
+    };
+
+    const features = [
+        {
+            icon: <Sparkles className="text-blue-400 text-xl" />,
+            title: 'Effortless Writing',
+            description: 'Focus on your ideas — format and move blocks with one click.',
+        },
+        {
+            icon: <FaSyncAlt className="text-pink-400 text-xl" />,
+            title: 'Auto Save & Sync',
+            description: 'Never lose your progress. Smart Note saves as you type.',
+        },
+        {
+            icon: <FaUsers className="text-purple-400 text-xl" />,
+            title: "Smart Collaboration",
+            description: "Perfect for teams and individual creators"
+        }
+    ];
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
+                <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-600 font-medium font-inter">Authenticating...</p>
+                </div>
+            </div>
+        );
     }
-  }, []);
 
-  const handleGoogleLogin = () => {
-    setLoading(true);
-    // Gọi hàm chuyển hướng sang Google
-    // Trình duyệt sẽ rời khỏi trang này
-    loginWithGoogle();
-  };
-
-  const handleGoToSignUp = () => {
-    navigate("/signup");
-  };
-
-  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Redirecting to Google...</p>
+        <div className="min-h-screen font-inter flex bg-gradient-to-br from-blue-50 via-white to-purple-50 relative overflow-hidden">
+            {/* Background Elements */}
+            <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute -top-32 -left-32 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-float"></div>
+                <div className="absolute -top-32 -right-32 w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-float animation-delay-2000"></div>
+                <div className="absolute -bottom-32 left-1/4 w-96 h-96 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-float animation-delay-4000"></div>
+                <div className="absolute -bottom-32 -right-20 w-80 h-80 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float animation-delay-6000"></div>
+            </div>
+
+            {/* Left Side - Features */}
+            <div className="flex-1 flex items-center justify-center p-12">
+                <motion.div
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className="max-w-2xl"
+                >
+                    {/* Logo and Title */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="mb-12"
+                    >
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-300 rounded-xl flex items-center justify-center">
+                                <BookOpen className="w-6 h-6 text-white" />
+                            </div>
+                            <h1 className="text-4xl font-gabarito font-bold bg-gradient-to-r from-blue-500 to-purple-400 bg-clip-text text-transparent">
+                                Aeternus
+                            </h1>
+                        </div>
+                        <p className="text-2xl text-gray-800 font-light leading-relaxed">
+                            Your mind, organized. Your projects, simplified.
+                            <br />
+                            <span className="font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                All your notes, tasks, and plans are here.
+                            </span>
+                        </p>
+                    </motion.div>
+
+                    {/* Features Grid */}
+                    <div className="grid gap-6">
+                        {features.map((feature, index) => (
+                            <motion.div
+                                key={feature.title}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
+                                className="flex items-start gap-4 p-6 rounded-2xl bg-white/70 backdrop-blur-sm border border-white/50 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02]"
+                            >
+                                <div className="flex-shrink-0 p-3 rounded-xl bg-gradient-to-r shadow-lg">
+                                    {feature.icon}
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="font-semibold text-gray-800 mb-2 text-lg">{feature.title}</h3>
+                                    <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </motion.div>
+            </div>
+
+            {/* Right Side - Auth Card */}
+            <div className="flex-1 flex items-center justify-center p-12 relative z-10">
+                <motion.div
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                    className="w-full max-w-md relative z-20"
+                >
+                    <div className="bg-white rounded-3xl p-8 shadow-2xl border border-gray-100 relative z-30">
+                        {/* Header */}
+                        <div className="text-center mb-8">
+                            <motion.h2
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 0.4 }}
+                                className="text-3xl font-gabarito font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2"
+                            >
+                                Welcome Back
+                            </motion.h2>
+                            <p className="text-gray-600">
+                                Sign in to your account
+                            </p>
+                        </div>
+
+                        {/* Error Message */}
+                        {error && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl"
+                            >
+                                <p className="text-sm text-red-600 text-center">{error}</p>
+                            </motion.div>
+                        )}
+
+                        {/* Google Button */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.6 }}
+                        >
+                            <RainbowButton
+                                onClick={handleGoogleLogin}
+                                disabled={loading}
+                                className="w-full flex items-center justify-center gap-3 rounded-xl border-2 border-gray-200 bg-white text-gray-800 py-4 text-base font-semibold transition-all duration-300 hover:border-blue-500 hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <FcGoogle className="w-6 h-6" />
+                                Sign in with Google
+                            </RainbowButton>
+                        </motion.div>
+
+                        {/* Divider */}
+                        <div className="relative my-8">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-200"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="px-4 bg-white text-gray-500">Or continue with email</span>
+                            </div>
+                        </div>
+
+                        {/* Email Form (Placeholder for future implementation) */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.8 }}
+                            className="space-y-4"
+                        >
+                            <div className="p-4 text-center text-gray-500 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                                <p className="text-sm">
+                                    Email authentication coming soon
+                                </p>
+                            </div>
+                        </motion.div>
+
+                        {/* Sign Up Link - ĐÃ SỬA */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 1 }}
+                            className="mt-4 text-center text-sm text-gray-600 relative z-40"
+                        >
+                            Don't have an account?{" "}
+                            <Link
+                                to="/signup"
+                                className="text-purple-600 hover:underline font-medium hover:text-purple-700 transition-colors px-2 py-1 bg-white rounded-md inline-block"
+                            >
+                                Create one
+                            </Link>
+                        </motion.div>
+
+                        {/* Terms */}
+                        <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.5, delay: 1.2 }}
+                            className="mt-6 text-xs text-gray-400 text-center leading-relaxed"
+                        >
+                            By continuing, you agree to our{" "}
+                            <a href="#" className="text-blue-600 hover:underline">Terms of Service</a>{" "}
+                            and{" "}
+                            <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
+                        </motion.p>
+                    </div>
+                </motion.div>
+            </div>
+
+            <style>{`
+                @keyframes float {
+                    0%, 100% { transform: translateY(0px) rotate(0deg); }
+                    33% { transform: translateY(-20px) rotate(1deg); }
+                    66% { transform: translateY(10px) rotate(-1deg); }
+                }
+                .animate-float {
+                    animation: float 8s ease-in-out infinite;
+                }
+                .animation-delay-2000 {
+                    animation-delay: 2s;
+                }
+                .animation-delay-4000 {
+                    animation-delay: 4s;
+                }
+                .animation-delay-6000 {
+                    animation-delay: 6s;
+                }
+            `}</style>
         </div>
-      </div>
     );
-  }
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-white relative overflow-hidden">
-      {/* Background blobs ... (Giữ nguyên phần UI) */}
-      <div className="absolute inset-0">
-        <div className="absolute top-0 left-1/4 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-        <div className="absolute top-0 right-1/4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-1/3 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -30 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative z-10 p-[0.8px] rounded-2xl bg-gradient-to-r from-purple-400 via-blue-400 to-pink-400 animate-border"
-      >
-        <div className="rounded-2xl p-8 flex flex-col items-center w-80 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out">
-          
-          <div className="flex items-center justify-between w-full mb-4">
-            <div className="flex flex-col items-start">
-              <p className="text-sm text-gray-800 font-medium">Welcome back</p>
-              <h2 className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-tight">
-                Sign in
-              </h2>
-            </div>
-            <BookOpen className="w-10 h-10 text-blue-600" strokeWidth={1.5} />
-          </div>
-
-          {error && (
-            <div className="w-full mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-xs text-red-600 text-center">{error}</p>
-            </div>
-          )}
-
-          {/* Nút Đăng nhập Google */}
-          <RainbowButton
-            onClick={handleGoogleLogin}
-            disabled={loading}
-            className="mt-4 w-full flex items-center justify-center gap-2 rounded-full border border-gray-800 bg-black text-white py-2 text-sm font-semibold transition-all duration-300 hover:bg-gray-900 hover:shadow-[0_0_8px_rgba(147,51,234,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <FcGoogle className="w-5 h-5" />
-            Sign in with Google
-          </RainbowButton>
-
-          <div className="mt-4 text-xs text-gray-600">
-            Don't have an account?{" "}
-            <button
-              onClick={handleGoToSignUp}
-              className="text-purple-600 hover:underline font-medium"
-            >
-              Register (via Google)
-            </button>
-          </div>
-
-          {/* ... (Terms text) ... */}
-        </div>
-      </motion.div>
-      {/* ... (Styles) ... */}
-      <style>{`
-        @keyframes borderMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        .animate-border { background-size: 200% 200%; animation: borderMove 6s linear infinite; }
-        @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
-        .animate-blob { animation: blob 7s infinite; }
-        .animation-delay-2000 { animation-delay: 2s; }
-        .animation-delay-4000 { animation-delay: 4s; }
-      `}</style>
-    </div>
-  );
 };
 
 export default LoginPage;

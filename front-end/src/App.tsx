@@ -73,7 +73,6 @@ function AuthInit() {
 
     console.log("Checking auth status at path:", location.pathname);
 
-    // SỬA Ở ĐÂY: Thêm điều kiện kiểm tra khi ở trang chủ "/"
     if (location.pathname === "/login" || location.pathname === "/signup" || location.pathname === "/") {
       verifyAuth().then((user) => {
         if (user) {

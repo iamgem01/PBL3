@@ -84,6 +84,7 @@ export class GeminiService {
                 topP: 0.95,
                 topK: 40,
                 maxOutputTokens: 8192, // Tăng token để trả lời dài
+                responseMimeType: "text/plain"
             }
         });
     }

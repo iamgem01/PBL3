@@ -7,6 +7,8 @@ import StepNeeds from "./steps/stepNeeds";
 import StepReferral from "./steps/stepReferral";
 import StepTemplate from "./steps/stepTemplate";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import type { OnboardingData } from "./types";
 
 const steps = [
     { id: 1, title: "What's your role?", component: StepRole },
@@ -17,15 +19,36 @@ const steps = [
 ];
 
 export default function OnboardingForm() {
+    const navigate = useNavigate();
     const [step, setStep] = useState(1);
-    const [formData, setFormData] = useState({});
+    const [formData, setFormData] = useState<OnboardingData>({});
 
     const CurrentStep = steps.find((s) => s.id === step)?.component ?? null;
 
-    const handleNext = (data?: object) => {
-        if (data) setFormData((prev) => ({ ...prev, ...data }));
-        if (step < steps.length) setStep(step + 1);
-        else console.log("✅ Done:", formData);
+    const handleCompleteOnboarding = () => {
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        user.hasCompletedOnboarding = true;
+        user.onboardingData = formData;
+        localStorage.setItem("user", JSON.stringify(user));
+
+        console.log("🎉 Onboarding completed:", formData);
+        navigate("/home");
+    };
+
+    const handleNext = (data?: Partial<OnboardingData>) => {
+        if (data) {
+            const updatedData = { ...formData, ...data };
+            setFormData(updatedData);
+
+            if (step === steps.length) {
+                handleCompleteOnboarding();
+                return;
+            }
+        }
+
+        if (step < steps.length) {
+            setStep(step + 1);
+        }
     };
 
     const handleBack = () => {
@@ -48,7 +71,10 @@ export default function OnboardingForm() {
                         Back
                     </Button>
                 )}
-                <Button onClick={() => handleNext()}>Next</Button>
+                <div className="flex-1"></div>
+                <Button onClick={() => handleNext()}>
+                    {step === steps.length ? "Complete" : "Next"}
+                </Button>
             </div>
 
             <div className="mt-4 text-sm text-gray-400 text-center">

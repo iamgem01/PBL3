@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FileText, Search, X, Loader2, AlertCircle } from "lucide-react";
-import { getAllNotes } from "@/services";
+import { getAllNotes } from "../../services/noteService"; // Thêm import
 
 export interface Note {
     id: string;
@@ -16,12 +16,12 @@ interface ContextMenuProps {
     selectedNotes?: Note[];
 }
 
-const ContextMenu: React.FC<ContextMenuProps> = ({ 
-    isOpen, 
-    onClose, 
-    onSelectNote,
-    selectedNotes = [] 
-}) => {
+const ContextMenu: React.FC<ContextMenuProps> = ({
+                                                     isOpen,
+                                                     onClose,
+                                                     onSelectNote,
+                                                     selectedNotes = []
+                                                 }) => {
     const [notes, setNotes] = useState<Note[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [loading, setLoading] = useState(false);

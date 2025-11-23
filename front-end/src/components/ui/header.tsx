@@ -25,7 +25,7 @@ const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center gap-3 transition-all duration-300">
       <button
           onClick={onToggleHistory}
-          className="p-2 flex items-center gap-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+          className="p-2 flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
           title="Chat history"
         >
           <Clock size={20} />
