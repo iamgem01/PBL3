@@ -1,4 +1,4 @@
-import { Calendar, Plus, Sparkles, TrendingUp } from "lucide-react";
+import { Calendar, Plus, Sparkles } from "lucide-react";
 import RecentlyVisited from "./RecentlyVisited";
 import LearnSection from "./LearnSection";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +20,10 @@ export default function Dashboard() {
             day: 'numeric',
             year: 'numeric'
         });
+    };
+
+    const handleCreateEvent = () => {
+        navigate('/calendar');
     };
 
     return (
@@ -69,6 +73,7 @@ export default function Dashboard() {
                     </button>
 
                     <button
+                        onClick={() => navigate('/calendar')}
                         className="group relative bg-card border-2 border-transparent hover:border-pink-500/30 rounded-2xl p-6 text-left transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 overflow-hidden"
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -110,7 +115,10 @@ export default function Dashboard() {
                             <p className="text-sm text-muted-foreground mb-4">
                                 No events scheduled in the next 3 days
                             </p>
-                            <button className="inline-flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg shadow-purple-500/20">
+                            <button 
+                                onClick={handleCreateEvent}
+                                className="inline-flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg shadow-purple-500/20"
+                            >
                                 <Plus className="w-4 h-4" />
                                 Create event
                             </button>

@@ -14,7 +14,8 @@
     "dev:front-end": "cd front-end && npm run dev",
     "dev:note-service": "cd note-service && mvn spring-boot:run",
     "dev:collab-service": "cd collab-service && mvn spring-boot:run",
-    "dev:all": "concurrently \"npm run dev:user-service\" \"npm run dev:front-end\" \"npm run dev:ai-service\" \"npm run dev:note-service\" \"npm run dev:collab-service\""
+    "dev:calendar-service": "cd calendar-service && npm run dev",
+    "dev:all": "concurrently \"npm run dev:user-service\" \"npm run dev:front-end\" \"npm run dev:ai-service\" \"npm run dev:note-service\" \"npm run dev:collab-service\" \"npm run dev:calendar-service\""
   },
   "devDependencies": {
     "@types/express": "^5.0.5",
