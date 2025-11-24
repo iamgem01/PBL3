@@ -33,16 +33,53 @@ public class NoteService {
      * Lấy tất cả notes đang được share với một user cụ thể
      */
     public List<Note> getSharedNotesForUser(String userId) {
+        System.out.println("🔍 [SERVICE] ===== GETTING SHARED NOTES =====");
+        System.out.println("🔍 [SERVICE] UserId parameter: " + userId);
+        
         if (userId == null || userId.trim().isEmpty()) {
-            // Return all shared notes if no user specified (for admin purposes)
+            System.out.println("🔍 [SERVICE] UserId is null/empty, returning all shared notes");
             return getSharedNotes();
         }
         
-        return noteRepository.findAll().stream()
+        List<Note> allNotes = noteRepository.findAll();
+        System.out.println("📊 Total notes in collab-service DB: " + allNotes.size());
+        
+        // Debug từng note
+        int notesWithShares = 0;
+        for (int i = 0; i < allNotes.size(); i++) {
+            Note note = allNotes.get(i);
+            boolean hasShares = note.getShares() != null && !note.getShares().isEmpty();
+            
+            if (hasShares) {
+                notesWithShares++;
+                System.out.println("📝 Note " + (i+1) + " (has shares): " + note.getId() + " - " + note.getTitle());
+                System.out.println("   - Shares: " + note.getShares());
+                System.out.println("   - Shares size: " + note.getShares().size());
+                boolean containsUserId = note.getShares().contains(userId);
+                boolean isSharedWithAll = note.getShares().contains("all_users");
+                System.out.println("   - Contains userId '" + userId + "': " + containsUserId);
+                System.out.println("   - Shared with all users: " + isSharedWithAll);
+                System.out.println("   - Accessible by current user: " + (containsUserId || isSharedWithAll));
+            }
+        }
+        
+        System.out.println("📊 Summary: " + notesWithShares + "/" + allNotes.size() + " notes have shares");
+        
+        List<Note> filteredNotes = allNotes.stream()
                 .filter(note -> note.getShares() != null && !note.getShares().isEmpty())
-                .filter(note -> note.getShares().contains(userId)) // Only notes shared with this user
+                .filter(note -> {
+                    // Check if note is shared with current user
+                    boolean containsUserId = note.getShares().contains(userId);
+                    boolean isSharedWithAll = note.getShares().contains("all_users");
+                    return containsUserId || isSharedWithAll;
+                })
                 .filter(note -> !Boolean.TRUE.equals(note.getIsDeleted()))
                 .collect(Collectors.toList());
+        
+        System.out.println("✅ Filtered to " + filteredNotes.size() + " shared notes for user: " + userId);
+        System.out.println("🔍 [SERVICE] ===== SERVICE COMPLETED =====");
+        
+        return filteredNotes;
     }
     
     /**

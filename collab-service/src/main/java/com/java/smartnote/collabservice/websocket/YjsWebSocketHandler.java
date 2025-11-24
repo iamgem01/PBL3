@@ -1,5 +1,6 @@
 package com.java.smartnote.collabservice.websocket;
-
+import org.springframework.web.socket.BinaryMessage; 
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.BinaryWebSocketHandler;

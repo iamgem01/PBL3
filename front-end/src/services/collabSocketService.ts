@@ -250,22 +250,28 @@ class CollabSocketService {
      * Send cursor position update
      */
     sendCursorUpdate(noteId: string, userId: string, email: string, name: string, position: number) {
-        if (this.client && this.client.connected) {
-            const payload: CursorUpdateMessage = {
-                userId,
-                email,
-                name,
-                position,
-                color: '', // Will be set by server
-                timestamp: Date.now()
-            };
-            
-            this.client.publish({
-                destination: `/app/ws/note.cursor/${noteId}`, // Thêm /ws prefix
-                body: JSON.stringify(payload),
-            });
-        }
+  if (this.client && this.client.connected) {
+    // ✅ FIXED: Validate data trước khi gửi
+    if (position === undefined || position === null || position < 0) {
+      console.warn('⚠️ Invalid cursor position, not sending:', position);
+      return;
     }
+
+    const payload: CursorUpdateMessage = {
+      userId: userId || 'unknown',
+      email: email || 'unknown@example.com',
+      name: name || 'Unknown',
+      position: Math.max(0, position),
+      color: this.getUserColor(),
+      timestamp: Date.now()
+    };
+    
+    this.client.publish({
+      destination: `/app/ws/note.cursor/${noteId}`,
+      body: JSON.stringify(payload),
+    });
+  }
+}
 
     // Public methods for presence features
     sendPresenceUpdate(noteId: string, status: 'ONLINE' | 'AWAY' | 'OFFLINE') {
@@ -304,22 +310,40 @@ class CollabSocketService {
     }
 
     sendSelectionUpdate(noteId: string, selection: { start: number; end: number; text?: string }) {
-        if (!this.client || !this.client.connected) return;
+  if (!this.client || !this.client.connected) return;
 
-        const selectionMessage = {
-            userId: this.getCurrentUserId(),
-            email: this.getCurrentUserEmail(),
-            name: this.getCurrentUserName(),
-            selection: selection,
-            color: this.getUserColor(),
-            timestamp: Date.now()
-        };
+  // ✅ FIXED: Validate selection data
+  if (!selection || selection.start === undefined || selection.end === undefined) {
+    console.warn('⚠️ Invalid selection data, not sending:', selection);
+    return;
+  }
 
-        this.client.publish({
-            destination: `/app/ws/note.selection/${noteId}`,
-            body: JSON.stringify(selectionMessage)
-        });
-    }
+  const start = Math.max(0, selection.start);
+  const end = Math.max(0, selection.end);
+  
+  if (start >= end) {
+    console.warn('⚠️ Invalid selection range, not sending:', { start, end });
+    return;
+  }
+
+  const selectionMessage = {
+    userId: this.getCurrentUserId(),
+    email: this.getCurrentUserEmail(),
+    name: this.getCurrentUserName(),
+    selection: {
+      start: start,
+      end: end,
+      text: selection.text || '',
+    },
+    color: this.getUserColor(),
+    timestamp: Date.now()
+  };
+
+  this.client.publish({
+    destination: `/app/ws/note.selection/${noteId}`,
+    body: JSON.stringify(selectionMessage)
+  });
+}
 
     // Debounced typing indicator
     startTyping(noteId: string) {

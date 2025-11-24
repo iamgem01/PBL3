@@ -45,10 +45,16 @@ public class NoteController {
      */
     @GetMapping("/api/notes/shared")
     public ResponseEntity<?> getSharedNotes(@RequestHeader(value = "X-User-Id", required = false) String userId) {
+        System.out.println("🌐 [CONTROLLER] ===== RECEIVED REQUEST FOR SHARED NOTES =====");
+        System.out.println("🌐 [CONTROLLER] UserId from header: " + userId);
+        System.out.println("🌐 [CONTROLLER] UserId is null: " + (userId == null));
+        System.out.println("🌐 [CONTROLLER] UserId length: " + (userId != null ? userId.length() : 0));
+        
         try {
             System.out.println("📋 Fetching shared notes for user: " + (userId != null ? userId : "all users"));
             List<Note> sharedNotes = noteService.getSharedNotesForUser(userId);
-            System.out.println("✅ Found " + sharedNotes.size() + " shared notes");
+            System.out.println("✅ Found " + sharedNotes.size() + " shared notes for user: " + userId);
+            System.out.println("🌐 [CONTROLLER] ===== REQUEST COMPLETED =====");
             return ResponseEntity.ok(sharedNotes);
         } catch (Exception e) {
             System.err.println("❌ Error fetching shared notes: " + e.getMessage());

@@ -25,7 +25,7 @@ export default function DocumentPage() {
     handleMoveToTrash,
     handleToggleImportant,
     handleExportPdf,
-    getInitialContent, // ✅ Nhận function mới
+    getInitialContent,
     noteId
   } = useDocumentState();
 
@@ -36,15 +36,22 @@ export default function DocumentPage() {
   const [isInviting, setIsInviting] = useState(false);
   const [inviteSuccess, setInviteSuccess] = useState(false);
 
+  // FIXED: Stabilize sharing status detection
   useEffect(() => {
     if (note?.shares && Array.isArray(note.shares)) {
-      setIsShared(prev => {
-        const newState = (note.shares?.length ?? 0) > 0;
-        console.log('🔄 Sharing status:', { prev, newState, shares: note.shares?.length });
-        return prev !== newState ? newState : prev;
+      const newIsShared = (note.shares?.length ?? 0) > 0;
+      console.log('📊 Sharing status update:', { 
+        previous: isShared, 
+        new: newIsShared, 
+        sharesCount: note.shares?.length 
       });
+      
+      // Only update if actually changed to avoid unnecessary re-renders
+      if (isShared !== newIsShared) {
+        setIsShared(newIsShared);
+      }
     }
-  }, [note?.shares]);
+  }, [note?.shares]); // Removed isShared from dependencies to avoid loop
 
   // ✅ FIX: Sử dụng function thay vì memo để lấy initial content
   const initialContent = useMemo(() => {
@@ -179,7 +186,7 @@ export default function DocumentPage() {
             key={noteId} 
             documentId={noteId || ''}
             isShared={isShared}
-            initialContent={initialContent} // ✅ Sử dụng initial content thông minh
+            initialContent={initialContent}
             onContentChange={handleContentChange}
           />
         </div>

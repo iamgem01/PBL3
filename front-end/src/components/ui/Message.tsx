@@ -2,6 +2,7 @@ import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
+import rehypeRaw from "rehype-raw"; 
 import { Sparkles, Copy, RotateCw, File, FileText } from "lucide-react";
 import type { MessageItem } from "./sidebar";
 
@@ -16,6 +17,23 @@ const Message: React.FC<MessageProps> = ({ message, isUser, onRepeat }) => {
         if (bytes < 1024) return bytes + ' B';
         if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
         return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    };
+
+    // Function để clean HTML tags và chỉ giữ nội dung
+    const cleanHtmlContent = (text: string): string => {
+        // Remove HTML tags nhưng giữ nội dung
+        return text
+            .replace(/<h3>/g, '\n### ')
+            .replace(/<\/h3>/g, '\n')
+            .replace(/<p>/g, '\n')
+            .replace(/<\/p>/g, '\n')
+            .replace(/<strong>/g, '**')
+            .replace(/<\/strong>/g, '**')
+            .replace(/<em>/g, '*')
+            .replace(/<\/em>/g, '*')
+            .replace(/<br\s*\/?>/g, '\n')
+            .replace(/\n{3,}/g, '\n\n') // Remove excessive newlines
+            .trim();
     };
 
     return (
@@ -35,12 +53,10 @@ const Message: React.FC<MessageProps> = ({ message, isUser, onRepeat }) => {
                         {/* USER MESSAGE */}
                         {isUser ? (
                             <div className="text-gray-700 bg-gray-100 rounded-xl p-3 max-w-[80%] ml-auto break-words">
-                                {/* Text content */}
                                 {message.text && (
                                     <div className="mb-2 last:mb-0">{message.text}</div>
                                 )}
 
-                                {/* Attachments inside bubble */}
                                 {message.attachments && message.attachments.length > 0 && (
                                     <div className="flex flex-col gap-2 mt-2">
                                         {message.attachments.map((file, index) => (
@@ -69,12 +85,9 @@ const Message: React.FC<MessageProps> = ({ message, isUser, onRepeat }) => {
                             </div>
                         ) : (
                             <>
-                                {/* AI MESSAGE - Hiển thị context/files đã sử dụng */}
-                                
-                                {/* Context summary - hiển thị phía trên response */}
+                                {/* Context/Files indicators */}
                                 {(message.contextUsed || message.notesUsed || message.filesUsed) && (
                                     <div className="mb-3 space-y-2">
-                                        {/* Files used */}
                                         {message.filesUsed && message.filesUsed.length > 0 && (
                                             <div className="text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-2">
                                                 <div className="font-medium mb-1 flex items-center gap-1">
@@ -102,7 +115,6 @@ const Message: React.FC<MessageProps> = ({ message, isUser, onRepeat }) => {
                                             </div>
                                         )}
 
-                                        {/* Notes used */}
                                         {message.notesUsed && message.notesUsed.length > 0 && (
                                             <div className="text-sm text-gray-600 bg-purple-50 border border-purple-200 rounded-lg p-2">
                                                 <div className="font-medium mb-1 flex items-center gap-1">
@@ -125,39 +137,44 @@ const Message: React.FC<MessageProps> = ({ message, isUser, onRepeat }) => {
                                     </div>
                                 )}
 
-                                {/* AI Response content */}
+                                {/* AI Response - Clean and render as Markdown */}
                                 <div className="markdown-content text-gray-800 break-words max-w-[80%]">
                                     <ReactMarkdown
                                         remarkPlugins={[remarkGfm]}
-                                        rehypePlugins={[rehypeHighlight]}
+                                        rehypePlugins={[rehypeHighlight, rehypeRaw]}
                                         components={{
                                             p: ({ children }) => (
-                                                <p className="mb-2 leading-6">{children}</p>
+                                                <p className="mb-3 leading-7">{children}</p>
                                             ),
                                             h1: ({ children }) => (
-                                                <h1 className="text-2xl font-bold mb-2">{children}</h1>
+                                                <h1 className="text-2xl font-bold mb-4 mt-6">{children}</h1>
                                             ),
                                             h2: ({ children }) => (
-                                                <h2 className="text-xl font-bold mb-2">{children}</h2>
+                                                <h2 className="text-xl font-bold mb-3 mt-5">{children}</h2>
                                             ),
                                             h3: ({ children }) => (
-                                                <h3 className="text-lg font-semibold mb-1">
+                                                <h3 className="text-lg font-semibold mb-2 mt-4">
                                                     {children}
                                                 </h3>
                                             ),
                                             ul: ({ children }) => (
-                                                <ul className="list-disc pl-6 mb-2">{children}</ul>
+                                                <ul className="list-disc pl-6 mb-3 space-y-1">{children}</ul>
                                             ),
                                             ol: ({ children }) => (
-                                                <ol className="list-decimal pl-6 mb-2">{children}</ol>
+                                                <ol className="list-decimal pl-6 mb-3 space-y-1">{children}</ol>
                                             ),
                                             li: ({ children }) => (
-                                                <li className="leading-6">{children}</li>
+                                                <li className="leading-7">{children}</li>
+                                            ),
+                                            blockquote: ({ children }) => (
+                                                <blockquote className="border-l-4 border-gray-300 pl-4 italic my-3 text-gray-700">
+                                                    {children}
+                                                </blockquote>
                                             ),
                                             code: ({ inline, className, children, ...props }: any) => {
                                                 const match = /language-(\w+)/.exec(className || "");
                                                 return !inline && match ? (
-                                                    <pre className="mb-2 rounded-lg bg-gray-900 text-white p-2 overflow-x-auto">
+                                                    <pre className="mb-3 rounded-lg bg-gray-900 text-white p-4 overflow-x-auto">
                                                         <code
                                                             className={`hljs language-${match[1]}`}
                                                             {...props}
@@ -174,15 +191,21 @@ const Message: React.FC<MessageProps> = ({ message, isUser, onRepeat }) => {
                                                     </code>
                                                 );
                                             },
+                                            strong: ({ children }) => (
+                                                <strong className="font-semibold text-gray-900">{children}</strong>
+                                            ),
+                                            em: ({ children }) => (
+                                                <em className="italic">{children}</em>
+                                            ),
                                         }}
                                     >
-                                        {message.text}
+                                        {cleanHtmlContent(message.text)}
                                     </ReactMarkdown>
                                 </div>
                             </>
                         )}
 
-                        {/* COPY / REPEAT BUTTONS */}
+                        {/* Action buttons */}
                         {!isUser && (
                             <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition">
                                 <button

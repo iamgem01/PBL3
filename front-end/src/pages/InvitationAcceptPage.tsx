@@ -23,7 +23,7 @@ export default function InvitationAcceptPage() {
     }
 
     // Check if user is logged in (you should get this from your auth context)
-    const currentUserEmail = localStorage.getItem('userEmail'); // TODO: Get from auth context
+    const currentUserEmail = localStorage.getItem('userEmail'); 
     
     if (!currentUserEmail) {
       setShowEmailInput(true);
@@ -63,7 +63,7 @@ export default function InvitationAcceptPage() {
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (userEmail.trim()) {
-      localStorage.setItem('userEmail', userEmail.trim()); // TODO: Use proper auth
+      localStorage.setItem('userEmail', userEmail.trim()); 
       handleAcceptInvitation(userEmail.trim());
     }
   };

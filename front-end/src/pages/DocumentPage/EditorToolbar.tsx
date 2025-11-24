@@ -6,7 +6,7 @@ import {
   X, ChevronDown
 } from 'lucide-react';
 import { memo, useState, useEffect } from 'react';
-import { AIModal } from '../../components/modals/AIModal';
+import { AIBubbleMenu } from '../../components/editor/AIBubbleMenu'; // Import component mới
 
 // --- CUSTOM HOOK: Bắt dính trạng thái Editor ---
 const useEditorState = (editor: Editor | null) => {
@@ -20,9 +20,10 @@ const useEditorState = (editor: Editor | null) => {
     isOrderedList: false,
     isBlockquote: false,
     align: 'left',
-    headingLevel: 'paragraph', // String để bind vào select
+    headingLevel: 'paragraph',
     canUndo: false,
     canRedo: false,
+    hasSelection: false, // Thêm trạng thái có text được select
   });
 
   useEffect(() => {
@@ -40,6 +41,10 @@ const useEditorState = (editor: Editor | null) => {
       if (editor.isActive({ textAlign: 'center' })) currentAlign = 'center';
       else if (editor.isActive({ textAlign: 'right' })) currentAlign = 'right';
 
+      // Check if text is selected
+      const { from, to } = editor.state.selection;
+      const hasSelection = from !== to;
+
       setState({
         isBold: editor.isActive('bold'),
         isItalic: editor.isActive('italic'),
@@ -53,10 +58,10 @@ const useEditorState = (editor: Editor | null) => {
         headingLevel: currentHeading,
         canUndo: editor.can().undo(),
         canRedo: editor.can().redo(),
+        hasSelection,
       });
     };
 
-    // Gọi ngay lần đầu và lắng nghe sự kiện
     handleUpdate();
     editor.on('selectionUpdate', handleUpdate);
     editor.on('transaction', handleUpdate);
@@ -79,11 +84,11 @@ interface EditorToolbarProps {
 export const EditorToolbar = memo(({ editor }: EditorToolbarProps) => {
   const selectionState = useEditorState(editor);
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const [showAIModal, setShowAIModal] = useState(false);
+  const [showAIMenu, setShowAIMenu] = useState(false);
 
   if (!editor) return null;
 
-  // --- HANDLERS (Quan trọng: e.preventDefault để không mất focus) ---
+  // --- HANDLERS ---
   
   const handleHeadingChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     e.preventDefault();
@@ -108,6 +113,17 @@ export const EditorToolbar = memo(({ editor }: EditorToolbarProps) => {
   const handleColorChange = (color: string) => {
     editor.chain().focus().setColor(color).run();
     setShowColorPicker(false);
+  };
+
+  // AI Button Handler
+  const handleAIClick = () => {
+    // Nếu không có text được select, focus vào editor trước
+    if (!selectionState.hasSelection) {
+      editor.commands.focus();
+      // Có thể thêm tooltip hoặc notification
+      return;
+    }
+    setShowAIMenu(true);
   };
 
   const colors = ['#000000', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3', '#54A0FF'];
@@ -136,15 +152,28 @@ export const EditorToolbar = memo(({ editor }: EditorToolbarProps) => {
     <>
       <div className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex items-center gap-1 px-4 py-2 flex-wrap">
-          {/* AI Button */}
-          <button onClick={() => setShowAIModal(true)} className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-md hover:shadow-md hover:scale-105 transition-all mr-2 font-medium text-sm">
-            <Sparkles size={14} /><span>AI Ask</span>
+          {/* AI Button - Notion Style */}
+          <button 
+            onClick={handleAIClick}
+            disabled={!selectionState.hasSelection}
+            className={`
+              flex items-center gap-2 px-3 py-1.5 rounded-md font-medium text-sm
+              transition-all duration-200 mr-2
+              ${selectionState.hasSelection
+                ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:shadow-lg hover:scale-105 active:scale-95'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
+              }
+            `}
+            title={selectionState.hasSelection ? 'AI Actions (Select text first)' : 'Select text to use AI'}
+          >
+            <Sparkles size={14} />
+            <span>AI</span>
           </button>
 
           <div className="w-px h-5 bg-border mx-1" />
 
-          <ToolButton icon={Undo} onClick={() => editor.chain().focus().undo().run()} disabled={!selectionState.canUndo} title="Undo" />
-          <ToolButton icon={Redo} onClick={() => editor.chain().focus().redo().run()} disabled={!selectionState.canRedo} title="Redo" />
+          <ToolButton icon={Undo} onClick={() => editor.chain().focus().undo().run()} disabled={!selectionState.canUndo} title="Undo (Ctrl+Z)" />
+          <ToolButton icon={Redo} onClick={() => editor.chain().focus().redo().run()} disabled={!selectionState.canRedo} title="Redo (Ctrl+Y)" />
 
           <div className="w-px h-5 bg-border mx-1" />
 
@@ -166,10 +195,10 @@ export const EditorToolbar = memo(({ editor }: EditorToolbarProps) => {
           <div className="w-px h-5 bg-border mx-1" />
 
           {/* BASIC FORMATTING */}
-          <ToolButton icon={Bold} onClick={() => editor.chain().focus().toggleBold().run()} active={selectionState.isBold} title="Bold" />
-          <ToolButton icon={Italic} onClick={() => editor.chain().focus().toggleItalic().run()} active={selectionState.isItalic} title="Italic" />
-          <ToolButton icon={Underline} onClick={() => editor.chain().focus().toggleUnderline().run()} active={selectionState.isUnderline} title="Underline" />
-          <ToolButton icon={Strikethrough} onClick={() => editor.chain().focus().toggleStrike().run()} active={selectionState.isStrike} title="Strike" />
+          <ToolButton icon={Bold} onClick={() => editor.chain().focus().toggleBold().run()} active={selectionState.isBold} title="Bold (Ctrl+B)" />
+          <ToolButton icon={Italic} onClick={() => editor.chain().focus().toggleItalic().run()} active={selectionState.isItalic} title="Italic (Ctrl+I)" />
+          <ToolButton icon={Underline} onClick={() => editor.chain().focus().toggleUnderline().run()} active={selectionState.isUnderline} title="Underline (Ctrl+U)" />
+          <ToolButton icon={Strikethrough} onClick={() => editor.chain().focus().toggleStrike().run()} active={selectionState.isStrike} title="Strikethrough" />
           <ToolButton icon={Code} onClick={() => editor.chain().focus().toggleCode().run()} active={selectionState.isCode} title="Code" />
 
           <div className="w-px h-5 bg-border mx-1" />
@@ -195,16 +224,34 @@ export const EditorToolbar = memo(({ editor }: EditorToolbarProps) => {
                 <div className="fixed inset-0 z-40" onClick={() => setShowColorPicker(false)} />
                 <div className="absolute top-full right-0 mt-2 p-3 bg-popover border border-border rounded-lg shadow-xl flex gap-2 z-50 animate-in fade-in zoom-in-95 duration-200">
                   {colors.map((color) => (
-                    <button key={color} onClick={() => handleColorChange(color)} className="w-6 h-6 rounded-full border border-border hover:scale-110 transition-transform" style={{ backgroundColor: color }} title={color} />
+                    <button 
+                      key={color} 
+                      onClick={() => handleColorChange(color)} 
+                      className="w-6 h-6 rounded-full border border-border hover:scale-110 transition-transform" 
+                      style={{ backgroundColor: color }} 
+                      title={color} 
+                    />
                   ))}
-                  <button onClick={() => handleColorChange('inherit')} className="w-6 h-6 rounded-full border border-border hover:scale-110 transition-transform flex items-center justify-center bg-muted" title="Reset Color"><X size={12} /></button>
+                  <button 
+                    onClick={() => handleColorChange('inherit')} 
+                    className="w-6 h-6 rounded-full border border-border hover:scale-110 transition-transform flex items-center justify-center bg-muted" 
+                    title="Reset Color"
+                  >
+                    <X size={12} />
+                  </button>
                 </div>
               </>
             )}
           </div>
         </div>
       </div>
-      <AIModal isOpen={showAIModal} onClose={() => setShowAIModal(false)} editor={editor} />
+
+      {/* AI Bubble Menu */}
+      <AIBubbleMenu 
+        editor={editor} 
+        isOpen={showAIMenu} 
+        onClose={() => setShowAIMenu(false)} 
+      />
     </>
   );
 });

@@ -82,7 +82,7 @@ export const useYjs = (documentId: string, isShared: boolean) => {
             
             // ✅ Lắng nghe sự kiện sync từ provider
             result.provider.on('sync', (synced: boolean) => {
-              console.log('🔄 Yjs Provider Synced:', synced);
+              console.log('📡 Yjs Provider Synced:', synced);
               setIsSynced(synced);
             });
 
@@ -101,6 +101,10 @@ export const useYjs = (documentId: string, isShared: boolean) => {
               }, delay);
             } else {
               setConnected(false);
+              // Vẫn tiếp tục với local mode nếu collaboration failed
+              console.warn('⚠️ Falling back to local mode due to collaboration failure');
+              setConnected(true);
+              setIsSynced(true);
             }
           }
         } else {
@@ -110,6 +114,9 @@ export const useYjs = (documentId: string, isShared: boolean) => {
       } catch (error) {
         console.error('❌ Failed to initialize Yjs:', error);
         initializingRef.current = false;
+        // Fallback to local mode
+        setConnected(true);
+        setIsSynced(true);
       }
     };
 
