@@ -1,0 +1,192 @@
+import { handleResponse } from './utils';
+import type { 
+  CalendarEvent, 
+  CreateEventInput, 
+  UpdateEventInput,
+  CalendarFilters 
+} from '@/types/calendar';
+
+const CALENDAR_SERVICE_URL = import.meta.env.VITE_CALENDAR_SERVICE_URL || 'http://localhost:5003';
+
+/**
+ * Get user ID from localStorage
+ */
+const getUserId = (): string => {
+  try {
+    const userData = localStorage.getItem('user');
+    if (!userData) throw new Error('User not authenticated');
+    const user = JSON.parse(userData);
+    if (!user.id) throw new Error('User ID not found');
+    return user.id;
+  } catch (error) {
+    console.error('❌ Error getting user ID:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all events for the current user
+ */
+export const getAllEvents = async (filters?: CalendarFilters): Promise<CalendarEvent[]> => {
+  try {
+    const userId = getUserId();
+    
+    const queryParams = new URLSearchParams();
+    if (filters?.startDate) queryParams.append('startDate', filters.startDate);
+    if (filters?.endDate) queryParams.append('endDate', filters.endDate);
+    if (filters?.noteId) queryParams.append('noteId', filters.noteId);
+
+    const url = `${CALENDAR_SERVICE_URL}/api/events${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+      },
+      credentials: 'include',
+    });
+
+    return await handleResponse(response);
+  } catch (error) {
+    console.error('❌ Error fetching events:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get a single event by ID
+ */
+export const getEventById = async (id: string): Promise<CalendarEvent> => {
+  try {
+    const userId = getUserId();
+    
+    const response = await fetch(`${CALENDAR_SERVICE_URL}/api/events/${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+      },
+      credentials: 'include',
+    });
+
+    return await handleResponse(response);
+  } catch (error) {
+    console.error('❌ Error fetching event:', error);
+    throw error;
+  }
+};
+
+/**
+ * Create a new event
+ */
+export const createEvent = async (eventData: CreateEventInput): Promise<CalendarEvent> => {
+  try {
+    const userId = getUserId();
+    
+    const response = await fetch(`${CALENDAR_SERVICE_URL}/api/events`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+      },
+      credentials: 'include',
+      body: JSON.stringify(eventData),
+    });
+
+    const result = await handleResponse(response);
+    console.log('✅ Event created successfully:', result.id);
+    return result;
+  } catch (error) {
+    console.error('❌ Error creating event:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update an existing event
+ */
+export const updateEvent = async (id: string, eventData: Partial<UpdateEventInput>): Promise<CalendarEvent> => {
+  try {
+    const userId = getUserId();
+    
+    const response = await fetch(`${CALENDAR_SERVICE_URL}/api/events/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+      },
+      credentials: 'include',
+      body: JSON.stringify(eventData),
+    });
+
+    return await handleResponse(response);
+  } catch (error) {
+    console.error('❌ Error updating event:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete an event
+ */
+export const deleteEvent = async (id: string): Promise<void> => {
+  try {
+    const userId = getUserId();
+    
+    const response = await fetch(`${CALENDAR_SERVICE_URL}/api/events/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+      },
+      credentials: 'include',
+    });
+
+    await handleResponse(response);
+    console.log('✅ Event deleted successfully');
+  } catch (error) {
+    console.error('❌ Error deleting event:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get events for a specific date range (useful for calendar views)
+ */
+export const getEventsInRange = async (startDate: Date, endDate: Date): Promise<CalendarEvent[]> => {
+  return getAllEvents({
+    startDate: startDate.toISOString(),
+    endDate: endDate.toISOString(),
+  });
+};
+
+/**
+ * Get upcoming events (next 7 days)
+ */
+export const getUpcomingEvents = async (days: number = 7): Promise<CalendarEvent[]> => {
+  const startDate = new Date();
+  const endDate = new Date();
+  endDate.setDate(endDate.getDate() + days);
+  
+  return getEventsInRange(startDate, endDate);
+};
+
+/**
+ * Link an event to a note
+ */
+export const linkEventToNote = async (eventId: string, noteId: string): Promise<CalendarEvent> => {
+  return updateEvent(eventId, { noteId });
+};
+
+// Google Calendar Integration (will be implemented later)
+export const syncWithGoogleCalendar = async (): Promise<{ success: boolean; message: string }> => {
+  // TODO: Implement Google Calendar sync
+  console.warn('⚠️ Google Calendar sync not implemented yet');
+  return { success: false, message: 'Not implemented' };
+};
+
+export const disconnectGoogleCalendar = async (): Promise<void> => {
+  // TODO: Implement disconnect logic
+  console.warn('⚠️ Google Calendar disconnect not implemented yet');
+};

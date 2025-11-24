@@ -13,6 +13,7 @@ import NotFoundPage from "@/pages/NotFound/NotFoundPage";
 import NotePage from "@/pages/NotePage/NotePage";
 import AdminPage from "./pages/Manager/adminpage";
 import InvitationAcceptPage from "@/pages/InvitationAcceptPage";
+import CalendarPage from "@/pages/CalendarPage/CalendarPage";
 
 // Loading Component
 function LoadingScreen() {
@@ -220,6 +221,14 @@ function App() {
           element={
             <ProtectedRoute>
               <TemplatePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/calendar"
+          element={
+            <ProtectedRoute>
+              <CalendarPage />
             </ProtectedRoute>
           }
         />
