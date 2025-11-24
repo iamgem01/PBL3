@@ -17,9 +17,10 @@ const getUserId = (): string => {
     if (!userData) throw new Error('User not authenticated');
     const user = JSON.parse(userData);
     if (!user.id) throw new Error('User ID not found');
+    console.log('📅 [Calendar] Using user ID:', user.id);
     return user.id;
   } catch (error) {
-    console.error('❌ Error getting user ID:', error);
+    console.error('❌ [Calendar] Error getting user ID:', error);
     throw error;
   }
 };
@@ -38,6 +39,9 @@ export const getAllEvents = async (filters?: CalendarFilters): Promise<CalendarE
 
     const url = `${CALENDAR_SERVICE_URL}/api/events${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     
+    console.log('📅 [Calendar] Fetching events from:', url);
+    console.log('📅 [Calendar] Filters:', filters);
+    
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -47,10 +51,17 @@ export const getAllEvents = async (filters?: CalendarFilters): Promise<CalendarE
       credentials: 'include',
     });
 
-    return await handleResponse(response);
+    console.log('📅 [Calendar] Response status:', response.status);
+    
+    const events = await handleResponse(response);
+    console.log('✅ [Calendar] Fetched events:', events.length);
+    console.log('📅 [Calendar] First 2 events:', events.slice(0, 2));
+    
+    return events;
   } catch (error) {
-    console.error('❌ Error fetching events:', error);
-    throw error;
+    console.error('❌ [Calendar] Error fetching events:', error);
+    // Return empty array instead of throwing to prevent UI crash
+    return [];
   }
 };
 
@@ -60,6 +71,8 @@ export const getAllEvents = async (filters?: CalendarFilters): Promise<CalendarE
 export const getEventById = async (id: string): Promise<CalendarEvent> => {
   try {
     const userId = getUserId();
+    
+    console.log('📅 [Calendar] Fetching event:', id);
     
     const response = await fetch(`${CALENDAR_SERVICE_URL}/api/events/${id}`, {
       method: 'GET',
@@ -72,7 +85,7 @@ export const getEventById = async (id: string): Promise<CalendarEvent> => {
 
     return await handleResponse(response);
   } catch (error) {
-    console.error('❌ Error fetching event:', error);
+    console.error('❌ [Calendar] Error fetching event:', error);
     throw error;
   }
 };
@@ -83,6 +96,8 @@ export const getEventById = async (id: string): Promise<CalendarEvent> => {
 export const createEvent = async (eventData: CreateEventInput): Promise<CalendarEvent> => {
   try {
     const userId = getUserId();
+    
+    console.log('📅 [Calendar] Creating event:', eventData);
     
     const response = await fetch(`${CALENDAR_SERVICE_URL}/api/events`, {
       method: 'POST',
@@ -95,10 +110,10 @@ export const createEvent = async (eventData: CreateEventInput): Promise<Calendar
     });
 
     const result = await handleResponse(response);
-    console.log('✅ Event created successfully:', result.id);
+    console.log('✅ [Calendar] Event created successfully:', result.id);
     return result;
   } catch (error) {
-    console.error('❌ Error creating event:', error);
+    console.error('❌ [Calendar] Error creating event:', error);
     throw error;
   }
 };
@@ -109,6 +124,8 @@ export const createEvent = async (eventData: CreateEventInput): Promise<Calendar
 export const updateEvent = async (id: string, eventData: Partial<UpdateEventInput>): Promise<CalendarEvent> => {
   try {
     const userId = getUserId();
+    
+    console.log('📅 [Calendar] Updating event:', id, eventData);
     
     const response = await fetch(`${CALENDAR_SERVICE_URL}/api/events/${id}`, {
       method: 'PUT',
@@ -122,7 +139,7 @@ export const updateEvent = async (id: string, eventData: Partial<UpdateEventInpu
 
     return await handleResponse(response);
   } catch (error) {
-    console.error('❌ Error updating event:', error);
+    console.error('❌ [Calendar] Error updating event:', error);
     throw error;
   }
 };
@@ -134,6 +151,8 @@ export const deleteEvent = async (id: string): Promise<void> => {
   try {
     const userId = getUserId();
     
+    console.log('📅 [Calendar] Deleting event:', id);
+    
     const response = await fetch(`${CALENDAR_SERVICE_URL}/api/events/${id}`, {
       method: 'DELETE',
       headers: {
@@ -144,9 +163,9 @@ export const deleteEvent = async (id: string): Promise<void> => {
     });
 
     await handleResponse(response);
-    console.log('✅ Event deleted successfully');
+    console.log('✅ [Calendar] Event deleted successfully');
   } catch (error) {
-    console.error('❌ Error deleting event:', error);
+    console.error('❌ [Calendar] Error deleting event:', error);
     throw error;
   }
 };
@@ -155,6 +174,11 @@ export const deleteEvent = async (id: string): Promise<void> => {
  * Get events for a specific date range (useful for calendar views)
  */
 export const getEventsInRange = async (startDate: Date, endDate: Date): Promise<CalendarEvent[]> => {
+  console.log('📅 [Calendar] Getting events in range:', {
+    start: startDate.toISOString(),
+    end: endDate.toISOString()
+  });
+  
   return getAllEvents({
     startDate: startDate.toISOString(),
     endDate: endDate.toISOString(),
@@ -169,6 +193,8 @@ export const getUpcomingEvents = async (days: number = 7): Promise<CalendarEvent
   const endDate = new Date();
   endDate.setDate(endDate.getDate() + days);
   
+  console.log('📅 [Calendar] Getting upcoming events for next', days, 'days');
+  
   return getEventsInRange(startDate, endDate);
 };
 
@@ -176,17 +202,16 @@ export const getUpcomingEvents = async (days: number = 7): Promise<CalendarEvent
  * Link an event to a note
  */
 export const linkEventToNote = async (eventId: string, noteId: string): Promise<CalendarEvent> => {
+  console.log('📅 [Calendar] Linking event to note:', { eventId, noteId });
   return updateEvent(eventId, { noteId });
 };
 
 // Google Calendar Integration (will be implemented later)
 export const syncWithGoogleCalendar = async (): Promise<{ success: boolean; message: string }> => {
-  // TODO: Implement Google Calendar sync
-  console.warn('⚠️ Google Calendar sync not implemented yet');
+  console.warn('⚠️ [Calendar] Google Calendar sync not implemented yet');
   return { success: false, message: 'Not implemented' };
 };
 
 export const disconnectGoogleCalendar = async (): Promise<void> => {
-  // TODO: Implement disconnect logic
-  console.warn('⚠️ Google Calendar disconnect not implemented yet');
+  console.warn('⚠️ [Calendar] Google Calendar disconnect not implemented yet');
 };

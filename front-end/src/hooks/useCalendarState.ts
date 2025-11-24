@@ -9,7 +9,6 @@ import {
 import { getViewDateRange } from '@/utils/calendarUtils';
 import type { CalendarEvent, CreateEventInput } from '@/types/calendar';
 
-// Define proper view type
 type ViewType = 'month' | 'week' | 'day' | 'agenda';
 
 export const useCalendarState = () => {
@@ -20,24 +19,41 @@ export const useCalendarState = () => {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  
   // Modals state
   const [showEventModal, setShowEventModal] = useState(false);
   const [showEventDetails, setShowEventDetails] = useState(false);
 
-  // Fetch events based on current view
+  // Fetch events based on current date and view type
   const fetchEvents = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
-
+      
+      // For agenda view, get all events
+      if (viewType === 'agenda') {
+        const allEvents = await getAllEvents();
+        setEvents(allEvents);
+        return;
+      }
+      
       const { start, end } = getViewDateRange(currentDate, viewType as 'month' | 'week' | 'day');
+      
+      console.log('📅 Fetching events for range:', {
+        viewType,
+        start: start.toISOString(),
+        end: end.toISOString()
+      });
+      
       const fetchedEvents = await getEventsInRange(start, end);
+      
+      console.log('✅ Fetched events:', fetchedEvents.length);
       
       setEvents(fetchedEvents);
     } catch (err: any) {
-      console.error('Failed to fetch events:', err);
+      console.error('❌ Failed to fetch events:', err);
       setError(err.message || 'Failed to load events');
+      setEvents([]); // Set empty array on error to prevent UI crash
     } finally {
       setIsLoading(false);
     }
@@ -133,19 +149,26 @@ export const useCalendarState = () => {
         setEvents((prev) => [...prev, newEvent]);
       }
       
+      // Close modals and reset state
       setShowEventModal(false);
+      setShowEventDetails(false);
       setSelectedEvent(null);
       setSelectedDate(undefined);
+      
+      // Optionally refresh to ensure sync
+      await fetchEvents();
     } catch (error) {
       console.error('Failed to save event:', error);
       throw error;
     }
-  }, [selectedEvent]);
+  }, [selectedEvent, fetchEvents]);
 
   const handleDeleteEvent = useCallback(async (eventId: string) => {
     try {
       await deleteEvent(eventId);
       setEvents((prev) => prev.filter((e) => e.id !== eventId));
+      
+      // Close modals and reset state
       setShowEventModal(false);
       setShowEventDetails(false);
       setSelectedEvent(null);
@@ -159,7 +182,7 @@ export const useCalendarState = () => {
     setViewType(view);
   }, []);
 
-  // Memoized values
+  // Memoized values for better performance
   const state = useMemo(
     () => ({
       events,

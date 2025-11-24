@@ -112,9 +112,12 @@ export const getEventsForDay = (date: Date, events: CalendarEvent[]): CalendarEv
     const eventStart = new Date(event.startDate);
     const eventEnd = new Date(event.endDate);
     
-    // Check if the date falls within the event's date range
-    return date >= new Date(eventStart.toDateString()) && 
-           date <= new Date(eventEnd.toDateString());
+    // Normalize dates to start of day for comparison
+    const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const dayEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+    
+    // Check if the event overlaps with this day
+    return eventStart <= dayEnd && eventEnd >= dayStart;
   });
 };
 
@@ -208,37 +211,53 @@ export const getWeekDates = (date: Date): Date[] => {
 };
 
 /**
- * Get date range for current view
+ * Get date range for current view - CRITICAL FOR FETCHING EVENTS
  */
 export const getViewDateRange = (
   date: Date, 
   viewType: 'month' | 'week' | 'day'
 ): { start: Date; end: Date } => {
+  let start: Date;
+  let end: Date;
+  
   switch (viewType) {
-    case 'day':
-      return {
-        start: new Date(date.getFullYear(), date.getMonth(), date.getDate()),
-        end: new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59),
-      };
+    case 'day': {
+      start = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+      end = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+      break;
+    }
     case 'week': {
       const weekDates = getWeekDates(date);
-      return {
-        start: weekDates[0],
-        end: new Date(weekDates[6].getFullYear(), weekDates[6].getMonth(), weekDates[6].getDate(), 23, 59, 59),
-      };
+      start = new Date(weekDates[0].getFullYear(), weekDates[0].getMonth(), weekDates[0].getDate(), 0, 0, 0, 0);
+      end = new Date(weekDates[6].getFullYear(), weekDates[6].getMonth(), weekDates[6].getDate(), 23, 59, 59, 999);
+      break;
     }
     case 'month':
     default: {
+      // Get all days that will be displayed in calendar (including prev/next month)
       const calendarDays = getCalendarDays(date);
-      return {
-        start: calendarDays[0],
-        end: new Date(
-          calendarDays[calendarDays.length - 1].getFullYear(),
-          calendarDays[calendarDays.length - 1].getMonth(),
-          calendarDays[calendarDays.length - 1].getDate(),
-          23, 59, 59
-        ),
-      };
+      start = new Date(
+        calendarDays[0].getFullYear(),
+        calendarDays[0].getMonth(),
+        calendarDays[0].getDate(),
+        0, 0, 0, 0
+      );
+      end = new Date(
+        calendarDays[calendarDays.length - 1].getFullYear(),
+        calendarDays[calendarDays.length - 1].getMonth(),
+        calendarDays[calendarDays.length - 1].getDate(),
+        23, 59, 59, 999
+      );
+      break;
     }
   }
+  
+  console.log('📅 getViewDateRange:', {
+    viewType,
+    inputDate: date.toISOString(),
+    start: start.toISOString(),
+    end: end.toISOString()
+  });
+  
+  return { start, end };
 };
