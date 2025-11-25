@@ -126,7 +126,6 @@ services:
   - name: ai-service
     host: ai-service
     port: 3001
-    path: /api/chat
     protocol: http
     connect_timeout: 60000
     read_timeout: 60000
@@ -158,7 +157,7 @@ services:
     routes:
       - name: ai-resource
         paths:
-          - /api/ai
+          - /api/chat
         methods: [POST, GET, OPTIONS]
         strip_path: true
         preserve_host: false

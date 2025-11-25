@@ -1,0 +1,74 @@
+server: 
+  port: 8084
+
+spring:
+  application:
+    name: collab-service 
+
+  websocket:
+    allowed-origins: http://localhost:3000
+  web:
+    cors:
+      allowed-origins: http://localhost:3000
+      allowed-methods : GET, POST, PUT, DELETE, OPTIONS
+      allowed-headers: '*'
+      allow-credentials: true
+  data:
+    mongodb:
+      host: ${SPRING_DATA_MONGODB_HOST}
+      port: ${SPRING_DATA_MONGODB_PORT}
+      database: ${SPRING_DATA_MONGODB_DATABASE}
+      auto-index-creation: ${SPRING_DATA_MONGODB_AUTO_INDEX_CREATION}
+  
+  # Websocket configuration #
+  servlet: 
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  
+  # Email configuration #
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: aeternusad01@gmail.com
+    password: ${GMAIL_APP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            trust: smtp.gmail.com
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+# Actuator #
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info 
+  endpoint:
+    health:
+      show-details: always
+
+note:
+  service:
+    url: ${NOTE_SERVICE_URL}
+
+logging: 
+  level:
+    root: INFO
+    com.java.smartnote.collabservice: DEBUG
+    org.springframework.web: INFO
+    org.springframework.messaging: DEBUG
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} - %msg%n'
+
+allowed:
+  origins: http://localhost:3000
+
+  

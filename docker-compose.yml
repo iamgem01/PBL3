@@ -96,17 +96,41 @@ services:
   #     timeout: 5s
   #     retries: 5
   #     start_period: 5s
+  collab-service:
+    build: 
+      context: ./collab-service
+      dockerfile: Dockerfile
+    image: collab-service-app
+    ports: 
+      - "8085:8084"
+    environment: 
+      SPRING_DATA_MONGODB_HOST: mongodb
+      SPRING_DATA_MONGODB_PORT: 27017
+      SPRING_DATA_MONGODB_DATABASE: collaboration_notes_db
+      SPRING_DATA_MONGODB_AUTO_INDEX_CREATION: true
+      NOTE_SERVICE_URL: http://note-service:8080
+      GMAIL_APP_PASSWORD: 
+    networks:
+      - my-network
+    deploy:
+      replicas: 1
+      restart_policy: 
+        condition: on-failure
+    depends_on:
+      - mongodb
 
 
   # We can deploy by using docker swarm, so I don't set the container name
   ai-service:
-    build: ./ai-service
+    build: 
+      context: ./ai-service
+      dockerfile: Dockerfile
     image: ai-service-app
     ports:
       - "3001:3001"
     environment:
     
-      GEMINI_API_KEY: AIzaSyCd1XwO0kHPsYbhVuCff4Wb8hHXWbY-XCg
+      GEMINI_API_KEY: AIzaSyDHKeKXDLTThc04ruoyyR3pwH6iDEo3yPw
       MONGODB_URI: mongodb://mongodb:27017/ai-service
     networks:
       - my-network

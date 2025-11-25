@@ -21,12 +21,19 @@ public class NoteService {
     private final NoteHistoryRepository noteHistoryRepository;
 
     public NoteResponse createNote(NoteRequest request, String userId) {
+        // Validate userId
+        if (userId == null || userId.trim().isEmpty()) {
+            throw new IllegalArgumentException("User ID cannot be null or empty");
+        }
+        
+        System.out.println("📝 Creating note for userId: " + userId);
+        
         Note note = new Note();
         note.setFolderId(request.getFolderId());
         note.setTitle(request.getTitle());
         note.setContent(request.getContent());
         note.setContentType(request.getContentType() != null ? request.getContentType() : "markdown");
-        note.setCreatedBy(userId);
+        note.setCreatedBy(userId); // Ensure this is set correctly
         note.setCreatedAt(LocalDateTime.now());
         note.setUpdatedAt(LocalDateTime.now());
         note.setVersion(1);
@@ -35,6 +42,8 @@ public class NoteService {
         note.setIsDeleted(false); 
 
         Note savedNote = noteRepository.save(note);
+        
+        System.out.println("✅ Note created with ID: " + savedNote.getId() + " for user: " + userId);
         return convertToResponse(savedNote);
     }
 
@@ -89,9 +98,35 @@ public class NoteService {
         noteRepository.save(note);
     }
 
-    public List<NoteResponse> getAllNotes() {
+    // public List<NoteResponse> getAllNotes() {
     
-        return noteRepository.findByIsDeletedFalse().stream()
+    //     return noteRepository.findByIsDeletedFalse().stream()
+    //             .map(this::convertToResponse)
+    //             .collect(Collectors.toList());
+    // }
+    public List<NoteResponse> getAllNotesByUser(String userId) {
+        System.out.println("🔍 [DEBUG] Getting notes for userId: " + userId);
+        System.out.println("🔍 [DEBUG] UserId type: " + (userId != null ? userId.getClass().getSimpleName() : "null"));
+        System.out.println("🔍 [DEBUG] UserId length: " + (userId != null ? userId.length() : 0));
+        
+        List<Note> notes = noteRepository.findByCreatedByAndIsDeletedFalse(userId);
+        System.out.println("📊 [DEBUG] Found " + notes.size() + " notes for user " + userId);
+        
+        // Log chi tiết từng note để debug
+        for (int i = 0; i < notes.size(); i++) {
+            Note note = notes.get(i);
+            System.out.println("📝 [DEBUG] Note " + (i+1) + ":");
+            System.out.println("   ID: " + note.getId());
+            System.out.println("   CreatedBy: '" + note.getCreatedBy() + "'");
+            System.out.println("   CreatedBy type: " + (note.getCreatedBy() != null ? note.getCreatedBy().getClass().getSimpleName() : "null"));
+            System.out.println("   CreatedBy length: " + (note.getCreatedBy() != null ? note.getCreatedBy().length() : 0));
+            System.out.println("   Title: " + note.getTitle());
+            if (note.getCreatedBy() != null) {
+                System.out.println("   Match check: " + note.getCreatedBy().equals(userId));
+            }
+        }
+        
+        return notes.stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }

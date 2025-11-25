@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  collab-service:
+    build: 
+      context: ./collab-service
+      dockerfile: Dockerfile
+    image: collab-service-app
+    ports: 
+      - "8083:8083"
+    environment: 
+      SPRING_DATA_MONGODB_HOST: mongodb
+      SPRING_DATA_MONGODB_PORT: 27017
+      SPRING_DATA_MONGODB_DATABASE: collaboration_notes_db
+      SPRING_DATA_MONGODB_AUTO_INDEX_CREATION: true
+      NOTE_SERVICE_URL: http://note-service:8080
+      GMAIL_APP_PASSWORD: aaaa bbbb cccc dddd
+    network:
+      - my-network
+    deploy:
+      replicas: 1
+      restart_policy: 
+        condition: on_failure
+    depend_on:
+      - mongodb
