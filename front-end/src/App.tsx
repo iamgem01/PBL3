@@ -14,6 +14,7 @@ import NotePage from "@/pages/NotePage/NotePage";
 import AdminPage from "./pages/Manager/adminpage";
 import InvitationAcceptPage from "@/pages/InvitationAcceptPage";
 import CalendarPage from "@/pages/CalendarPage/CalendarPage";
+import NotificationsPage from "@/pages/NotificationsPage/NotificationsPage";
 
 // Loading Component
 function LoadingScreen() {
@@ -229,6 +230,14 @@ function App() {
           element={
             <ProtectedRoute>
               <CalendarPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <NotificationsPage />
             </ProtectedRoute>
           }
         />

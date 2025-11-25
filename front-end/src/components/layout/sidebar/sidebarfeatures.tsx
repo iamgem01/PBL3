@@ -1,5 +1,7 @@
-import { Home, Sparkles, Bell, Search } from "lucide-react";
+// components/layout/sidebar/sidebarfeatures.tsx
+import { Home, Sparkles, Search } from "lucide-react";
 import { Link } from "react-router-dom";
+import NotificationPopup from "@/components/Notification/NotificationPopup";
 
 interface SidebarMainButtonsProps {
   collapsed: boolean;
@@ -11,13 +13,13 @@ export default function SidebarMainButtons({
   const buttons = [
     { label: "Home", icon: <Home size={16} />, path: "/home" },
     { label: "Aeternus AI", icon: <Sparkles size={16} />, path: "/ai" },
-    { label: "Notification", icon: <Bell size={16} />, path: "/notifications" },
     { label: "Search", icon: <Search size={16} />, path: "/search" },
   ];
 
   return (
     <div className="border-t border-border p-2 text-sm">
       <div className="space-y-1">
+        {/* Regular navigation buttons */}
         {buttons.map((btn) => (
           <Link
             key={btn.label}
@@ -30,6 +32,9 @@ export default function SidebarMainButtons({
             </span>
           </Link>
         ))}
+        
+        {/* Notification Popup - Integrated seamlessly */}
+        <NotificationPopup collapsed={collapsed} />
       </div>
     </div>
   );

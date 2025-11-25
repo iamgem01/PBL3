@@ -47,7 +47,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                     checked={theme === 'dark'}
                                     onChange={toggleTheme}
                                 />
-                                <div className="w-14 h-7 bg-gray-300 dark:bg-gray-600 rounded-full peer peer-checked:bg-blue-600 dark:peer-checked:bg-blue-500 transition-colors duration-300 relative">
+                                <div className="w-14 h-7 bg-gray-300 dark:bg-gray-600 rounded-full peer peer-checked:bg-blue-600 dark:peer-checked:bg-blue-500 transition-colors  duration-300 relative">
                                     <div className="absolute left-1 top-1 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 peer-checked:translate-x-7 flex items-center justify-center">
                                         {theme === 'dark' ? (
                                             <Moon className="w-3 h-3 text-blue-600" />
