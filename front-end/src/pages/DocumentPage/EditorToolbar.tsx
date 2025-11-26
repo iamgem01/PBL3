@@ -30,6 +30,16 @@ const useEditorState = (editor: Editor | null) => {
     if (!editor) return;
 
     const handleUpdate = () => {
+      // Safely check for undo/redo availability
+      let canUndo = false;
+      let canRedo = false;
+      try {
+        canUndo = editor.can().undo();
+        canRedo = editor.can().redo();
+      } catch (e) {
+        // History extension not available
+      }
+
       // Logic Heading
       let currentHeading = 'paragraph';
       if (editor.isActive('heading', { level: 1 })) currentHeading = '1';
@@ -56,8 +66,8 @@ const useEditorState = (editor: Editor | null) => {
         isBlockquote: editor.isActive('blockquote'),
         align: currentAlign,
         headingLevel: currentHeading,
-        canUndo: editor.can().undo(),
-        canRedo: editor.can().redo(),
+        canUndo,
+        canRedo,
         hasSelection,
       });
     };

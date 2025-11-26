@@ -84,8 +84,7 @@ const notificationSchema = new mongoose.Schema({
     type: Date
   },
   scheduledFor: {
-    type: Date,
-    index: true
+    type: Date
   },
   
   // Metadata

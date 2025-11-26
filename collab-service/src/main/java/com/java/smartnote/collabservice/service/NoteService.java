@@ -31,14 +31,16 @@ public class NoteService {
     
     /**
      * Lấy tất cả notes đang được share với một user cụ thể
+     * FIX: Chỉ trả về notes mà user được EXPLICITLY share (mời cụ thể)
+     * KHÔNG trả về notes chỉ vì enable collaboration
      */
     public List<Note> getSharedNotesForUser(String userId) {
         System.out.println("🔍 [SERVICE] ===== GETTING SHARED NOTES =====");
         System.out.println("🔍 [SERVICE] UserId parameter: " + userId);
         
         if (userId == null || userId.trim().isEmpty()) {
-            System.out.println("🔍 [SERVICE] UserId is null/empty, returning all shared notes");
-            return getSharedNotes();
+            System.out.println("🔍 [SERVICE] UserId is null/empty, returning empty list");
+            return new ArrayList<>();
         }
         
         List<Note> allNotes = noteRepository.findAll();
@@ -56,22 +58,23 @@ public class NoteService {
                 System.out.println("   - Shares: " + note.getShares());
                 System.out.println("   - Shares size: " + note.getShares().size());
                 boolean containsUserId = note.getShares().contains(userId);
-                boolean isSharedWithAll = note.getShares().contains("all_users");
                 System.out.println("   - Contains userId '" + userId + "': " + containsUserId);
-                System.out.println("   - Shared with all users: " + isSharedWithAll);
-                System.out.println("   - Accessible by current user: " + (containsUserId || isSharedWithAll));
+                System.out.println("   - Accessible by current user: " + containsUserId);
             }
         }
         
         System.out.println("📊 Summary: " + notesWithShares + "/" + allNotes.size() + " notes have shares");
         
+        // FIX: CHỈ trả về notes mà userId nằm trong shares list
+        // KHÔNG có logic "all_users" nữa - chỉ share khi được mời cụ thể
         List<Note> filteredNotes = allNotes.stream()
                 .filter(note -> note.getShares() != null && !note.getShares().isEmpty())
                 .filter(note -> {
-                    // Check if note is shared with current user
-                    boolean containsUserId = note.getShares().contains(userId);
-                    boolean isSharedWithAll = note.getShares().contains("all_users");
-                    return containsUserId || isSharedWithAll;
+                    // Chỉ check xem userId có trong shares list không
+                    // KHÔNG check "all_users" - logic này gây bug
+                    boolean isSharedWithUser = note.getShares().contains(userId);
+                    System.out.println("   ↳ Note " + note.getId() + " shared with " + userId + ": " + isSharedWithUser);
+                    return isSharedWithUser;
                 })
                 .filter(note -> !Boolean.TRUE.equals(note.getIsDeleted()))
                 .collect(Collectors.toList());
@@ -368,6 +371,17 @@ public class NoteService {
             }
         }
         return LocalDateTime.now();
+    }
+    
+    /**
+     * Cập nhật shares list của note
+     */
+    public Note updateNoteShares(String noteId, List<Object> shares) {
+        return noteRepository.findById(noteId).map(note -> {
+            note.setShares(shares);
+            note.setUpdatedAt(LocalDateTime.now());
+            return noteRepository.save(note);
+        }).orElseThrow(() -> new RuntimeException("Note not found: " + noteId));
     }
     
     /**

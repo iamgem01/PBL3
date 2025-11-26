@@ -325,6 +325,33 @@ app.get('/api/users', requireAuth, requireRole(['admin']), async (req, res) => {
   }
 });
 
+// Get user by email (for invitation system)
+app.get('/api/users/email/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    console.log(`🔍 Looking up user by email: ${email}`);
+    
+    const user = await User.findOne({ email: email.toLowerCase() }).select('-password');
+    
+    if (!user) {
+      console.log(`⚠️ User not found with email: ${email}`);
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    console.log(`✅ Found user: ${user._id} (${user.email})`);
+    res.json({ 
+      _id: user._id,
+      id: user._id.toString(),
+      email: user.email,
+      name: user.name,
+      role: user.role
+    });
+  } catch (error) {
+    console.error('❌ Get user by email error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Get single user (Admin only)
 app.get('/api/users/:id', requireAuth, requireRole(['admin']), async (req, res) => {
   try {

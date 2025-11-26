@@ -67,11 +67,15 @@ export const getAllNotifications = async (
 };
 
 /**
- * Get unread count
+ * Get unread count with silent failure
  */
 export const getUnreadCount = async (): Promise<number> => {
   try {
     const userId = getUserId();
+    
+    // Use AbortController with timeout to fail fast
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
     
     const response = await fetch(
       `${NOTIFICATION_SERVICE_URL}/api/notifications/unread-count`,
@@ -82,13 +86,15 @@ export const getUnreadCount = async (): Promise<number> => {
           'X-User-Id': userId,
         },
         credentials: 'include',
+        signal: controller.signal,
       }
     );
     
+    clearTimeout(timeoutId);
     const data = await handleResponse(response);
     return data.count;
   } catch (error) {
-    console.error('❌ [Notification] Error getting unread count:', error);
+    // Silently fail - notification service is optional
     return 0;
   }
 };
@@ -252,15 +258,15 @@ export const startNotificationPolling = (
     clearInterval(pollingInterval);
   }
   
-  // Initial fetch
-  getUnreadCount().then(callback);
+  // Initial fetch (with silent failure)
+  getUnreadCount().then(callback).catch(() => {});
   
   // Start polling
   pollingInterval = setInterval(() => {
-    getUnreadCount().then(callback);
+    getUnreadCount().then(callback).catch(() => {});
   }, intervalMs);
   
-  console.log('🔄 [Notification] Polling started');
+  console.log('🔄 [Notification] Polling started (graceful mode)');
 };
 
 export const stopNotificationPolling = () => {

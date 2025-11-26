@@ -113,7 +113,9 @@ export const CollaborativeEditor = memo(({
     try {
       const base: any[] = [
         StarterKit.configure({ 
-          history: isShared ? false : undefined
+          // History is enabled by default in StarterKit
+          // Only disable it when using Yjs collaboration (which has its own history)
+          history: isShared ? false : true
         }),
         Placeholder.configure({ placeholder: 'Start writing...' }),
         Underline,

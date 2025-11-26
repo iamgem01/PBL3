@@ -63,13 +63,25 @@ export default function DocumentPage() {
     setIsSharing(true);
     try {
       if (isShared) {
+        // Unshare: remove all shares
         await unshareNote(note.id);
         setIsShared(false);
-        alert('✅ Document unshared successfully!');
+        alert('✅ Document unshared successfully! All collaborators removed.');
       } else {
-        await shareNote(note.id, ["all"]);
+        // Enable collaboration: Share with yourself to enable collaboration features
+        // This saves the note to collab-service without auto-sharing to others
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const currentUserId = currentUser.id;
+        
+        if (!currentUserId) {
+          alert('❌ User not authenticated');
+          return;
+        }
+        
+        // Share with only yourself - this enables collaboration and saves to teamspace
+        await shareNote(note.id, [currentUserId]);
         setIsShared(true);
-        alert('✅ Document shared successfully!');
+        alert('✅ Collaboration enabled! Use the Invite button to share with specific users.');
       }
     } catch (error: any) {
       alert(`Action failed: ${error.message}`);

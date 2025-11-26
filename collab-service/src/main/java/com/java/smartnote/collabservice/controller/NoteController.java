@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Arrays;
 import com.java.smartnote.collabservice.dto.ShareNoteRequest;
 
 @RestController
@@ -102,13 +101,9 @@ public class NoteController {
             System.out.println("User IDs: " + userIds);
             System.out.println("User IDs count: " + userIds.size());
             
-            // Handle "all" case - convert to actual user sharing logic
-            if (userIds.size() == 1 && "all".equals(userIds.get(0))) {
-                // For now, we'll treat "all" as sharing with a placeholder
-                // You might want to implement actual "share with all users" logic here
-                userIds = Arrays.asList("all_users"); // Placeholder
-                System.out.println("📢 Sharing with ALL users");
-            }
+            // FIX: REMOVED AUTO "all_users" LOGIC
+            // Notes should ONLY be shared with explicitly invited users
+            // Enabling collaboration != sharing with everyone
             
             // Thực hiện share
             System.out.println("🚀 Calling noteService.shareNote...");
