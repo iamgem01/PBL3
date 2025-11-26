@@ -1,26 +1,26 @@
-import { handleResponse } from './utils';
-import type { 
-  Notification, 
+import { handleResponse } from "./utils";
+import type {
+  Notification,
   NotificationFilters,
   NotificationStats,
-  CreateNotificationInput 
-} from '@/types/notification';
+  CreateNotificationInput,
+} from "@/types/notification";
 
-const NOTIFICATION_SERVICE_URL = 
-  import.meta.env.VITE_NOTIFICATION_SERVICE_URL || 'http://localhost:5004';
+const NOTIFICATION_SERVICE_URL =
+  import.meta.env.VITE_NOTIFICATION_SERVICE_URL || "http://localhost:5004";
 
 /**
  * Get user ID from localStorage
  */
 const getUserId = (): string => {
   try {
-    const userData = localStorage.getItem('user');
-    if (!userData) throw new Error('User not authenticated');
+    const userData = localStorage.getItem("user");
+    if (!userData) throw new Error("User not authenticated");
     const user = JSON.parse(userData);
-    if (!user.id) throw new Error('User ID not found');
+    if (!user.id) throw new Error("User ID not found");
     return user.id;
   } catch (error) {
-    console.error('❌ [Notification] Error getting user ID:', error);
+    console.error("❌ [Notification] Error getting user ID:", error);
     throw error;
   }
 };
@@ -33,62 +33,74 @@ export const getAllNotifications = async (
 ): Promise<Notification[]> => {
   try {
     const userId = getUserId();
-    
+
     const queryParams = new URLSearchParams();
-    if (filters?.type?.length) queryParams.append('type', filters.type.join(','));
-    if (filters?.priority?.length) queryParams.append('priority', filters.priority.join(','));
-    if (filters?.isRead !== undefined) queryParams.append('isRead', String(filters.isRead));
-    if (filters?.limit) queryParams.append('limit', String(filters.limit));
-    if (filters?.skip) queryParams.append('skip', String(filters.skip));
-    
+    if (filters?.type?.length)
+      queryParams.append("type", filters.type.join(","));
+    if (filters?.priority?.length)
+      queryParams.append("priority", filters.priority.join(","));
+    if (filters?.isRead !== undefined)
+      queryParams.append("isRead", String(filters.isRead));
+    if (filters?.limit) queryParams.append("limit", String(filters.limit));
+    if (filters?.skip) queryParams.append("skip", String(filters.skip));
+
     const url = `${NOTIFICATION_SERVICE_URL}/api/notifications${
-      queryParams.toString() ? `?${queryParams.toString()}` : ''
+      queryParams.toString() ? `?${queryParams.toString()}` : ""
     }`;
-    
-    console.log('🔔 [Notification] Fetching notifications from:', url);
-    
+
+    console.log("🔔 [Notification] Fetching notifications from:", url);
+
     const response = await fetch(url, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': userId,
+        "Content-Type": "application/json",
+        "X-User-Id": userId,
       },
-      credentials: 'include',
+      credentials: "include",
     });
-    
+
     const data = await handleResponse(response);
-    console.log('✅ [Notification] Fetched notifications:', data.notifications.length);
-    
+    console.log(
+      "✅ [Notification] Fetched notifications:",
+      data.notifications.length
+    );
+
     return data.notifications;
   } catch (error) {
-    console.error('❌ [Notification] Error fetching notifications:', error);
+    console.error("❌ [Notification] Error fetching notifications:", error);
     return [];
   }
 };
 
 /**
- * Get unread count
+ * Get unread count with silent failure
  */
 export const getUnreadCount = async (): Promise<number> => {
   try {
     const userId = getUserId();
-    
+
+    // Use AbortController with timeout to fail fast
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+
     const response = await fetch(
       `${NOTIFICATION_SERVICE_URL}/api/notifications/unread-count`,
       {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          'X-User-Id': userId,
+          "Content-Type": "application/json",
+          "X-User-Id": userId,
         },
-        credentials: 'include',
+        credentials: "include",
+        signal: controller.signal,
       }
     );
-    
+
+    clearTimeout(timeoutId);
     const data = await handleResponse(response);
     return data.count;
   } catch (error) {
-    console.error('❌ [Notification] Error getting unread count:', error);
+    // Silently fail - notification service is optional
     return 0;
   }
 };
@@ -99,22 +111,22 @@ export const getUnreadCount = async (): Promise<number> => {
 export const getNotificationStats = async (): Promise<NotificationStats> => {
   try {
     const userId = getUserId();
-    
+
     const response = await fetch(
       `${NOTIFICATION_SERVICE_URL}/api/notifications/stats`,
       {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          'X-User-Id': userId,
+          "Content-Type": "application/json",
+          "X-User-Id": userId,
         },
-        credentials: 'include',
+        credentials: "include",
       }
     );
-    
+
     return await handleResponse(response);
   } catch (error) {
-    console.error('❌ [Notification] Error getting stats:', error);
+    console.error("❌ [Notification] Error getting stats:", error);
     throw error;
   }
 };
@@ -125,26 +137,26 @@ export const getNotificationStats = async (): Promise<NotificationStats> => {
 export const markAsRead = async (id: string): Promise<Notification> => {
   try {
     const userId = getUserId();
-    
-    console.log('📖 [Notification] Marking as read:', id);
-    
+
+    console.log("📖 [Notification] Marking as read:", id);
+
     const response = await fetch(
       `${NOTIFICATION_SERVICE_URL}/api/notifications/${id}/read`,
       {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
-          'X-User-Id': userId,
+          "Content-Type": "application/json",
+          "X-User-Id": userId,
         },
-        credentials: 'include',
+        credentials: "include",
       }
     );
-    
+
     const data = await handleResponse(response);
-    console.log('✅ [Notification] Marked as read');
+    console.log("✅ [Notification] Marked as read");
     return data.notification;
   } catch (error) {
-    console.error('❌ [Notification] Error marking as read:', error);
+    console.error("❌ [Notification] Error marking as read:", error);
     throw error;
   }
 };
@@ -155,25 +167,25 @@ export const markAsRead = async (id: string): Promise<Notification> => {
 export const markAllAsRead = async (): Promise<void> => {
   try {
     const userId = getUserId();
-    
-    console.log('📖 [Notification] Marking all as read');
-    
+
+    console.log("📖 [Notification] Marking all as read");
+
     const response = await fetch(
       `${NOTIFICATION_SERVICE_URL}/api/notifications/mark-all-read`,
       {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-User-Id': userId,
+          "Content-Type": "application/json",
+          "X-User-Id": userId,
         },
-        credentials: 'include',
+        credentials: "include",
       }
     );
-    
+
     await handleResponse(response);
-    console.log('✅ [Notification] All marked as read');
+    console.log("✅ [Notification] All marked as read");
   } catch (error) {
-    console.error('❌ [Notification] Error marking all as read:', error);
+    console.error("❌ [Notification] Error marking all as read:", error);
     throw error;
   }
 };
@@ -184,25 +196,25 @@ export const markAllAsRead = async (): Promise<void> => {
 export const archiveNotification = async (id: string): Promise<void> => {
   try {
     const userId = getUserId();
-    
-    console.log('🗑️ [Notification] Archiving:', id);
-    
+
+    console.log("🗑️ [Notification] Archiving:", id);
+
     const response = await fetch(
       `${NOTIFICATION_SERVICE_URL}/api/notifications/${id}`,
       {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
-          'X-User-Id': userId,
+          "Content-Type": "application/json",
+          "X-User-Id": userId,
         },
-        credentials: 'include',
+        credentials: "include",
       }
     );
-    
+
     await handleResponse(response);
-    console.log('✅ [Notification] Archived');
+    console.log("✅ [Notification] Archived");
   } catch (error) {
-    console.error('❌ [Notification] Error archiving:', error);
+    console.error("❌ [Notification] Error archiving:", error);
     throw error;
   }
 };
@@ -214,25 +226,25 @@ export const createNotification = async (
   input: CreateNotificationInput
 ): Promise<Notification> => {
   try {
-    console.log('🔔 [Notification] Creating:', input.type);
-    
+    console.log("🔔 [Notification] Creating:", input.type);
+
     const response = await fetch(
       `${NOTIFICATION_SERVICE_URL}/api/notifications`,
       {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify(input),
       }
     );
-    
+
     const data = await handleResponse(response);
-    console.log('✅ [Notification] Created');
+    console.log("✅ [Notification] Created");
     return data.notification;
   } catch (error) {
-    console.error('❌ [Notification] Error creating:', error);
+    console.error("❌ [Notification] Error creating:", error);
     throw error;
   }
 };
@@ -251,22 +263,26 @@ export const startNotificationPolling = (
   if (pollingInterval) {
     clearInterval(pollingInterval);
   }
-  
-  // Initial fetch
-  getUnreadCount().then(callback);
-  
+
+  // Initial fetch (with silent failure)
+  getUnreadCount()
+    .then(callback)
+    .catch(() => {});
+
   // Start polling
   pollingInterval = setInterval(() => {
-    getUnreadCount().then(callback);
+    getUnreadCount()
+      .then(callback)
+      .catch(() => {});
   }, intervalMs);
-  
-  console.log('🔄 [Notification] Polling started');
+
+  console.log("🔄 [Notification] Polling started (graceful mode)");
 };
 
 export const stopNotificationPolling = () => {
   if (pollingInterval) {
     clearInterval(pollingInterval);
     pollingInterval = null;
-    console.log('⏸️ [Notification] Polling stopped');
+    console.log("⏸️ [Notification] Polling stopped");
   }
 };

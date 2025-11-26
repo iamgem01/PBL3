@@ -10,18 +10,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Arrays;
 import com.java.smartnote.collabservice.dto.ShareNoteRequest;
 
 @RestController
-@CrossOrigin(
-    origins = "http://localhost:3000",
-    allowCredentials = "true",
-    allowedHeaders = "*",
-    methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS}
-)
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true", allowedHeaders = "*", methods = {
+        RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS })
 public class NoteController {
-    
+
     @Autowired
     private NoteService noteService;
 
@@ -35,11 +30,11 @@ public class NoteController {
         health.put("service", "Collab Service");
         health.put("port", 8083);
         health.put("timestamp", System.currentTimeMillis());
-        
+
         System.out.println("✅ Health check successful");
         return ResponseEntity.ok(health);
     }
-    
+
     /**
      * Lấy danh sách tất cả notes đang được share
      */
@@ -49,7 +44,7 @@ public class NoteController {
         System.out.println("🌐 [CONTROLLER] UserId from header: " + userId);
         System.out.println("🌐 [CONTROLLER] UserId is null: " + (userId == null));
         System.out.println("🌐 [CONTROLLER] UserId length: " + (userId != null ? userId.length() : 0));
-        
+
         try {
             System.out.println("📋 Fetching shared notes for user: " + (userId != null ? userId : "all users"));
             List<Note> sharedNotes = noteService.getSharedNotesForUser(userId);
@@ -59,26 +54,26 @@ public class NoteController {
         } catch (Exception e) {
             System.err.println("❌ Error fetching shared notes: " + e.getMessage());
             e.printStackTrace();
-            
+
             Map<String, String> error = new HashMap<>();
             error.put("error", "Failed to fetch shared notes");
             error.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
+
     /**
      * Share một note với danh sách users hoặc "all"
      */
     @PostMapping("/api/notes/{noteId}/share")
-    public ResponseEntity<?> shareNote(@PathVariable String noteId, 
-                                  @RequestBody ShareNoteRequest request) {
+    public ResponseEntity<?> shareNote(@PathVariable String noteId,
+            @RequestBody ShareNoteRequest request) {
         System.out.println("========================================");
         System.out.println("📨 SHARE REQUEST RECEIVED");
         System.out.println("========================================");
         System.out.println("Note ID: " + noteId);
         System.out.println("Request: " + request);
-        
+
         try {
             // Validation 1: Check noteId
             if (noteId == null || noteId.trim().isEmpty()) {
@@ -88,7 +83,7 @@ public class NoteController {
                 error.put("details", "Note ID cannot be empty");
                 return ResponseEntity.badRequest().body(error);
             }
-            
+
             // Validation 2: Check userIds
             List<String> userIds = request.getUserIds();
             if (userIds == null || userIds.isEmpty()) {
@@ -98,36 +93,32 @@ public class NoteController {
                 error.put("details", "userIds cannot be empty");
                 return ResponseEntity.badRequest().body(error);
             }
-            
+
             System.out.println("User IDs: " + userIds);
             System.out.println("User IDs count: " + userIds.size());
-            
-            // Handle "all" case - convert to actual user sharing logic
-            if (userIds.size() == 1 && "all".equals(userIds.get(0))) {
-                // For now, we'll treat "all" as sharing with a placeholder
-                // You might want to implement actual "share with all users" logic here
-                userIds = Arrays.asList("all_users"); // Placeholder
-                System.out.println("📢 Sharing with ALL users");
-            }
-            
+
+            // FIX: REMOVED AUTO "all_users" LOGIC
+            // Notes should ONLY be shared with explicitly invited users
+            // Enabling collaboration != sharing with everyone
+
             // Thực hiện share
             System.out.println("🚀 Calling noteService.shareNote...");
             Note sharedNote = noteService.shareNote(noteId, userIds);
             System.out.println("✅ Service call completed");
-            
+
             if (sharedNote == null) {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "Share failed");
                 error.put("details", "Note could not be shared");
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
             }
-            
+
             System.out.println("========================================");
             System.out.println("✅ SHARE API SUCCESSFUL");
             System.out.println("========================================");
-            
+
             return ResponseEntity.ok(sharedNote);
-            
+
         } catch (IllegalArgumentException e) {
             System.err.println("❌ Validation error: " + e.getMessage());
             Map<String, String> error = new HashMap<>();
@@ -141,7 +132,7 @@ public class NoteController {
             System.err.println("Error type: " + e.getClass().getSimpleName());
             e.printStackTrace();
             System.err.println("========================================");
-            
+
             Map<String, String> error = new HashMap<>();
             error.put("error", "Internal server error");
             error.put("details", e.getMessage());
@@ -158,34 +149,34 @@ public class NoteController {
         System.out.println("🔓 UNSHARE REQUEST RECEIVED");
         System.out.println("========================================");
         System.out.println("Note ID: " + noteId);
-        
+
         try {
             Note unsharedNote = noteService.unshareNote(noteId);
-            
+
             System.out.println("✅ UNSHARE SUCCESSFUL");
             System.out.println("========================================");
-            
+
             return ResponseEntity.ok(unsharedNote);
-            
+
         } catch (RuntimeException e) {
             System.err.println("❌ UNSHARE FAILED: " + e.getMessage());
             e.printStackTrace();
             System.err.println("========================================");
-            
+
             Map<String, String> error = new HashMap<>();
             error.put("error", "Failed to unshare note");
             error.put("message", e.getMessage());
             error.put("noteId", noteId);
-            
+
             // Not found vs other errors
             if (e.getMessage().contains("not found")) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
             }
-            
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
-    
+
     /**
      * Lấy chi tiết một note theo ID
      */
@@ -194,7 +185,7 @@ public class NoteController {
         try {
             System.out.println("📖 Fetching note: " + noteId);
             Note note = noteService.getNoteById(noteId);
-            
+
             if (note == null) {
                 System.err.println("❌ Note not found: " + noteId);
                 Map<String, String> error = new HashMap<>();
@@ -202,13 +193,13 @@ public class NoteController {
                 error.put("noteId", noteId);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
             }
-            
+
             System.out.println("✅ Note retrieved: " + note.getTitle());
             return ResponseEntity.ok(note);
-            
+
         } catch (Exception e) {
             System.err.println("❌ Error fetching note: " + e.getMessage());
-            
+
             Map<String, String> error = new HashMap<>();
             error.put("error", "Failed to fetch note");
             error.put("message", e.getMessage());

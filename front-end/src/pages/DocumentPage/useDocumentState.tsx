@@ -1,8 +1,17 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { getNoteById, updateNote, markAsImportant, removeAsImportant, moveToTrash, exportNoteAsPdf, handleResponse, COLLAB_SERVICE_URL } from '@/services';
-import type { Note } from '@/types/note';
-import type { ToolbarPosition } from './documentTypes';
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  getNoteById,
+  updateNote,
+  markAsImportant,
+  removeAsImportant,
+  moveToTrash,
+  exportNoteAsPdf,
+  handleResponse,
+  COLLAB_SERVICE_URL,
+} from "@/services";
+import type { Note } from "@/types/note";
+import type { ToolbarPosition } from "./documentTypes";
 
 export const useDocumentState = () => {
   const { id } = useParams<{ id: string }>();
@@ -12,10 +21,13 @@ export const useDocumentState = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
-  
+
   const [showToolbar, setShowToolbar] = useState(false);
-  const [toolbarPosition, setToolbarPosition] = useState<ToolbarPosition>({ x: 0, y: 0 });
-  
+  const [toolbarPosition, setToolbarPosition] = useState<ToolbarPosition>({
+    x: 0,
+    y: 0,
+  });
+
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -32,17 +44,18 @@ export const useDocumentState = () => {
         setIsLoading(true);
         // Thử lấy từ collab service (ưu tiên)
         try {
-           const res = await fetch(`${COLLAB_SERVICE_URL}/api/notes/${id}`, { 
-             headers: {'Content-Type': 'application/json'}, credentials: 'include' 
-           });
-           if(res.ok) {
-             const data = await handleResponse(res);
-             setNote(data);
-             setIsLoading(false);
-             return;
-           }
+          const res = await fetch(`${COLLAB_SERVICE_URL}/api/notes/${id}`, {
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          });
+          if (res.ok) {
+            const data = await handleResponse(res);
+            setNote(data);
+            setIsLoading(false);
+            return;
+          }
         } catch (e) {
-          console.log('⚠️ Collab service failed, falling back to local API');
+          console.log("⚠️ Collab service failed, falling back to local API");
         }
 
         // Fallback
@@ -57,41 +70,50 @@ export const useDocumentState = () => {
     fetchNote();
   }, [id]);
 
-  const handleUpdateNote = useCallback(async (newContent: string) => {
-    if (!note || !id) return;
+  const handleUpdateNote = useCallback(
+    async (newContent: string) => {
+      if (!note || !id) return;
 
-    try {
-      await updateNote(id, {
-        ...note,
-        content: newContent,
-        updatedAt: new Date().toISOString()
-      });
-      
-      setNote(prev => prev ? { 
-        ...prev, 
-        content: newContent, 
-        updatedAt: new Date().toISOString() 
-      } : null);
-    } catch (error: any) {
-      console.error("Failed to auto-save:", error);
-    }
-  }, [note, id]);
+      try {
+        await updateNote(id, {
+          ...note,
+          content: newContent,
+          updatedAt: new Date().toISOString(),
+        });
+
+        setNote((prev) =>
+          prev
+            ? {
+                ...prev,
+                content: newContent,
+                updatedAt: new Date().toISOString(),
+              }
+            : null
+        );
+      } catch (error: any) {
+        console.error("Failed to auto-save:", error);
+      }
+    },
+    [note, id]
+  );
 
   const getInitialContent = useCallback(() => {
-    if (note?.shares && note.shares.length > 0) {
-      console.log('🔄 Shared document - Yjs will load content from persistence');
-      return '';
-    } else {
-      console.log('📝 Local document - using content from API');
-      return note?.content || '';
-    }
+    // ✅ ALWAYS return note content initially
+    // Yjs will sync after editor is created, but we need initial content
+    // to populate the Yjs document when first enabling collaboration
+    console.log(
+      "📝 Loading initial content:",
+      note?.content?.length || 0,
+      "chars"
+    );
+    return note?.content || "";
   }, [note]);
 
   const handleMoveToTrash = useCallback(async () => {
     if (!id) return;
     setIsDeleting(true);
     try {
-      await moveToTrash(id, 'NOTE');
+      await moveToTrash(id, "NOTE");
       navigate(-1);
     } catch (error: any) {
       setError("Failed to move to trash: " + error.message);
@@ -103,7 +125,9 @@ export const useDocumentState = () => {
     if (!note || !id) return;
     setIsImportantLoading(true);
     try {
-      const updatedNote = note.isImportant ? await removeAsImportant(id) : await markAsImportant(id);
+      const updatedNote = note.isImportant
+        ? await removeAsImportant(id)
+        : await markAsImportant(id);
       setNote(updatedNote);
     } catch (error: any) {
       alert(error.message);
@@ -118,9 +142,9 @@ export const useDocumentState = () => {
     try {
       const blob = await exportNoteAsPdf(id);
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `${note?.title || 'note'}.pdf`;
+      a.download = `${note?.title || "note"}.pdf`;
       a.click();
     } catch (error: any) {
       alert(error.message);
@@ -129,32 +153,48 @@ export const useDocumentState = () => {
     }
   }, [id, note?.title]);
 
-  return useMemo(() => ({
-    note, 
-    isLoading, 
-    error, 
-    collapsed, 
-    setCollapsed,
-    showToolbar, 
-    setShowToolbar, 
-    toolbarPosition, 
-    setToolbarPosition,
-    isUpdating, 
-    isDeleting, 
-    isExporting, 
-    showDeleteConfirm, 
-    setShowDeleteConfirm, 
-    isImportantLoading,
-    handleUpdateNote, 
-    handleMoveToTrash, 
-    handleToggleImportant, 
-    handleExportPdf,
-    getInitialContent,
-    noteId: id
-  }), [
-    note, isLoading, error, collapsed, showToolbar, toolbarPosition, 
-    isUpdating, isDeleting, isExporting, showDeleteConfirm, isImportantLoading,
-    handleUpdateNote, handleMoveToTrash, handleToggleImportant, handleExportPdf,
-    getInitialContent, id
-  ]);
+  return useMemo(
+    () => ({
+      note,
+      isLoading,
+      error,
+      collapsed,
+      setCollapsed,
+      showToolbar,
+      setShowToolbar,
+      toolbarPosition,
+      setToolbarPosition,
+      isUpdating,
+      isDeleting,
+      isExporting,
+      showDeleteConfirm,
+      setShowDeleteConfirm,
+      isImportantLoading,
+      handleUpdateNote,
+      handleMoveToTrash,
+      handleToggleImportant,
+      handleExportPdf,
+      getInitialContent,
+      noteId: id,
+    }),
+    [
+      note,
+      isLoading,
+      error,
+      collapsed,
+      showToolbar,
+      toolbarPosition,
+      isUpdating,
+      isDeleting,
+      isExporting,
+      showDeleteConfirm,
+      isImportantLoading,
+      handleUpdateNote,
+      handleMoveToTrash,
+      handleToggleImportant,
+      handleExportPdf,
+      getInitialContent,
+      id,
+    ]
+  );
 };
