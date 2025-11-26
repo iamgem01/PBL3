@@ -96,6 +96,34 @@ services:
   #     timeout: 5s
   #     retries: 5
   #     start_period: 5s
+
+
+  # Calendar service #
+  calender-service:
+    build:
+      context: ./calendar-service
+      dockerfile: Dockerfile
+    image: calendar-service-app
+    ports:
+      - "5003:5003"
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/calendar-service
+      USER_SERVICE_URL: http://user-service:8082
+      COLLAB_SERVICE_URL: http://collab-service:8084
+      NOTE_SERVICE_URL: http://note-service:8080
+      LOG_LEVEL: DEBUG
+      SESSION_SECRET: your-secret-key-here-change-in-production
+      JWT_SECRET: your-jwt-secret-here-change-in-production
+    depends_on:
+      - mongodb
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure 
+    networks:
+      - my-network
+
+  # Collab service #
   collab-service:
     build: 
       context: ./collab-service

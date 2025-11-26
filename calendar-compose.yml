@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  calender-service:
+    buid:
+      context: ./calendar-service
+      dockerfile: Dockerfile
+    image: calendar-service-app
+    port:
+      - "5003:5003"
+    environment:
+      - PORT: 5003
+      - MONGODB_URI: mongodb://mongodb:27017/calendar-service
+      - USER_SERVICE_URL: http://user-service:8082
+      - COLLAB_SERVICE_URL: http://collab-service:8084
+      - NOTE_SERVICE_URL: http://note-service:8080
+      - LOG_LEVEL: DEBUG
+      - SESSION_SECRET: 
+      - JWT_SECRET: 
+    depend_on:
+      - mongodb
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure 
+    networks:
+      - my-network
+    
