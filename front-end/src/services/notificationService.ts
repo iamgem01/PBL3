@@ -65,7 +65,13 @@ export const getAllNotifications = async (
       data.notifications.length
     );
 
-    return data.notifications;
+    // Transform _id to id for MongoDB compatibility
+    const notifications = data.notifications.map((n: any) => ({
+      ...n,
+      id: n.id || n._id, // Use id if exists, fallback to _id
+    }));
+
+    return notifications;
   } catch (error) {
     console.error("❌ [Notification] Error fetching notifications:", error);
     return [];

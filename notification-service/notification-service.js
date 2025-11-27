@@ -59,7 +59,13 @@ app.get('/api/notifications', getUserId, async (req, res) => {
     
     console.log(`📬 [Notification] Retrieved ${notifications.length} notifications for user ${req.userId}`);
     
-    res.json({ notifications });
+    // Transform _id to id for frontend compatibility
+    const transformedNotifications = notifications.map(n => ({
+      ...n.toObject(),
+      id: n._id.toString(),
+    }));
+    
+    res.json({ notifications: transformedNotifications });
   } catch (error) {
     console.error('❌ Get notifications error:', error);
     res.status(500).json({ error: 'Failed to fetch notifications' });
@@ -100,7 +106,13 @@ app.get('/api/notifications/:id', getUserId, async (req, res) => {
       return res.status(404).json({ error: 'Notification not found' });
     }
     
-    res.json({ notification });
+    // Transform _id to id for frontend compatibility
+    const transformedNotification = {
+      ...notification.toObject(),
+      id: notification._id.toString(),
+    };
+    
+    res.json({ notification: transformedNotification });
   } catch (error) {
     console.error('❌ Get notification error:', error);
     res.status(500).json({ error: 'Failed to fetch notification' });
@@ -118,7 +130,13 @@ app.post('/api/notifications', async (req, res) => {
     // TODO: Send real-time update via WebSocket
     // TODO: Send email if enabled
     
-    res.status(201).json({ notification });
+    // Transform _id to id for frontend compatibility
+    const transformedNotification = {
+      ...notification.toObject(),
+      id: notification._id.toString(),
+    };
+    
+    res.status(201).json({ notification: transformedNotification });
   } catch (error) {
     console.error('❌ Create notification error:', error);
     res.status(500).json({ error: 'Failed to create notification' });
@@ -139,7 +157,14 @@ app.patch('/api/notifications/:id/read', getUserId, async (req, res) => {
     }
     
     console.log(`✅ [Notification] Marked as read: ${req.params.id}`);
-    res.json({ notification });
+    
+    // Transform _id to id for frontend compatibility
+    const transformedNotification = {
+      ...notification.toObject(),
+      id: notification._id.toString(),
+    };
+    
+    res.json({ notification: transformedNotification });
   } catch (error) {
     console.error('❌ Mark as read error:', error);
     res.status(500).json({ error: 'Failed to mark as read' });

@@ -197,6 +197,15 @@ function App() {
         />
         
         <Route
+          path="/document/:id"
+          element={
+            <ProtectedRoute>
+              <DocumentPage />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
           path="/search"
           element={
             <ProtectedRoute>
