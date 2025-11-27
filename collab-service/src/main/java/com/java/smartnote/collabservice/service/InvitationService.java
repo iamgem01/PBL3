@@ -32,6 +32,49 @@ public class InvitationService {
     @Value("${user.service.url:http://localhost:5000}")
     private String userServiceUrl;
 
+    @Value("${notification.service.url:http://localhost:5004}")
+    private String notificationServiceUrl;
+
+    /**
+     * Tạo notification cho user
+     */
+    private void createNotification(String userId, String type, String title, String message,
+            String relatedId, String relatedType, String inviterName) {
+        try {
+            String url = notificationServiceUrl + "/api/notifications";
+            System.out.println("📡 Creating notification: " + url);
+
+            // Tạo actions để navigate đến document
+            Map<String, Object> action = Map.of(
+                    "label", "Xem tài liệu",
+                    "url", "/document/" + relatedId,
+                    "action", "navigate",
+                    "primary", true);
+
+            Map<String, Object> notification = Map.of(
+                    "userId", userId,
+                    "type", type,
+                    "title", title,
+                    "message", message,
+                    "priority", "medium",
+                    "relatedId", relatedId,
+                    "relatedType", relatedType,
+                    "metadata", Map.of("inviterName", inviterName),
+                    "actions", java.util.List.of(action));
+
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, notification, Map.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                System.out.println("✅ Notification created successfully");
+            } else {
+                System.err.println("⚠️ Failed to create notification: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            System.err.println("⚠️ Error creating notification: " + e.getMessage());
+            // Don't fail the whole operation if notification fails
+        }
+    }
+
     /**
      * Tạo invitation và gửi email
      */
@@ -96,6 +139,25 @@ public class InvitationService {
             throw new RuntimeException("Failed to send invitation email: " + e.getMessage(), e);
         }
 
+        // Tạo notification cho người được mời (invitee)
+        try {
+            System.out.println("📬 Creating notification for invitee...");
+            String inviteeUserId = getUserIdFromEmail(inviteeEmail);
+            if (inviteeUserId != null) {
+                createNotification(
+                        inviteeUserId,
+                        "NOTE_SHARED",
+                        "Lời mời cộng tác",
+                        inviterEmail + " đã mời bạn cộng tác trên tài liệu: " + note.getTitle(),
+                        noteId,
+                        "note",
+                        inviterEmail);
+            }
+        } catch (Exception e) {
+            System.err.println("⚠️ Failed to create notification: " + e.getMessage());
+            // Don't fail if notification fails
+        }
+
         System.out.println("✅ INVITATION CREATED");
         System.out.println("========================================");
 
@@ -128,14 +190,16 @@ public class InvitationService {
 
         // Kiểm tra đã accept chưa
         if (invitation.getStatus() == InvitationStatus.ACCEPTED) {
-            System.out.println("⚠️ Invitation already accepted");
+            System.out.println("⚠️ Invitation already accepted - returning early");
             return invitation;
         }
 
-        // Update invitation
+        // Update invitation status FIRST to prevent race condition
         invitation.setStatus(InvitationStatus.ACCEPTED);
         invitation.setAcceptedAt(LocalDateTime.now());
         Invitation updated = invitationRepository.save(invitation);
+
+        System.out.println("✅ Invitation status updated to ACCEPTED");
 
         // FIX: Actually add user to note shares when they accept invitation
         // This was missing - invitations were accepted but users couldn't see the note!
@@ -158,12 +222,41 @@ public class InvitationService {
                 }
 
                 // Add userId to shares if not already present
+                boolean isNewlyAdded = false;
                 if (!currentShares.contains(userId)) {
                     currentShares.add(userId);
                     note.setShares(currentShares);
                     note.setUpdatedAt(LocalDateTime.now());
                     noteService.updateNoteShares(invitation.getNoteId(), currentShares);
                     System.out.println("✅ User added to note shares: " + userId);
+                    isNewlyAdded = true;
+                } else {
+                    System.out.println("ℹ️ User already in note shares: " + userId);
+                }
+
+                // Tạo notification cho người mời (inviter) CHỈ KHI user mới được thêm vào
+                // Tránh duplicate notification khi accept 2 lần
+                if (isNewlyAdded) {
+                    try {
+                        System.out.println("📬 Creating notification for inviter...");
+                        String inviterUserId = getUserIdFromEmail(invitation.getInviterEmail());
+                        if (inviterUserId != null) {
+                            createNotification(
+                                    inviterUserId,
+                                    "NOTE_SHARED",
+                                    "Lời mời được chấp nhận",
+                                    userEmail + " đã chấp nhận lời mời cộng tác trên tài liệu: " + note.getTitle(),
+                                    invitation.getNoteId(),
+                                    "note",
+                                    userEmail);
+                            System.out.println("✅ Notification created for inviter");
+                        }
+                    } catch (Exception e) {
+                        System.err.println("⚠️ Failed to create notification for inviter: " + e.getMessage());
+                        // Don't fail if notification fails
+                    }
+                } else {
+                    System.out.println("⏭️ Skipping notification - user already had access");
                 }
             }
         } catch (Exception e) {

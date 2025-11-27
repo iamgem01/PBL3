@@ -1,4 +1,10 @@
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import { useEffect, useState } from "react";
 import TemplatePage from "@/pages/TemplatePage/TemplatePage";
 import LandingPage from "@/pages/Landing/LandingPage";
@@ -34,7 +40,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [isChecking, setIsChecking] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const BACKEND_URL = import.meta.env.VITE_USER_SERVICE_URL || "http://localhost:5000";
+  const BACKEND_URL =
+    import.meta.env.VITE_USER_SERVICE_URL || "http://localhost:5000";
 
   useEffect(() => {
     checkAuth();
@@ -73,7 +80,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
-  const BACKEND_URL = import.meta.env.VITE_USER_SERVICE_URL || "http://localhost:5000";
+  const BACKEND_URL =
+    import.meta.env.VITE_USER_SERVICE_URL || "http://localhost:5000";
 
   function AuthHandler() {
     const navigate = useNavigate();
@@ -88,19 +96,24 @@ function App() {
       // Xử lý error từ OAuth
       if (error) {
         console.error("❌ OAuth error:", error);
-        
+
         // Show error message (có thể dùng toast/notification)
         const errorMessages: Record<string, string> = {
           authentication_failed: "Authentication failed. Please try again.",
           token_creation_failed: "Failed to create session. Please try again.",
           no_email: "No email found in Google account.",
         };
-        
-        const errorMsg = errorMessages[error] || "An unexpected error occurred.";
+
+        const errorMsg =
+          errorMessages[error] || "An unexpected error occurred.";
         console.error(errorMsg);
-        
+
         // Clear query params
-        window.history.replaceState({}, document.title, window.location.pathname);
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
         return;
       }
 
@@ -118,12 +131,16 @@ function App() {
             if (res.ok) {
               const data = await res.json();
               console.log(" User authenticated:", data.user);
-              
+
               localStorage.setItem("user", JSON.stringify(data.user));
-              
+
               // Clear query params
-              window.history.replaceState({}, document.title, window.location.pathname);
-              
+              window.history.replaceState(
+                {},
+                document.title,
+                window.location.pathname
+              );
+
               // Navigate to home
               navigate("/home", { replace: true });
             } else {
@@ -156,7 +173,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
-         <Route path="/onboarding" element={<OnboardingPage />} />
+        <Route path="/onboarding" element={<OnboardingPage />} />
 
         {/* Protected routes */}
         <Route
@@ -168,7 +185,7 @@ function App() {
           }
         />
         <Route path="/invitation/accept" element={<InvitationAcceptPage />} />
-        
+
         <Route
           path="/ai"
           element={
@@ -177,7 +194,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
+
         <Route
           path="/notes/new"
           element={
@@ -186,7 +203,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
+
         <Route
           path="/notes/:id"
           element={
@@ -195,7 +212,16 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
+
+        <Route
+          path="/document/:id"
+          element={
+            <ProtectedRoute>
+              <DocumentPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/search"
           element={
@@ -204,7 +230,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
+
         <Route
           path="/notifications"
           element={
