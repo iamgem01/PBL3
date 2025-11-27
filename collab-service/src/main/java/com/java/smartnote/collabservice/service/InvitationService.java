@@ -198,7 +198,7 @@ public class InvitationService {
         invitation.setStatus(InvitationStatus.ACCEPTED);
         invitation.setAcceptedAt(LocalDateTime.now());
         Invitation updated = invitationRepository.save(invitation);
-        
+
         System.out.println("✅ Invitation status updated to ACCEPTED");
 
         // FIX: Actually add user to note shares when they accept invitation
