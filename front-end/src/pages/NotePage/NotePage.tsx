@@ -2,13 +2,13 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "@/components/layout/sidebar/sidebar";
 import { ArrowLeft, Loader2, Check, Type } from "lucide-react";
-import { getAllNotes, createNote, updateNote } from '@/services';
+import { createNote, updateNote } from '@/services';
 
 export default function NotePage() {
     const [collapsed, setCollapsed] = useState(false);
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
-    const [isSaving, setIsSaving] = useState(false);
+    const [, setIsSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const [noteId, setNoteId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);

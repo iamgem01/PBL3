@@ -72,7 +72,7 @@ export const DayCell = ({ data, onClick, onEventClick }: DayCellProps) => {
 
       {/* Premium Event List */}
       <div className="space-y-1 flex-1 overflow-hidden relative z-10">
-        {events.slice(0, 3).map((event, index) => {
+        {events.slice(0, 3).map((event) => {
           const eventColor = event.color || '#8b5cf6';
           
           return (

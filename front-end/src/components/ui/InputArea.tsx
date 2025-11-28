@@ -33,7 +33,6 @@ const InputArea: React.FC<InputAreaProps> = ({
     onSendMessage,
     disabled,
     hasMessages,
-    collapsed = false,
     currentPreferences,
 }) => {
     const [message, setMessage] = useState("");

@@ -9,6 +9,24 @@ import type {
 const CALENDAR_SERVICE_URL = import.meta.env.VITE_CALENDAR_SERVICE_URL || 'http://localhost:5003';
 
 /**
+ * Transform MongoDB event to CalendarEvent (convert _id to id)
+ */
+const transformEvent = (event: any): CalendarEvent => {
+  const { _id, ...rest } = event;
+  return {
+    id: _id,
+    ...rest,
+  };
+};
+
+/**
+ * Transform array of MongoDB events
+ */
+const transformEvents = (events: any[]): CalendarEvent[] => {
+  return events.map(transformEvent);
+};
+
+/**
  * Get user ID from localStorage
  */
 const getUserId = (): string => {
@@ -57,7 +75,7 @@ export const getAllEvents = async (filters?: CalendarFilters): Promise<CalendarE
     console.log('✅ [Calendar] Fetched events:', events.length);
     console.log('📅 [Calendar] First 2 events:', events.slice(0, 2));
     
-    return events;
+    return transformEvents(events);
   } catch (error) {
     console.error('❌ [Calendar] Error fetching events:', error);
     // Return empty array instead of throwing to prevent UI crash
@@ -83,7 +101,8 @@ export const getEventById = async (id: string): Promise<CalendarEvent> => {
       credentials: 'include',
     });
 
-    return await handleResponse(response);
+    const event = await handleResponse(response);
+    return transformEvent(event);
   } catch (error) {
     console.error('❌ [Calendar] Error fetching event:', error);
     throw error;
@@ -110,8 +129,9 @@ export const createEvent = async (eventData: CreateEventInput): Promise<Calendar
     });
 
     const result = await handleResponse(response);
-    console.log('✅ [Calendar] Event created successfully:', result.id);
-    return result;
+    const transformed = transformEvent(result);
+    console.log('✅ [Calendar] Event created successfully:', transformed.id);
+    return transformed;
   } catch (error) {
     console.error('❌ [Calendar] Error creating event:', error);
     throw error;
@@ -137,7 +157,8 @@ export const updateEvent = async (id: string, eventData: Partial<UpdateEventInpu
       body: JSON.stringify(eventData),
     });
 
-    return await handleResponse(response);
+    const event = await handleResponse(response);
+    return transformEvent(event);
   } catch (error) {
     console.error('❌ [Calendar] Error updating event:', error);
     throw error;
@@ -203,7 +224,8 @@ export const getUpcomingEvents = async (days: number = 7): Promise<CalendarEvent
  */
 export const linkEventToNote = async (eventId: string, noteId: string): Promise<CalendarEvent> => {
   console.log('📅 [Calendar] Linking event to note:', { eventId, noteId });
-  return updateEvent(eventId, { noteId });
+  const updated = await updateEvent(eventId, { noteId });
+  return updated;
 };
 
 // Google Calendar Integration (will be implemented later)

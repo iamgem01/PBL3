@@ -1,11 +1,12 @@
-import express, { Application } from 'express';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
-import morgan from 'morgan';
-import dotenv from 'dotenv';
-import connectDB from './config/database';
-import eventRoutes from './routes/eventRoutes';
-import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import express, { Application } from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import morgan from "morgan";
+import dotenv from "dotenv";
+import connectDB from "./config/database";
+import eventRoutes from "./routes/eventRoutes";
+import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
+import reminderService from "./services/reminderService";
 
 // Load environment variables
 dotenv.config();
@@ -17,32 +18,37 @@ const PORT = process.env.PORT || 5003;
 // Connect to MongoDB
 connectDB();
 
+// Start reminder service
+reminderService.start();
+
 // Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Logging
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
+if (process.env.NODE_ENV === "development") {
+  app.use(morgan("dev"));
 }
 
 // Health check route
-app.get('/health', (_req, res) => {
+app.get("/health", (_req, res) => {
   res.json({
-    status: 'OK',
-    service: 'Calendar Service',
+    status: "OK",
+    service: "Calendar Service",
     timestamp: new Date().toISOString(),
   });
 });
 
 // API Routes
-app.use('/api', eventRoutes);
+app.use("/api", eventRoutes);
 
 // Error handling
 app.use(notFoundHandler);
@@ -50,22 +56,22 @@ app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {
-  console.log('🚀 ========================================');
+  console.log("🚀 ========================================");
   console.log(`📅 Calendar Service running on port ${PORT}`);
   console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL}`);
   console.log(`🗄️  MongoDB: ${process.env.MONGODB_URI}`);
   console.log(`🔧 Environment: ${process.env.NODE_ENV}`);
-  console.log('🚀 ========================================');
+  console.log("🚀 ========================================");
 });
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('⏹️  SIGTERM signal received: closing HTTP server');
+process.on("SIGTERM", () => {
+  console.log("⏹️  SIGTERM signal received: closing HTTP server");
   process.exit(0);
 });
 
-process.on('SIGINT', () => {
-  console.log('⏹️  SIGINT signal received: closing HTTP server');
+process.on("SIGINT", () => {
+  console.log("⏹️  SIGINT signal received: closing HTTP server");
   process.exit(0);
 });
 

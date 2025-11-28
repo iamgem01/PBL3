@@ -1,6 +1,6 @@
 import { memo, useEffect, useState } from 'react';
 import { Editor } from '@tiptap/react';
-import React, {  useRef } from 'react';
+import { useRef } from 'react';
 
 interface CollaborativeUser {
   id: string;

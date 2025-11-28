@@ -146,7 +146,7 @@ export class YjsService {
             this.reconnectAttempts = 0;
           } else if (event.status === "disconnected") {
             console.warn("⚠️ Yjs WebSocket DISCONNECTED");
-            this.handleReconnect(cleanDocId, user);
+            this.handleReconnect();
           }
         });
 
@@ -179,7 +179,7 @@ export class YjsService {
     });
   }
 
-  private handleReconnect(documentId: string, user: any) {
+  private handleReconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);

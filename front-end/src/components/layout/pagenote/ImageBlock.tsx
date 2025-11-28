@@ -1,4 +1,4 @@
-import React from "react";
+
 import type { ImageBlock } from "./types";
 
 interface Props {

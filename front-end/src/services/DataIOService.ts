@@ -1,4 +1,4 @@
-import { handleResponse, NOTE_SERVICE_URL } from './utils';
+import { NOTE_SERVICE_URL } from './utils';
 
 // Đảm bảo NOTE_SERVICE_URL = 'http://localhost:8082'
 

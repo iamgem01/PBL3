@@ -1,4 +1,4 @@
-import { Calendar, Clock, MapPin, Plus } from 'lucide-react';
+import { Calendar, Clock, Plus } from 'lucide-react';
 import { useState } from 'react';
 
 interface CalendarEvent {

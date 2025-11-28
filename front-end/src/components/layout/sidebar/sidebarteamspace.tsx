@@ -35,14 +35,6 @@ export default function SidebarTeamspace({ collapsed }: SidebarTeamspaceProps) {
     const [sharedLoading, setSharedLoading] = useState(true);
     const [sharedError, setSharedError] = useState<string | null>(null);
 
-    // Cache key dựa trên user ID để tránh cache conflict
-    const getCacheKey = () => {
-        const userData = localStorage.getItem('user');
-        if (!userData) return 'notes-anonymous';
-        const user = JSON.parse(userData);
-        return `notes-${user.id}`;
-    };
-
     // Fetch all notes từ note-service với error handling tốt hơn
     useEffect(() => {
         const fetchNotes = async () => {

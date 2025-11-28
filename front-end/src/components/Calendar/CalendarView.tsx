@@ -81,7 +81,7 @@ export const CalendarView = ({ currentDate, events, selectedDate, onDayClick, on
 
         {/* Premium Calendar Grid */}
         <div className="flex-1 grid grid-cols-7 auto-rows-fr overflow-auto">
-          {calendarDays.map((date, index) => {
+          {calendarDays.map((date) => {
             const cellData = generateDayCellData(date, events, currentDate, selectedDate);
             const isWeekend = date.getDay() === 0 || date.getDay() === 6;
             

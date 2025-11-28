@@ -41,7 +41,6 @@ export function UserMenu({ collapsed = false }: UserMenuProps) {
             const rect = avatarRef.current.getBoundingClientRect();
             const menuWidth = 240; // w-60 = 240px
             const spaceRight = window.innerWidth - rect.right;
-            const spaceLeft = rect.left;
             
             // Ưu tiên bên phải, nếu không đủ không gian thì qua bên trái
             setMenuPosition(spaceRight >= menuWidth + 20 ? "right" : "left");

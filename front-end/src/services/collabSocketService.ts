@@ -1,5 +1,5 @@
 import { Client } from '@stomp/stompjs';
-import type { IMessage } from '@stomp/stompjs';
+
 import SockJS from 'sockjs-client';
 
 const BASE_URL = import.meta.env.VITE_COLLAB_SERVICE_URL || 'http://localhost:8083';

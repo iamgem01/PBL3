@@ -1,4 +1,4 @@
-import React, { useState }  from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BookOpen, Send, Star, CheckCircle  , Menu, X, ShieldCheck, LockKeyhole, Fingerprint } from 'lucide-react';
 import { FaPen, FaSyncAlt, FaUsers,FaUserCog,FaRobot } from 'react-icons/fa';

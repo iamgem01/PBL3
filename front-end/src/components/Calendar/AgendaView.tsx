@@ -67,7 +67,7 @@ export const AgendaView = ({ events, onEventClick }: AgendaViewProps) => {
   return (
     <div className="h-full overflow-y-auto bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-pink-50/30 relative custom-scrollbar">
       <div className="relative z-10 max-w-4xl mx-auto p-6 space-y-8">
-        {Object.entries(eventsByDate).map(([dateKey, dateEvents], groupIndex) => {
+        {Object.entries(eventsByDate).map(([dateKey, dateEvents]) => {
           const date = new Date(dateKey);
           const isToday = date.toDateString() === new Date().toDateString();
           

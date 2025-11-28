@@ -9,7 +9,7 @@ export default function InvitationAcceptPage() {
   
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
-  const [noteId, setNoteId] = useState<string | null>(null);
+  const [, setNoteId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState('');
   const [showEmailInput, setShowEmailInput] = useState(false);
 

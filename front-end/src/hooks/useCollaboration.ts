@@ -278,7 +278,7 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
     const handleSelectionUpdate = () => {
       try {
         const { from, to } = editor.state.selection;
-        const currentUser = getCurrentUser();
+        getCurrentUser();
 
         // Validate positions
         if (from < 0 || to < 0 || from > editor.state.doc.content.size || to > editor.state.doc.content.size) {

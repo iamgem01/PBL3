@@ -1,6 +1,6 @@
 import BaseModal from "./BaseModal";
 import { useTheme } from "@/context/ThemeContext";
-import { Moon, Sun, Monitor } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 
 interface SettingsModalProps {
     isOpen: boolean;

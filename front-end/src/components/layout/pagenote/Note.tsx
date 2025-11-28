@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Share2, MessageSquare, User, Globe, Bold, Italic, Underline, Strikethrough, Link, Type, FileText, Menu, Plus, Image, ListTodo, Heading1, Heading2, List, CheckSquare, Code, Quote } from 'lucide-react';
+import { Share2, MessageSquare, User, Globe, Bold, Italic, Underline, Strikethrough, Link, Type, FileText, Plus, ListTodo, Heading1, Heading2, CheckSquare } from 'lucide-react';
 
 interface ContentBlock {
   id: string;
@@ -43,8 +43,8 @@ export default function TravelPlanner() {
 
   const [noteName, setNoteName] = useState('Travel Planner');
   const [isEditingName, setIsEditingName] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [focusedBlock, setFocusedBlock] = useState<string | null>(null);
+  const [sidebarCollapsed] = useState(false);
+  const [, setFocusedBlock] = useState<string | null>(null);
   const [showSlashMenu, setShowSlashMenu] = useState<{ blockId: string; show: boolean }>({ blockId: '', show: false });
   const nameInputRef = useRef<HTMLInputElement>(null);
 
@@ -206,14 +206,7 @@ export default function TravelPlanner() {
     );
   };
 
-  const deleteBlock = (blockId: string) => {
-    if (contentBlocks.length > 1) {
-      setContentBlocks(prev => prev.filter(block => block.id !== blockId));
-    }
-  };
-
   const renderBlock = (block: ContentBlock) => {
-    const isChecklist = block.type === 'checklist' || block.type === 'todo';
 
     return (
       <div

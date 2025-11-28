@@ -59,7 +59,7 @@ export const CollaborativeEditor = memo(
 
     const MAX_INIT_ATTEMPTS = 3;
 
-    const currentUser = useMemo(() => {
+    useMemo(() => {
       try {
         const user = JSON.parse(localStorage.getItem("user") || "{}");
         return {
@@ -81,11 +81,9 @@ export const CollaborativeEditor = memo(
     const {
       doc,
       users,
-      updateAwareness,
       yjsService,
       awareness,
       provider,
-      isSynced,
       persistenceReady,
     } = useYjs(documentId, isShared);
 
@@ -126,9 +124,7 @@ export const CollaborativeEditor = memo(
       try {
         const base: any[] = [
           StarterKit.configure({
-            // History is enabled by default in StarterKit
-            // Only disable it when using Yjs collaboration (which has its own history)
-            history: isShared ? false : true,
+            history: isShared ? false : {},
           }),
           Placeholder.configure({ placeholder: "Start writing..." }),
           Underline,
