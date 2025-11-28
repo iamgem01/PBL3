@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { Editor } from '@tiptap/react';
-import { collabSocketService } from '@/services/collabSocketService';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Editor } from "@tiptap/react";
+import { collabSocketService } from "@/services/collabSocketService";
 import type {
   CursorUpdateMessage,
   SelectionMessage,
-} from '@/services/collabSocketService';
+} from "@/services/collabSocketService";
 
 interface CollaborativeUser {
   id: string;
@@ -21,10 +21,14 @@ interface UseCollaborationProps {
   editor: Editor | null;
 }
 
-export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationProps) => {
+export const useCollaboration = ({
+  noteId,
+  isShared,
+  editor,
+}: UseCollaborationProps) => {
   const [cursorUsers, setCursorUsers] = useState<CollaborativeUser[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-  
+
   const lastCursorPos = useRef<number | null>(null);
   const lastSelection = useRef<{ from: number; to: number } | null>(null);
   const cursorUpdateTimeoutRef = useRef<number | null>(null);
@@ -34,17 +38,17 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
   // Get current user info
   const getCurrentUser = useCallback(() => {
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
       return {
-        id: user.id || 'user_' + Math.random().toString(36).slice(2, 9),
-        name: user.name || 'Anonymous',
-        email: user.email || 'user@example.com',
+        id: user.id || "user_" + Math.random().toString(36).slice(2, 9),
+        name: user.name || "Anonymous",
+        email: user.email || "user@example.com",
       };
     } catch {
       return {
-        id: 'user_' + Math.random().toString(36).slice(2, 9),
-        name: 'Anonymous',
-        email: 'user@example.com',
+        id: "user_" + Math.random().toString(36).slice(2, 9),
+        name: "Anonymous",
+        email: "user@example.com",
       };
     }
   }, []);
@@ -58,106 +62,118 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
     const currentUser = getCurrentUser();
     let mounted = true;
 
-    console.log('🔌 Connecting to collaboration service...');
+    console.log("🔌 Connecting to collaboration service...");
 
     // Handle cursor updates from other users - FIXED: Thêm validation cực kỳ mạnh mẽ
     const handleCursorUpdate = (message: CursorUpdateMessage) => {
       if (!mounted) return;
-      
+
       try {
         // ✅ FIXED: Validate message structure cực kỹ
-        if (!message || typeof message !== 'object') {
-          console.warn('⚠️ Invalid cursor message: not an object');
+        if (!message || typeof message !== "object") {
+          console.warn("⚠️ Invalid cursor message: not an object");
           return;
         }
 
         const currentUserId = getCurrentUser().id;
-        
+
         // Ignore own cursor updates
         if (message.userId === currentUserId) return;
 
         // ✅ FIXED: Validate required fields
-        if (!message.userId || typeof message.userId !== 'string') {
-          console.warn('⚠️ Invalid cursor message: missing userId');
+        if (!message.userId || typeof message.userId !== "string") {
+          console.warn("⚠️ Invalid cursor message: missing userId");
           return;
         }
 
         if (message.position === undefined || message.position === null) {
-          console.warn('⚠️ Invalid cursor message: missing position');
+          console.warn("⚠️ Invalid cursor message: missing position");
           return;
         }
 
         // ✅ FIXED: Validate position type and range
         const position = Number(message.position);
         if (isNaN(position) || position < 0) {
-          console.warn('⚠️ Invalid cursor position:', message.position);
+          console.warn("⚠️ Invalid cursor position:", message.position);
           return;
         }
 
         setCursorUsers((prev: CollaborativeUser[]) => {
-          const filtered = prev.filter((u: CollaborativeUser) => u.id !== message.userId);
-          
+          const filtered = prev.filter(
+            (u: CollaborativeUser) => u.id !== message.userId
+          );
+
           return [
             ...filtered,
             {
               id: message.userId,
-              name: message.name || 'Unknown',
-              email: message.email || 'unknown@example.com',
-              color: message.color || '#FF6B6B',
+              name: message.name || "Unknown",
+              email: message.email || "unknown@example.com",
+              color: message.color || "#FF6B6B",
               cursor: { pos: position },
             },
           ];
         });
       } catch (error) {
-        console.error('❌ Error handling cursor update:', error);
+        console.error("❌ Error handling cursor update:", error);
       }
     };
 
     // Handle selection updates - FIXED: Thêm validation cực kỳ mạnh mẽ
     const handleSelectionUpdate = (message: SelectionMessage) => {
       if (!mounted) return;
-      
+
       try {
         // ✅ FIXED: Validate message structure cực kỹ
-        if (!message || typeof message !== 'object') {
-          console.warn('⚠️ Invalid selection message: not an object');
+        if (!message || typeof message !== "object") {
+          console.warn("⚠️ Invalid selection message: not an object");
           return;
         }
 
         const currentUserId = getCurrentUser().id;
-        
+
         // Ignore own selection
         if (message.userId === currentUserId) return;
 
         // ✅ FIXED: Validate required fields
-        if (!message.userId || typeof message.userId !== 'string') {
-          console.warn('⚠️ Invalid selection message: missing userId');
+        if (!message.userId || typeof message.userId !== "string") {
+          console.warn("⚠️ Invalid selection message: missing userId");
           return;
         }
 
-        if (!message.selection || typeof message.selection !== 'object') {
-          console.warn('⚠️ Invalid selection message: missing selection object');
+        if (!message.selection || typeof message.selection !== "object") {
+          console.warn(
+            "⚠️ Invalid selection message: missing selection object"
+          );
           return;
         }
 
         // Validate selection range
         const start = Number(message.selection.start);
         const end = Number(message.selection.end);
-        
-        if (isNaN(start) || isNaN(end) || start < 0 || end < 0 || start >= end) {
-          console.warn('⚠️ Invalid selection range:', { start, end });
+
+        if (
+          isNaN(start) ||
+          isNaN(end) ||
+          start < 0 ||
+          end < 0 ||
+          start >= end
+        ) {
+          console.warn("⚠️ Invalid selection range:", { start, end });
           return;
         }
 
         setCursorUsers((prev: CollaborativeUser[]) => {
-          const filtered = prev.filter((u: CollaborativeUser) => u.id !== message.userId);
+          const filtered = prev.filter(
+            (u: CollaborativeUser) => u.id !== message.userId
+          );
           return [
             ...filtered,
             {
               id: message.userId,
-              name: message.name || 'Unknown',
-              email: message.email || 'unknown@example.com',
-              color: message.color || '#FF6B6B',
+              name: message.name || "Unknown",
+              email: message.email || "unknown@example.com",
+              color: message.color || "#FF6B6B",
               selection: {
                 from: start,
                 to: end,
@@ -166,7 +182,7 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
           ];
         });
       } catch (error) {
-        console.error('❌ Error handling selection update:', error);
+        console.error("❌ Error handling selection update:", error);
       }
     };
 
@@ -186,9 +202,9 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
         handleSelectionUpdate,
         () => {
           if (!mounted) return;
-          console.log('✅ Connected to collaboration service');
+          console.log("✅ Connected to collaboration service");
           setIsConnected(true);
-          
+
           // Send initial join event
           collabSocketService.sendUserJoin(
             noteId,
@@ -202,17 +218,17 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
 
     return () => {
       mounted = false;
-      
+
       if (connectionTimeoutRef.current) {
         clearTimeout(connectionTimeoutRef.current);
       }
-      
-      console.log('🔌 Disconnecting from collaboration service...');
+
+      console.log("🔌 Disconnecting from collaboration service...");
       collabSocketService.sendUserLeave(noteId, currentUser.id);
       collabSocketService.disconnect();
       setIsConnected(false);
       setCursorUsers([]);
-      
+
       // Clear timeouts
       if (cursorUpdateTimeoutRef.current) {
         clearTimeout(cursorUpdateTimeoutRef.current);
@@ -244,9 +260,12 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
 
         cursorUpdateTimeoutRef.current = setTimeout(() => {
           // Only send if position changed significantly (avoid spam)
-          if (lastCursorPos.current === null || Math.abs(lastCursorPos.current - from) > 1) {
+          if (
+            lastCursorPos.current === null ||
+            Math.abs(lastCursorPos.current - from) > 1
+          ) {
             lastCursorPos.current = from;
-            
+
             collabSocketService.sendCursorUpdate(
               noteId,
               currentUser.id,
@@ -257,14 +276,14 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
           }
         }, 200);
       } catch (error) {
-        console.error('❌ Error tracking cursor position:', error);
+        console.error("❌ Error tracking cursor position:", error);
       }
     };
 
-    editor.on('selectionUpdate', handleSelectionUpdate);
+    editor.on("selectionUpdate", handleSelectionUpdate);
 
     return () => {
-      editor.off('selectionUpdate', handleSelectionUpdate);
+      editor.off("selectionUpdate", handleSelectionUpdate);
       if (cursorUpdateTimeoutRef.current) {
         clearTimeout(cursorUpdateTimeoutRef.current);
       }
@@ -278,10 +297,15 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
     const handleSelectionUpdate = () => {
       try {
         const { from, to } = editor.state.selection;
-        const currentUser = getCurrentUser();
+        getCurrentUser();
 
         // Validate positions
-        if (from < 0 || to < 0 || from > editor.state.doc.content.size || to > editor.state.doc.content.size) {
+        if (
+          from < 0 ||
+          to < 0 ||
+          from > editor.state.doc.content.size ||
+          to > editor.state.doc.content.size
+        ) {
           return;
         }
 
@@ -301,16 +325,16 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
 
         selectionUpdateTimeoutRef.current = setTimeout(() => {
           // Only send if selection changed significantly
-          const selectionChanged = 
+          const selectionChanged =
             !lastSelection.current ||
             Math.abs(lastSelection.current.from - from) > 1 ||
             Math.abs(lastSelection.current.to - to) > 1;
 
           if (selectionChanged) {
             lastSelection.current = { from, to };
-            
+
             const selectedText = editor.state.doc.textBetween(from, to);
-            
+
             collabSocketService.sendSelectionUpdate(noteId, {
               start: from,
               end: to,
@@ -319,14 +343,14 @@ export const useCollaboration = ({ noteId, isShared, editor }: UseCollaborationP
           }
         }, 300);
       } catch (error) {
-        console.error('❌ Error tracking text selection:', error);
+        console.error("❌ Error tracking text selection:", error);
       }
     };
 
-    editor.on('selectionUpdate', handleSelectionUpdate);
+    editor.on("selectionUpdate", handleSelectionUpdate);
 
     return () => {
-      editor.off('selectionUpdate', handleSelectionUpdate);
+      editor.off("selectionUpdate", handleSelectionUpdate);
       if (selectionUpdateTimeoutRef.current) {
         clearTimeout(selectionUpdateTimeoutRef.current);
       }

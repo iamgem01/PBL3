@@ -21,6 +21,8 @@ import AdminPage from "./pages/Manager/adminpage";
 import InvitationAcceptPage from "@/pages/InvitationAcceptPage";
 import CalendarPage from "@/pages/CalendarPage/CalendarPage";
 import NotificationsPage from "@/pages/NotificationsPage/NotificationsPage";
+import { useCalendarNotifications } from "@/hooks/useCalendarNotifications";
+import { Toaster } from "sonner";
 
 // Loading Component
 function LoadingScreen() {
@@ -82,6 +84,24 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function App() {
   const BACKEND_URL =
     import.meta.env.VITE_USER_SERVICE_URL || "http://localhost:5000";
+
+  // Get current user for notifications
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    if (user) {
+      try {
+        const userData = JSON.parse(user);
+        setCurrentUserId(userData.id || userData._id);
+      } catch (error) {
+        console.error("Failed to parse user data:", error);
+      }
+    }
+  }, []);
+
+  // Initialize calendar notifications with sound
+  useCalendarNotifications(currentUserId);
 
   function AuthHandler() {
     const navigate = useNavigate();
@@ -168,6 +188,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthHandler />
+      <Toaster position="top-right" expand={true} richColors closeButton />
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<LandingPage />} />

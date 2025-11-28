@@ -1,9 +1,33 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Share2, MessageSquare, User, Globe, Bold, Italic, Underline, Strikethrough, Link, Type, FileText, Menu, Plus, Image, ListTodo, Heading1, Heading2, List, CheckSquare, Code, Quote } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  Share2,
+  MessageSquare,
+  User,
+  Globe,
+  Bold,
+  Italic,
+  Underline,
+  Strikethrough,
+  Link,
+  Type,
+  FileText,
+  Plus,
+  ListTodo,
+  Heading1,
+  Heading2,
+  CheckSquare,
+} from "lucide-react";
 
 interface ContentBlock {
   id: string;
-  type: 'paragraph' | 'heading1' | 'heading2' | 'checklist' | 'todo' | 'bulletlist' | 'numberedlist';
+  type:
+    | "paragraph"
+    | "heading1"
+    | "heading2"
+    | "checklist"
+    | "todo"
+    | "bulletlist"
+    | "numberedlist";
   content: string;
   items?: { id: string; text: string; checked: boolean }[];
 }
@@ -17,35 +41,39 @@ interface SelectionToolbar {
 export default function TravelPlanner() {
   const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([
     {
-      id: '1',
-      type: 'heading1',
-      content: 'Travel Planner',
+      id: "1",
+      type: "heading1",
+      content: "Travel Planner",
     },
     {
-      id: '2',
-      type: 'paragraph',
-      content: 'Expand each category below by clicking the ▶ to use your packing checklist!',
+      id: "2",
+      type: "paragraph",
+      content:
+        "Expand each category below by clicking the ▶ to use your packing checklist!",
     },
     {
-      id: '3',
-      type: 'checklist',
-      content: 'Essentials 📋',
+      id: "3",
+      type: "checklist",
+      content: "Essentials 📋",
       items: [
-        { id: '1', text: 'Passport 🛂', checked: false },
-        { id: '2', text: 'Boarding pass / Tickets', checked: false },
-        { id: '3', text: 'Wallet (cash + cards)', checked: false },
-        { id: '4', text: 'Phone + charger', checked: false },
-        { id: '5', text: 'Travel insurance documents', checked: false },
-        { id: '6', text: 'Keys', checked: false },
+        { id: "1", text: "Passport 🛂", checked: false },
+        { id: "2", text: "Boarding pass / Tickets", checked: false },
+        { id: "3", text: "Wallet (cash + cards)", checked: false },
+        { id: "4", text: "Phone + charger", checked: false },
+        { id: "5", text: "Travel insurance documents", checked: false },
+        { id: "6", text: "Keys", checked: false },
       ],
     },
   ]);
 
-  const [noteName, setNoteName] = useState('Travel Planner');
+  const [noteName, setNoteName] = useState("Travel Planner");
   const [isEditingName, setIsEditingName] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [focusedBlock, setFocusedBlock] = useState<string | null>(null);
-  const [showSlashMenu, setShowSlashMenu] = useState<{ blockId: string; show: boolean }>({ blockId: '', show: false });
+  const [sidebarCollapsed] = useState(false);
+  const [, setFocusedBlock] = useState<string | null>(null);
+  const [showSlashMenu, setShowSlashMenu] = useState<{
+    blockId: string;
+    show: boolean;
+  }>({ blockId: "", show: false });
   const nameInputRef = useRef<HTMLInputElement>(null);
 
   const [selectionToolbar, setSelectionToolbar] = useState<SelectionToolbar>({
@@ -61,7 +89,7 @@ export default function TravelPlanner() {
     if (selection && selection.toString().length > 0) {
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
-      
+
       setSelectionToolbar({
         show: true,
         x: rect.left + rect.width / 2,
@@ -73,8 +101,8 @@ export default function TravelPlanner() {
   };
 
   useEffect(() => {
-    document.addEventListener('mouseup', handleTextSelection);
-    document.addEventListener('selectionchange', () => {
+    document.addEventListener("mouseup", handleTextSelection);
+    document.addEventListener("selectionchange", () => {
       const selection = window.getSelection();
       if (!selection || selection.toString().length === 0) {
         setSelectionToolbar({ show: false, x: 0, y: 0 });
@@ -82,7 +110,7 @@ export default function TravelPlanner() {
     });
 
     return () => {
-      document.removeEventListener('mouseup', handleTextSelection);
+      document.removeEventListener("mouseup", handleTextSelection);
     };
   }, []);
 
@@ -99,49 +127,51 @@ export default function TravelPlanner() {
 
   const handleNameBlur = () => {
     setIsEditingName(false);
-    if (noteName.trim() === '') {
-      setNoteName('Travel Planner');
+    if (noteName.trim() === "") {
+      setNoteName("Travel Planner");
     }
   };
 
   const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       setIsEditingName(false);
-    } else if (e.key === 'Escape') {
+    } else if (e.key === "Escape") {
       setIsEditingName(false);
-      setNoteName('Travel Planner');
+      setNoteName("Travel Planner");
     }
   };
 
-  const addBlock = (afterId: string, type: ContentBlock['type']) => {
+  const addBlock = (afterId: string, type: ContentBlock["type"]) => {
     const newBlock: ContentBlock = {
       id: Date.now().toString(),
       type,
-      content: '',
-      ...(type === 'checklist' || type === 'todo' ? { items: [] } : {}),
+      content: "",
+      ...(type === "checklist" || type === "todo" ? { items: [] } : {}),
     };
 
-    const index = contentBlocks.findIndex(b => b.id === afterId);
+    const index = contentBlocks.findIndex((b) => b.id === afterId);
     const newBlocks = [...contentBlocks];
     newBlocks.splice(index + 1, 0, newBlock);
     setContentBlocks(newBlocks);
-    setShowSlashMenu({ blockId: '', show: false });
+    setShowSlashMenu({ blockId: "", show: false });
   };
 
   const updateBlockContent = (id: string, content: string) => {
-    setContentBlocks(prev =>
-      prev.map(block => (block.id === id ? { ...block, content } : block))
+    setContentBlocks((prev) =>
+      prev.map((block) => (block.id === id ? { ...block, content } : block))
     );
   };
 
-  const updateBlockType = (id: string, type: ContentBlock['type']) => {
-    setContentBlocks(prev =>
-      prev.map(block => {
+  const updateBlockType = (id: string, type: ContentBlock["type"]) => {
+    setContentBlocks((prev) =>
+      prev.map((block) => {
         if (block.id === id) {
           return {
             ...block,
             type,
-            ...(type === 'checklist' || type === 'todo' ? { items: block.items || [] } : {}),
+            ...(type === "checklist" || type === "todo"
+              ? { items: block.items || [] }
+              : {}),
           };
         }
         return block;
@@ -150,22 +180,22 @@ export default function TravelPlanner() {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, blockId: string) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      addBlock(blockId, 'paragraph');
-    } else if (e.key === '/' && (e.target as HTMLInputElement).value === '') {
+      addBlock(blockId, "paragraph");
+    } else if (e.key === "/" && (e.target as HTMLInputElement).value === "") {
       e.preventDefault();
       setShowSlashMenu({ blockId, show: true });
     }
   };
 
   const toggleCheckItem = (blockId: string, itemId: string) => {
-    setContentBlocks(prev =>
-      prev.map(block => {
+    setContentBlocks((prev) =>
+      prev.map((block) => {
         if (block.id === blockId && block.items) {
           return {
             ...block,
-            items: block.items.map(item =>
+            items: block.items.map((item) =>
               item.id === itemId ? { ...item, checked: !item.checked } : item
             ),
           };
@@ -176,10 +206,14 @@ export default function TravelPlanner() {
   };
 
   const addItemToBlock = (blockId: string) => {
-    setContentBlocks(prev =>
-      prev.map(block => {
+    setContentBlocks((prev) =>
+      prev.map((block) => {
         if (block.id === blockId && block.items) {
-          const newItem = { id: Date.now().toString(), text: '', checked: false };
+          const newItem = {
+            id: Date.now().toString(),
+            text: "",
+            checked: false,
+          };
           return {
             ...block,
             items: [...block.items, newItem],
@@ -191,12 +225,12 @@ export default function TravelPlanner() {
   };
 
   const updateItemText = (blockId: string, itemId: string, text: string) => {
-    setContentBlocks(prev =>
-      prev.map(block => {
+    setContentBlocks((prev) =>
+      prev.map((block) => {
         if (block.id === blockId && block.items) {
           return {
             ...block,
-            items: block.items.map(item =>
+            items: block.items.map((item) =>
               item.id === itemId ? { ...item, text } : item
             ),
           };
@@ -206,15 +240,7 @@ export default function TravelPlanner() {
     );
   };
 
-  const deleteBlock = (blockId: string) => {
-    if (contentBlocks.length > 1) {
-      setContentBlocks(prev => prev.filter(block => block.id !== blockId));
-    }
-  };
-
   const renderBlock = (block: ContentBlock) => {
-    const isChecklist = block.type === 'checklist' || block.type === 'todo';
-
     return (
       <div
         key={block.id}
@@ -225,23 +251,23 @@ export default function TravelPlanner() {
         {/* Block Actions */}
         <div className="absolute -left-12 top-1 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
           <button
-            onClick={() => addBlock(block.id, 'paragraph')}
+            onClick={() => addBlock(block.id, "paragraph")}
             className="w-6 h-6 hover:bg-gray-200 rounded flex items-center justify-center text-gray-400 hover:text-gray-600"
           >
             <Plus className="w-4 h-4" />
           </button>
           <button className="w-6 h-6 hover:bg-gray-200 rounded flex items-center justify-center text-gray-400 hover:text-gray-600">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
-              <circle cx="3" cy="8" r="1.5"/>
-              <circle cx="8" cy="8" r="1.5"/>
-              <circle cx="13" cy="8" r="1.5"/>
+              <circle cx="3" cy="8" r="1.5" />
+              <circle cx="8" cy="8" r="1.5" />
+              <circle cx="13" cy="8" r="1.5" />
             </svg>
           </button>
         </div>
 
         {/* Content */}
         <div className="min-h-[32px]">
-          {block.type === 'heading1' && (
+          {block.type === "heading1" && (
             <input
               type="text"
               value={block.content}
@@ -252,7 +278,7 @@ export default function TravelPlanner() {
             />
           )}
 
-          {block.type === 'heading2' && (
+          {block.type === "heading2" && (
             <input
               type="text"
               value={block.content}
@@ -263,7 +289,7 @@ export default function TravelPlanner() {
             />
           )}
 
-          {block.type === 'paragraph' && (
+          {block.type === "paragraph" && (
             <div className="relative">
               <input
                 type="text"
@@ -277,56 +303,64 @@ export default function TravelPlanner() {
                 <div className="absolute left-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10 min-w-[240px]">
                   <button
                     onClick={() => {
-                      updateBlockType(block.id, 'heading1');
-                      setShowSlashMenu({ blockId: '', show: false });
+                      updateBlockType(block.id, "heading1");
+                      setShowSlashMenu({ blockId: "", show: false });
                     }}
                     className="w-full px-3 py-2 text-left hover:bg-gray-100 rounded flex items-center gap-3"
                   >
                     <Heading1 className="w-4 h-4" />
                     <div>
                       <div className="text-sm font-medium">Heading 1</div>
-                      <div className="text-xs text-gray-500">Big section heading</div>
+                      <div className="text-xs text-gray-500">
+                        Big section heading
+                      </div>
                     </div>
                   </button>
                   <button
                     onClick={() => {
-                      updateBlockType(block.id, 'heading2');
-                      setShowSlashMenu({ blockId: '', show: false });
+                      updateBlockType(block.id, "heading2");
+                      setShowSlashMenu({ blockId: "", show: false });
                     }}
                     className="w-full px-3 py-2 text-left hover:bg-gray-100 rounded flex items-center gap-3"
                   >
                     <Heading2 className="w-4 h-4" />
                     <div>
                       <div className="text-sm font-medium">Heading 2</div>
-                      <div className="text-xs text-gray-500">Medium section heading</div>
+                      <div className="text-xs text-gray-500">
+                        Medium section heading
+                      </div>
                     </div>
                   </button>
                   <button
                     onClick={() => {
-                      updateBlockType(block.id, 'checklist');
+                      updateBlockType(block.id, "checklist");
                       addItemToBlock(block.id);
-                      setShowSlashMenu({ blockId: '', show: false });
+                      setShowSlashMenu({ blockId: "", show: false });
                     }}
                     className="w-full px-3 py-2 text-left hover:bg-gray-100 rounded flex items-center gap-3"
                   >
                     <CheckSquare className="w-4 h-4" />
                     <div>
                       <div className="text-sm font-medium">Checklist</div>
-                      <div className="text-xs text-gray-500">Track tasks with checkboxes</div>
+                      <div className="text-xs text-gray-500">
+                        Track tasks with checkboxes
+                      </div>
                     </div>
                   </button>
                   <button
                     onClick={() => {
-                      updateBlockType(block.id, 'todo');
+                      updateBlockType(block.id, "todo");
                       addItemToBlock(block.id);
-                      setShowSlashMenu({ blockId: '', show: false });
+                      setShowSlashMenu({ blockId: "", show: false });
                     }}
                     className="w-full px-3 py-2 text-left hover:bg-gray-100 rounded flex items-center gap-3"
                   >
                     <ListTodo className="w-4 h-4" />
                     <div>
                       <div className="text-sm font-medium">Todo List</div>
-                      <div className="text-xs text-gray-500">Track to-do items</div>
+                      <div className="text-xs text-gray-500">
+                        Track to-do items
+                      </div>
                     </div>
                   </button>
                 </div>
@@ -334,7 +368,7 @@ export default function TravelPlanner() {
             </div>
           )}
 
-          {(block.type === 'checklist' || block.type === 'todo') && (
+          {(block.type === "checklist" || block.type === "todo") && (
             <div>
               {block.content && (
                 <input
@@ -346,7 +380,7 @@ export default function TravelPlanner() {
                 />
               )}
               <div className="space-y-2">
-                {block.items?.map(item => (
+                {block.items?.map((item) => (
                   <div key={item.id} className="flex items-center gap-3">
                     <input
                       type="checkbox"
@@ -357,10 +391,14 @@ export default function TravelPlanner() {
                     <input
                       type="text"
                       value={item.text}
-                      onChange={(e) => updateItemText(block.id, item.id, e.target.value)}
+                      onChange={(e) =>
+                        updateItemText(block.id, item.id, e.target.value)
+                      }
                       placeholder="Item"
                       className={`flex-1 bg-transparent outline-none ${
-                        item.checked ? 'line-through text-gray-400' : 'text-gray-700'
+                        item.checked
+                          ? "line-through text-gray-400"
+                          : "text-gray-700"
                       }`}
                     />
                   </div>
@@ -385,7 +423,7 @@ export default function TravelPlanner() {
       {/* Main Content */}
       <div
         className={`flex-1 transition-all duration-300 ${
-          sidebarCollapsed ? 'ml-16' : 'ml-64'
+          sidebarCollapsed ? "ml-16" : "ml-64"
         }`}
       >
         {/* Header */}
@@ -426,10 +464,14 @@ export default function TravelPlanner() {
               <User className="w-4 h-4 text-gray-600" />
             </button>
             <button className="w-8 h-8 hover:bg-gray-100 rounded flex items-center justify-center">
-              <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 16 16">
-                <circle cx="3" cy="8" r="1.5"/>
-                <circle cx="8" cy="8" r="1.5"/>
-                <circle cx="13" cy="8" r="1.5"/>
+              <svg
+                className="w-4 h-4 text-gray-600"
+                fill="currentColor"
+                viewBox="0 0 16 16"
+              >
+                <circle cx="3" cy="8" r="1.5" />
+                <circle cx="8" cy="8" r="1.5" />
+                <circle cx="13" cy="8" r="1.5" />
               </svg>
             </button>
           </div>
@@ -443,7 +485,7 @@ export default function TravelPlanner() {
               style={{
                 left: `${selectionToolbar.x}px`,
                 top: `${selectionToolbar.y}px`,
-                transform: 'translateX(-50%)',
+                transform: "translateX(-50%)",
               }}
             >
               <button className="w-8 h-8 hover:bg-gray-700 rounded flex items-center justify-center transition-colors">
@@ -480,17 +522,21 @@ export default function TravelPlanner() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
             <button className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center shadow-xl transition-all">
-              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L4.5 20.5l.75-8.5L12 2z"/>
-                <path d="M12 2l7.5 18.5-.75-8.5L12 2z"/>
-                <path d="M5.25 12l6.75 8.5L19.5 12H5.25z"/>
+              <svg
+                className="w-8 h-8 text-white"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 2L4.5 20.5l.75-8.5L12 2z" />
+                <path d="M12 2l7.5 18.5-.75-8.5L12 2z" />
+                <path d="M5.25 12l6.75 8.5L19.5 12H5.25z" />
               </svg>
             </button>
           </div>
 
           {/* Content Blocks */}
           <div className="space-y-2 pl-12">
-            {contentBlocks.map(block => renderBlock(block))}
+            {contentBlocks.map((block) => renderBlock(block))}
           </div>
         </main>
       </div>
