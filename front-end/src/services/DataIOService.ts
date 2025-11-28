@@ -1,4 +1,4 @@
-import { NOTE_SERVICE_URL } from './utils';
+import { NOTE_SERVICE_URL } from "./utils";
 
 // Đảm bảo NOTE_SERVICE_URL = 'http://localhost:8082'
 
@@ -7,12 +7,15 @@ import { NOTE_SERVICE_URL } from './utils';
  */
 export const exportNoteAsPdf = async (id: string) => {
   try {
-    const response = await fetch(`${NOTE_SERVICE_URL}/api/data/export/pdf/${id}`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/pdf',
+    const response = await fetch(
+      `${NOTE_SERVICE_URL}/api/data/export/pdf/${id}`,
+      {
+        method: "GET",
+        headers: {
+          Accept: "application/pdf",
+        },
       }
-    });
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -20,22 +23,22 @@ export const exportNoteAsPdf = async (id: string) => {
     }
 
     const blob = await response.blob();
-    
+
     // Tạo link download
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `note-${id}.pdf`;
     document.body.appendChild(a);
     a.click();
-    
+
     // Cleanup
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
-    
+
     return blob;
   } catch (error) {
-    console.error('Export PDF error:', error);
+    console.error("Export PDF error:", error);
     throw error;
   }
 };

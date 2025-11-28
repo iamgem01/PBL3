@@ -78,14 +78,8 @@ export const CollaborativeEditor = memo(
       }
     }, []);
 
-    const {
-      doc,
-      users,
-      yjsService,
-      awareness,
-      provider,
-      persistenceReady,
-    } = useYjs(documentId, isShared);
+    const { doc, users, yjsService, awareness, provider, persistenceReady } =
+      useYjs(documentId, isShared);
 
     useEffect(() => {
       if (!isShared) {

@@ -1,5 +1,5 @@
-import { Calendar, Sparkles } from 'lucide-react';
-import { EventCard } from './EventCard';
+import { Calendar, Sparkles } from "lucide-react";
+import { EventCard } from "./EventCard";
 
 interface CalendarEvent {
   id: string;
@@ -19,23 +19,23 @@ interface AgendaViewProps {
 }
 
 const sortEventsByDate = (events: CalendarEvent[]): CalendarEvent[] => {
-  return [...events].sort((a, b) => 
-    new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+  return [...events].sort(
+    (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
   );
 };
 
 const formatDate = (date: Date): string => {
-  return date.toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 };
 
 export const AgendaView = ({ events, onEventClick }: AgendaViewProps) => {
   const sortedEvents = sortEventsByDate(events);
-  
+
   // Group events by date
   const eventsByDate = sortedEvents.reduce((acc, event) => {
     const dateKey = new Date(event.startDate).toDateString();
@@ -70,29 +70,31 @@ export const AgendaView = ({ events, onEventClick }: AgendaViewProps) => {
         {Object.entries(eventsByDate).map(([dateKey, dateEvents]) => {
           const date = new Date(dateKey);
           const isToday = date.toDateString() === new Date().toDateString();
-          
+
           return (
-            <div 
-              key={dateKey} 
-              className="space-y-4"
-            >
+            <div key={dateKey} className="space-y-4">
               {/* Date Header */}
-              <div className={`sticky top-0 z-20 pb-3 border-b transition-all rounded-xl p-4 shadow-md backdrop-blur-xl ${
-                isToday 
-                  ? 'bg-gradient-to-r from-blue-100/80 via-purple-100/70 to-pink-100/80 border-purple-300' 
-                  : 'bg-white/80 border-slate-200'
-              }`}>
+              <div
+                className={`sticky top-0 z-20 pb-3 border-b transition-all rounded-xl p-4 shadow-md backdrop-blur-xl ${
+                  isToday
+                    ? "bg-gradient-to-r from-blue-100/80 via-purple-100/70 to-pink-100/80 border-purple-300"
+                    : "bg-white/80 border-slate-200"
+                }`}
+              >
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className={`text-xl font-serif font-bold ${
-                      isToday 
-                        ? 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600' 
-                        : 'text-slate-900'
-                    }`}>
+                    <h3
+                      className={`text-xl font-serif font-bold ${
+                        isToday
+                          ? "text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600"
+                          : "text-slate-900"
+                      }`}
+                    >
                       {formatDate(date)}
                     </h3>
                     <p className="text-sm text-slate-600 mt-1 font-medium">
-                      {dateEvents.length} {dateEvents.length === 1 ? 'event' : 'events'}
+                      {dateEvents.length}{" "}
+                      {dateEvents.length === 1 ? "event" : "events"}
                     </p>
                   </div>
                   {isToday && (

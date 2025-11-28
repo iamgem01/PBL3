@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-react';
+import { Sparkles } from "lucide-react";
 
 interface CalendarEvent {
   id: string;
@@ -24,14 +24,14 @@ interface DayCellProps {
 
 export const DayCell = ({ data, onClick, onEventClick }: DayCellProps) => {
   const { date, events, isToday, isCurrentMonth, isSelected } = data;
-  
+
   return (
     <div
       onClick={() => onClick?.(date)}
       className={`
         relative h-full p-2 cursor-pointer transition-all duration-150 flex flex-col
-        ${!isCurrentMonth && 'opacity-40'}
-        ${isSelected ? 'bg-blue-50 ring-1 ring-blue-300' : 'hover:bg-slate-50'}
+        ${!isCurrentMonth && "opacity-40"}
+        ${isSelected ? "bg-blue-50 ring-1 ring-blue-300" : "hover:bg-slate-50"}
       `}
     >
       {/* Premium Date Display */}
@@ -47,21 +47,18 @@ export const DayCell = ({ data, onClick, onEventClick }: DayCellProps) => {
             </div>
           ) : (
             // REGULAR: Clean number with hover effect
-            <div 
+            <div
               className={`
                 flex items-center justify-center w-7 h-7 rounded-lg font-medium text-sm transition-colors
-                ${isCurrentMonth 
-                  ? 'text-slate-700' 
-                  : 'text-slate-300'
-                }
-                ${isSelected ? 'text-blue-600 font-semibold' : ''}
+                ${isCurrentMonth ? "text-slate-700" : "text-slate-300"}
+                ${isSelected ? "text-blue-600 font-semibold" : ""}
               `}
             >
               {date.getDate()}
             </div>
           )}
         </div>
-        
+
         {/* Event count badge */}
         {events.length > 0 && !isToday && (
           <div className="flex items-center justify-center w-5 h-5 bg-slate-600 text-white rounded-full text-xs font-medium">
@@ -73,23 +70,28 @@ export const DayCell = ({ data, onClick, onEventClick }: DayCellProps) => {
       {/* Premium Event List */}
       <div className="space-y-1 flex-1 overflow-hidden relative z-10">
         {events.slice(0, 3).map((event) => {
-          const eventColor = event.color || '#8b5cf6';
-          
+          const eventColor = event.color || "#8b5cf6";
+
           return (
             <div
               key={event.id}
-              onClick={(e) => { e.stopPropagation(); onEventClick?.(event.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEventClick?.(event.id);
+              }}
               className="group/event relative w-full text-left px-2 py-1 rounded text-[11px] truncate font-medium transition-colors cursor-pointer hover:shadow-sm"
-              style={{ 
+              style={{
                 background: `linear-gradient(135deg, ${eventColor}12, ${eventColor}20)`,
                 borderLeft: `2px solid ${eventColor}`,
               }}
             >
-              <span className="text-slate-900 font-semibold">{event.title}</span>
+              <span className="text-slate-900 font-semibold">
+                {event.title}
+              </span>
             </div>
           );
         })}
-        
+
         {/* More events indicator */}
         {events.length > 3 && (
           <div className="text-[10px] text-slate-500 font-medium px-2 py-0.5 bg-slate-100 rounded inline-block">

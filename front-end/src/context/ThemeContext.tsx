@@ -1,6 +1,12 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  type ReactNode,
+} from "react";
 
-type Theme = 'light' | 'dark';
+type Theme = "light" | "dark";
 
 interface ThemeContextType {
   theme: Theme;
@@ -14,74 +20,80 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   // Initialize theme from localStorage or system preference
   const [theme, setThemeState] = useState<Theme>(() => {
     // Check localStorage first
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light' || savedTheme === 'dark') {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "light" || savedTheme === "dark") {
       return savedTheme;
     }
-    
+
     // Fall back to system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
+    if (
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+    ) {
+      return "dark";
     }
-    
-    return 'light';
+
+    return "light";
   });
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
-    localStorage.setItem('theme', newTheme);
+    localStorage.setItem("theme", newTheme);
   };
 
   const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
+    const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
   };
 
   // Apply theme to document with smooth transition
   useEffect(() => {
     const root = window.document.documentElement;
-    
+
     // Add transitioning class to disable transitions during theme change
-    root.classList.add('theme-transitioning');
-    
+    root.classList.add("theme-transitioning");
+
     // Remove both classes
-    root.classList.remove('light', 'dark');
-    
+    root.classList.remove("light", "dark");
+
     // Add the new theme class
     root.classList.add(theme);
-    
+
     // Remove transitioning class after a frame
     requestAnimationFrame(() => {
       setTimeout(() => {
-        root.classList.remove('theme-transitioning');
+        root.classList.remove("theme-transitioning");
       }, 10);
     });
-    
+
     // Update meta theme color for mobile browsers
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', theme === 'dark' ? '#111827' : '#ffffff');
+      metaThemeColor.setAttribute(
+        "content",
+        theme === "dark" ? "#111827" : "#ffffff"
+      );
     } else {
-      const meta = document.createElement('meta');
-      meta.name = 'theme-color';
-      meta.content = theme === 'dark' ? '#111827' : '#ffffff';
+      const meta = document.createElement("meta");
+      meta.name = "theme-color";
+      meta.content = theme === "dark" ? "#111827" : "#ffffff";
       document.head.appendChild(meta);
     }
   }, [theme]);
 
   // Listen for system theme changes
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
     const handleChange = (e: MediaQueryListEvent) => {
       // Only update if no theme is saved in localStorage
-      if (!localStorage.getItem('theme')) {
-        setThemeState(e.matches ? 'dark' : 'light');
+      if (!localStorage.getItem("theme")) {
+        setThemeState(e.matches ? "dark" : "light");
       }
     };
-    
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
   return (
@@ -94,7 +106,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {
-    throw new Error('useTheme must be used within ThemeProvider');
+    throw new Error("useTheme must be used within ThemeProvider");
   }
   return context;
 };
