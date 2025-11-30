@@ -13,6 +13,21 @@
 #     org.springframework.data.mongodb: DEBUG
 #     com.smartnote.noteservice: DEBUG
 
+# spring:
+#   jackson:
+#     property-naming-strategy: SNAKE_CASE
+#   application:
+#     name: note-service
+#   data:
+#     mongodb:
+#       uri: mongodb://localhost:27017/collaboration_notes_db
+# server:
+#   port: 8082
+# logging:
+#   level:
+#     org.springframework.data.mongodb: DEBUG
+#     com.smartnote.noteservice: DEBUG
+
 server:
     port: 8080
 spring:
@@ -23,6 +38,9 @@ spring:
             host: ${SPRING_DATA_MONGODB_HOST}
             port: ${SPRING_DATA_MONGODB_PORT}
             database: ${SPRING_DATA_MONGODB_DATABASE}
+            username: ${SPRING_DATA_MONGODB_USERNAME}
+            password: ${SPRING_DATA_MONGODB_PASSWORD}
+            authentication-database: admin
             auto-index-creation: true
 
     jackson:

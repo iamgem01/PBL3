@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: user-service
+  cloud:
+    host: vault
+    port: 8200
+    scheme: http
+    authentication: TOKEN
+    # token: ${VAULT_DEV_ROOT_TOKEN_ID}
+    kv:
+      enabled: true
+      backend: kv # Default to secret engine
+      default-context: ${spring.application.name}/config
+      profile-separator: /
+    config:
+      order: -10

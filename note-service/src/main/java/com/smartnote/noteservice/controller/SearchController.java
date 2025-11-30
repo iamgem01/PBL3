@@ -15,7 +15,7 @@ import java.util.List;
 public class SearchController {
     
     private final SearchService searchService;
-    
+    // Get notes by folderId
     @GetMapping("/folder/{folderId}")
     public ResponseEntity<List<NoteResponse>> getNotesByFolder(@PathVariable String folderId) {
         try {

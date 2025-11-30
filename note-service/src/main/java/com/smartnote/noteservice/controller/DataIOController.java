@@ -25,7 +25,7 @@ public class DataIOController {
     private final ImportService importService;
     private final ExportService exportService;
     private final NoteService noteService; 
-
+    // Import note from file
     @PostMapping("/import")
     public ResponseEntity<NoteResponse> importNoteFromFile(
             @RequestParam("file") MultipartFile file,
@@ -42,7 +42,7 @@ public class DataIOController {
             return ResponseEntity.badRequest().body(null);
         }
     }
-
+    // Export note to file markdown
     @GetMapping("/export/md/{id}")
     public ResponseEntity<Resource> exportNoteAsMarkdown(@PathVariable String id) {
         try {
@@ -60,7 +60,7 @@ public class DataIOController {
             return ResponseEntity.notFound().build();
         }
     }
-
+    // Export note to file pdf
     @GetMapping("/export/pdf/{id}")
     public ResponseEntity<Resource> exportNoteAsPdf(@PathVariable String id) {
         try {

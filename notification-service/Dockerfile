@@ -1,16 +1,13 @@
-FROM maven:3.9-eclipse-temurin-21 AS builder
+FROM node:20-alpine
+
 WORKDIR /app
-COPY pom.xml .
-COPY src ./src
-RUN mvn clean package -DskipTests
 
-FROM eclipse-temurin:21-jre-jammy AS runtime
-WORKDIR /app
-COPY --from=builder /app/target/*.jar app.jar
+COPY package*.json ./
 
-ENV SPRING_PROFILES_ACTIVE=docker
-ENV JAVA_OPTS="-Xmx256m -Xms256m"
+RUN npm install
 
-EXPOSE 8082
+COPY . .
 
-CMD ["/bin/sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+EXPOSE 5004
+
+CMD ["npm", "start"]

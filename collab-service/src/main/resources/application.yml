@@ -18,6 +18,8 @@ spring:
       host: ${SPRING_DATA_MONGODB_HOST}
       port: ${SPRING_DATA_MONGODB_PORT}
       database: ${SPRING_DATA_MONGODB_DATABASE}
+      username: ${SPRING_DATA_MONGODB_USERNAME}
+      password: ${SPRING_DATA_MONGODB_PASSWORD}
       auto-index-creation: ${SPRING_DATA_MONGODB_AUTO_INDEX_CREATION}
   
   # Websocket configuration #

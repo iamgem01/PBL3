@@ -18,6 +18,7 @@ public class FolderController {
     @Autowired
     private FolderService folderService;
 
+    // Create a new folder
     @PostMapping
     public ResponseEntity<?> createFolder(@RequestBody FolderRequest request) {
         try {
@@ -32,7 +33,7 @@ public class FolderController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
+    // Get all folder
     @GetMapping
     public List<Folder> getAllFolders(
             @RequestParam(required = false) String userId,
@@ -46,22 +47,22 @@ public class FolderController {
             return folderService.getAllFolders();
         }
     }
-
+    // Get user's folders
     @GetMapping("/user/{userId}")
     public List<Folder> getUserFolders(@PathVariable String userId) {
         return folderService.getUserFolders(userId);
     }
-
+    // Get workspace's folders
     @GetMapping("/workspace/{workspaceId}")
     public List<Folder> getWorkspaceFolders(@PathVariable String workspaceId) {
         return folderService.getWorkspaceFolders(workspaceId);
     }
-
+    // Get subfolders
     @GetMapping("/subfolders/{parentId}")
     public List<Folder> getSubFolders(@PathVariable String parentId) {
         return folderService.getSubFolders(parentId);
     }
-
+    // Get folder's information by id
     @GetMapping("/{id}")
     public ResponseEntity<?> getFolderById(@PathVariable String id) {
         Optional<Folder> folder = folderService.getFolderById(id);
@@ -71,7 +72,7 @@ public class FolderController {
             return ResponseEntity.notFound().build();
         }
     }
-
+    // Rename the folder by id
     @PutMapping("/{id}")
     public ResponseEntity<?> renameFolder(@PathVariable String id, @RequestBody FolderRequest request) {
         try {
@@ -81,7 +82,7 @@ public class FolderController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
+    // Move the folder identified by id
     @PutMapping("/move/{id}")
     public ResponseEntity<?> moveFolder(@PathVariable String id, @RequestBody FolderRequest request) {
         try {
@@ -91,7 +92,7 @@ public class FolderController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
+    // Update the position of the folder
     @PutMapping("/{id}/position")
     public ResponseEntity<?> updatePosition(@PathVariable String id, @RequestBody Map<String, Integer> request) {
         try {
@@ -105,7 +106,7 @@ public class FolderController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
+    // Set the order the folders
     @PutMapping("/reorder")
     public ResponseEntity<?> reorder(@RequestBody List<String> folderIdsInOrder) {
         try {

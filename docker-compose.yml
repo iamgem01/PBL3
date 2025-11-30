@@ -99,7 +99,7 @@ services:
 
 
   # Calendar service #
-  calender-service:
+  calendar-service:
     build:
       context: ./calendar-service
       dockerfile: Dockerfile
@@ -107,7 +107,13 @@ services:
     ports:
       - "5003:5003"
     environment:
-      MONGODB_URI: mongodb://mongodb:27017/calendar-service
+      # MONGODB_URI: mongodb://mongodb:27017/calendar-service
+      SPRING_DATA_MONGODB_HOST: mongodb
+      SPRING_DATA_MONGODB_PORT: 27017
+      SPRING_DATA_MONGODB_DATABASE: calendarservice_database
+      SPRING_DATA_MONGODB_USERNAME: root
+      SPRING_DATA_MONGODB_PASSWORD: aeternusPass2026
+      SPRING_DATA_MONGODB_AUTHENTICATION_DATABASE: admin
       USER_SERVICE_URL: http://user-service:8082
       COLLAB_SERVICE_URL: http://collab-service:8084
       NOTE_SERVICE_URL: http://note-service:8080
@@ -132,12 +138,15 @@ services:
     ports: 
       - "8085:8084"
     environment: 
+      SPRING_DATA_MONGODB_USERNAME: root
+      SPRING_DATA_MONGODB_PASSWORD: aeternusPass2026
       SPRING_DATA_MONGODB_HOST: mongodb
       SPRING_DATA_MONGODB_PORT: 27017
-      SPRING_DATA_MONGODB_DATABASE: collaboration_notes_db
+      SPRING_DATA_MONGODB_DATABASE: collabservice_database
       SPRING_DATA_MONGODB_AUTO_INDEX_CREATION: true
+      SPRING_DATA_MONGODB_AUTHENTICATION_DATABASE: admin
       NOTE_SERVICE_URL: http://note-service:8080
-      GMAIL_APP_PASSWORD: 
+      GMAIL_APP_PASSWORD: gwor tahp cakz fgri
     networks:
       - my-network
     deploy:
@@ -145,7 +154,8 @@ services:
       restart_policy: 
         condition: on-failure
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
 
 
   # We can deploy by using docker swarm, so I don't set the container name
@@ -184,6 +194,8 @@ services:
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
       SPRING_JPA_HIBERNATE_DDL_AUTO: create # Used to update schema database automatively
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
+      SPRING_PROFILES_ACTIVE: dev
+      # VAULT_DEV_ROOT_TOKEN_ID: mydevtoken
     networks:
       - my-network
     deploy:
@@ -192,7 +204,11 @@ services:
         condition: on-failure
     depends_on:
       # - discovery-server
-      - mysql
+      # vault: 
+      #   condition: service_healthy
+      mysql:
+        condition: service_healthy
+
 
   
   note-service:
@@ -209,6 +225,8 @@ services:
       # EUREKA_CLIENT_FETCHREGISTRY: "true"
       # EUREKA_CLIENT_PREFER_IP_ADDRESS: "true"
       SPRING_DATA_MONGODB_HOST: mongodb
+      SPRING_DATA_MONGODB_USERNAME: root
+      SPRING_DATA_MONGODB_PASSWORD: aeternusPass2026
       SPRING_DATA_MONGODB_PORT: 27017 # In the container
       SPRING_DATA_MONGODB_DATABASE: noteservice_database
     networks:
@@ -219,21 +237,36 @@ services:
         condition: on-failure
     depends_on:
       # - discovery-server
-      - mongodb
-    #   - config-server
-  #   # healthcheck:
-  #   #   test: ["CMD-SHELL", "curl", "-f", "http://discovery-server:8761/eureka/apps || exit 1"]
-  #   #   interval: 10s
-  #   #   timeout: 5s
-  #   #   retries: 10
-  #   #   start_period: 30s
+      mongodb:
+        condition: service_healthy
+
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    image: notification-service-app
+    ports:
+      - "5004:5004"
+    # environment:
+    networks:
+      - my-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
 
   front-end:
     build:
-      context: ./front-end
+      context: ./frontend-2
       dockerfile: Dockerfile
     image: frontend-app
+    # volumes:
+    #   # - .:/app
+    #   - /app/node_modules
     ports:
       - "3000:5000"
     networks:
@@ -343,15 +376,19 @@ services:
     container_name: mongodb_container
     ports:
       - "27018:27017" #Temp
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: aeternusPass2026
     volumes:
-      - noteservice_mongodb_data:/data/noteservice_db
+      - noteservice_mongodb_data:/data/database
     networks:
-      - my-network  
+      - my-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:27017"]
+      test: ["CMD-SHELL", "echo 'db.runCommand(\"ping\").ok' | mongosh --host localhost --port 27017 --quiet"]
       interval: 10s
       timeout: 5s
       retries: 3
+      start_period: 30s
   #   # command: --default-authentication-plugin=mysql_native_password # Ensure that mysql compatible with oldly driver
 
   # # Database for user service #
@@ -361,7 +398,7 @@ services:
     ports: 
       - "3307:3306" #Temp
     volumes:
-      - userservice_mysql_data:/data/userservice_db
+      - userservice_mysql_data:/data/database
     environment: # Have all the privileges
       MYSQL_ROOT_PASSWORD: VuNguyen2028
       MYSQL_DATABASE: userservice_database
@@ -370,8 +407,7 @@ services:
     networks:
       - my-network
     healthcheck:
-      test: >
-        mysqladmin ping -h localhost -u AeternusAd -p Chucmungnammoi2026
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -412,32 +448,60 @@ services:
     networks:
       - my-network
 
-  notification-service:
-    build:
-      context: ./notification-service
-      dockerfile: Dockerfile
-    image: notification-service-app
-    ports:
-      - "8083:8083"
-    environment:
-      SPRING_MAIL_USERNAME: vunguyens3rdvvv2919@gmail.com
-      SPRING_MAIL_PASSWORD: gwor tahp cakz fgri
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9093
-    networks:
-      - my-network
-    depends_on:
-      - kafka
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
+  # notification-service:
+  #   build:
+  #     context: ./notification-service
+  #     dockerfile: Dockerfile
+  #   image: notification-service-app
+  #   ports:
+  #     - "8083:8083"
+  #   environment:
+  #     SPRING_MAIL_USERNAME: vunguyens3rdvvv2919@gmail.com
+  #     SPRING_MAIL_PASSWORD: gwor tahp cakz fgri
+  #     SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9093
+  #   networks:
+  #     - my-network
+  #   depends_on:
+  #     - kafka
+  #   deploy:
+  #     replicas: 1
+  #     restart_policy:
+  #       condition: on-failure
 
   # Database for ai service #
+  # vault:
+  #   image: hashicorp/vault:1.21
+  #   container_name: vault_container
+  #   entrypoint: vault
+  #   user: "0:0"
+  #   ports:
+  #     - "8200:8200"
+  #   volumes: 
+  #     - ./vault-server-dev-config.hcl:/vault/config/vault.hcl:ro
+  #     - ./vault_data:/vault/data
+  #   environment:
+  #     # VAULT_TOKEN: #__________________# <-- Fill in 
+  #     VAULT_ADDR: "http://0.0.0.0:8200"
+  #     VAULT_API_ADDR: "http://0.0.0.0:8200"
+  #   cap_add:
+  #     - IPC_LOCK
+  #   healthcheck: 
+  #     test: ["CMD", "vault", "status"]
+  #     interval: 5s
+  #     timeout: 10s
+  #     retries: 5
+  #     start_period: 10s
+  #   # This command to start the vault based on the configuration file
+  #   command: "server -config=/vault/config/vault.hcl"
+  #   networks:
+  #     - my-network
 
 volumes:
   noteservice_mongodb_data:
   kong-postgre-data:
   userservice_mysql_data:
+  vault_data:
+    driver: local
 
 networks:
   my-network:

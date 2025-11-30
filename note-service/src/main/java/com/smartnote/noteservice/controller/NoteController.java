@@ -65,9 +65,12 @@ public class NoteController {
         }
     }
 
-    @GetMapping
-    public ResponseEntity<List<NoteResponse>> getAllNotes() {
-        List<NoteResponse> notes = noteService.getAllNotes();
+    @GetMapping // Get all user's notes
+    public ResponseEntity<List<NoteResponse>> getAllNotes(
+            @RequestHeader(value = "X-User-Id", defaultValue = "user_001") String userId) {
+        System.out.println("🌐 [CONTROLLER] Received request for user: " + userId);
+        List<NoteResponse> notes = noteService.getAllNotesByUser(userId);
+        System.out.println("📤 [CONTROLLER] Returning " + notes.size() + " notes for user: " + userId);
         return ResponseEntity.ok(notes);
     }
     
@@ -86,7 +89,7 @@ public class NoteController {
         }
     }
     
-    @GetMapping("/{id}/history")
+    @GetMapping("/{id}/history") // Get history of note
     public ResponseEntity<List<NoteHistory>> getNoteHistory(@PathVariable String id) {
         try {
             List<NoteHistory> history = noteService.getNoteHistory(id);
@@ -95,7 +98,7 @@ public class NoteController {
             return ResponseEntity.notFound().build();
         }
     }
-//danh dau quan trong
+    // Mark the note important
      @PostMapping("/{id}/important")
     public ResponseEntity<NoteResponse> markAsImportant(
             @PathVariable String id,
@@ -107,7 +110,7 @@ public class NoteController {
             return ResponseEntity.notFound().build();
         }
     }
-//bo danh dau quan trong
+    // Unmark the note important
     @DeleteMapping("/{id}/important")
     public ResponseEntity<NoteResponse> removeAsImportant(
             @PathVariable String id,
@@ -119,7 +122,7 @@ public class NoteController {
             return ResponseEntity.notFound().build();
         }
     }
-//lay danh sach quan trong
+    // Get the all important notes
     @GetMapping("/important")
     public ResponseEntity<List<NoteResponse>> getImportantNotes(
             @RequestHeader(value = "X-User-Id", defaultValue = "user_001") String userId) {

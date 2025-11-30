@@ -98,12 +98,6 @@ public class NoteService {
         noteRepository.save(note);
     }
 
-    // public List<NoteResponse> getAllNotes() {
-    
-    //     return noteRepository.findByIsDeletedFalse().stream()
-    //             .map(this::convertToResponse)
-    //             .collect(Collectors.toList());
-    // }
     public List<NoteResponse> getAllNotesByUser(String userId) {
         System.out.println("🔍 [DEBUG] Getting notes for userId: " + userId);
         System.out.println("🔍 [DEBUG] UserId type: " + (userId != null ? userId.getClass().getSimpleName() : "null"));

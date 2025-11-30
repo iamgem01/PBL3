@@ -18,7 +18,7 @@ public class TrashController {
 
     @Autowired
     private TrashService trashService;
-
+    // Move item/note to the trash
     @PostMapping("/move/{id}")
     public ResponseEntity<?> moveToTrash(@PathVariable String id, @RequestBody Map<String, String> request) {
         try {
@@ -41,7 +41,7 @@ public class TrashController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
+    // Restore item/note in the trash
     @PostMapping("/restore/{itemId}")
     public ResponseEntity<?> restoreFromTrash(@PathVariable String itemId) {
         try {
@@ -51,7 +51,7 @@ public class TrashController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
+    // Delete permanently the item
     @DeleteMapping("/{itemId}")
     public ResponseEntity<?> permanentDelete(@PathVariable String itemId) {
         try {
@@ -61,7 +61,7 @@ public class TrashController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
+    // Get the items in the trash
     @GetMapping
     public List<TrashItem> getTrashItems(
             @RequestParam(required = false) String userId,
@@ -85,7 +85,7 @@ public class TrashController {
             return List.of();
         }
     }
-
+    // Clean the trash
     @DeleteMapping
     public ResponseEntity<?> emptyTrash(
             @RequestParam(required = false) String userId,
@@ -111,7 +111,7 @@ public class TrashController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-//thong ke thung rac
+    // Get the trash'stats
     @GetMapping("/stats")
     public ResponseEntity<?> getTrashStats(@RequestParam String userId) {
         try {
@@ -128,6 +128,7 @@ public class TrashController {
     }
 
     // AUTO CLEANUP (cho admin)
+    // Clean the expired stored items
     @PostMapping("/cleanup")
     public ResponseEntity<?> cleanupExpiredItems(@RequestParam(defaultValue = "30") int daysToKeep) {
         try {
@@ -137,7 +138,7 @@ public class TrashController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
+    // Clean the invalid items
     @PostMapping("/cleanup-invalid")
     public ResponseEntity<?> cleanupInvalidTrashItems() {
         try {
@@ -147,7 +148,7 @@ public class TrashController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
+    // Check the validation of the items
     @GetMapping("/validate/{itemId}")
     public ResponseEntity<?> validateTrashItem(@PathVariable String itemId) {
         try {

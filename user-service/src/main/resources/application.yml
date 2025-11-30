@@ -11,8 +11,8 @@ server:
   port: 8082
   
 spring:
-  application: 
-    name: user-service  
+  # application: 
+  #   name: user-service  
   # This section used to test #
   datasource:
     url: ${SPRING_DATASOURCE_URL}
@@ -44,7 +44,7 @@ spring:
         registration:
           google:  
             client-id: 
-            client-secret: 
+            client-secret:
             scope: # The permission that you want to access
               - openid
               - email

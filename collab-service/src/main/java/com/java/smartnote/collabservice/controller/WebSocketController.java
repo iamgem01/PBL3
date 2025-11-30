@@ -30,7 +30,7 @@ public class WebSocketController {
             @Payload Map<String, Object> message,
             SimpMessageHeaderAccessor headerAccessor) {
         
-        System.out.println("ðŸ“¨ Received note edit for note: " + noteId);
+        System.out.println("Received note edit for note: " + noteId);
         System.out.println("Message: " + message);
         
         // Add server timestamp

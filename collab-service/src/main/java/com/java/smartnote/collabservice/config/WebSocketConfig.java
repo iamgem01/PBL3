@@ -18,7 +18,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-collab")
                 .setAllowedOrigins("http://localhost:3000", "http://127.0.0.1:3000")
-                .withSockJS();  // Fallback cho browsers không support WebSocket (previous version browsers)
+                .withSockJS();  // Fallback cho browsers không support WebSocket
         
         System.out.println("✅ STOMP WebSocket endpoint registered: /ws-collab");
     }
@@ -34,7 +34,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.setApplicationDestinationPrefixes("/app");
 
         // Server broadcast message tới: /topic/note/{noteId}
-        // Message sent to the destination starts with '/app' will be directed to methods @MessageMapping in the Controller
         registry.enableSimpleBroker("/topic");
         
         System.out.println("✅ Message broker configured:");

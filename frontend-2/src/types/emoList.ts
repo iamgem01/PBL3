@@ -1,0 +1,28 @@
+export const emojiList = [
+    { id: 1, emoji: '👷', name: 'Construction Worker' },
+    { id: 2, emoji: '👓', name: 'Glasses' },
+    { id: 3, emoji: '🍬', name: 'Candy' },
+    { id: 4, emoji: '🌸', name: 'Flower' },
+    { id: 5, emoji: '✏️', name: 'Pencil' },
+    { id: 6, emoji: '🦆', name: 'Duck' },
+    { id: 7, emoji: '🌶️', name: 'Pepper' },
+    { id: 8, emoji: '😺', name: 'Cat' },
+    { id: 9, emoji: '👑', name: 'Crown' },
+    { id: 10, emoji: '🍎', name: 'Apple' },
+    { id: 11, emoji: '🛸', name: 'UFO' },
+    { id: 12, emoji: '✨', name: 'Sparkles' },
+    { id: 13, emoji: '🎀', name: 'Ribbon' },
+    { id: 14, emoji: '🎩', name: 'Top Hat' },
+    { id: 15, emoji: '🔨', name: 'Hammer' },
+    { id: 16, emoji: '🔒', name: 'Lock' },
+    { id: 17, emoji: '🌟', name: 'Star' },
+    { id: 18, emoji: '🎯', name: 'Target' },
+    { id: 19, emoji: '🚀', name: 'Rocket' },
+    { id: 20, emoji: '🎨', name: 'Palette' },
+    { id: 21, emoji: '🎵', name: 'Music' },
+    { id: 22, emoji: '🏆', name: 'Trophy' },
+    { id: 23, emoji: '🔑', name: 'Key' },
+    { id: 24, emoji: '💡', name: 'Light Bulb' },
+];
+
+export default emojiList;
