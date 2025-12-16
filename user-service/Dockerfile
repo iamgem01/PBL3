@@ -6,11 +6,11 @@ RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:21-jre-jammy AS runtime
 WORKDIR /app
-COPY --from=builder /app/target/*.jar app.jar
+COPY --from=builder /app/target/*.jar apps.jar
 
 ENV SPRING_PROFILES_ACTIVE=docker
 ENV JAVA_OPTS="-Xmx256m -Xms256m"
 
 EXPOSE 8082
 
-CMD ["/bin/sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+CMD ["/bin/sh", "-c", "java $JAVA_OPTS -jar apps.jar"]

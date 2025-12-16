@@ -20,6 +20,7 @@ public class JwtTokenProvider {
     private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
     private final SecretKey secretKey;
     private final long validityInMilliseconds; // Live time for session token
+    private static final String ISSUER = "Aeternus";
 
     public JwtTokenProvider(
             @Value("${app.jwt.secret}") String secret, 
@@ -35,7 +36,9 @@ public class JwtTokenProvider {
         Date validity = new Date(now.getTime() + validityInMilliseconds);
 
         return Jwts.builder()
-                .subject(userId.toString())         
+                .subject(userId.toString())    
+                .issuer(ISSUER)
+                .id(UUID.randomUUID().toString())   
                 .claim("roles", roles)            
                 .issuedAt(now)
                 .expiration(validity)

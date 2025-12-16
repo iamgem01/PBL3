@@ -13,4 +13,9 @@ public interface UserService {
     UserProfileDto getCurrentUserProfile(UUID userId);
     List<DeviceDto> getActiveDevices(UUID userId);
     void logoutFromDevice(String jwtToken);
+    void setNotePassword(UUID userId, String password);
+    void changeNotePassword(UUID userId, String currentPassword, String newPassword);
+    void removeNotePassword(UUID userId, String currentPassword);   
+    boolean hasNotePassword(UUID userId);
+    boolean verifyNotePassword(UUID userId, String password);
 }

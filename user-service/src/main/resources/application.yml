@@ -11,9 +11,6 @@ server:
   port: 8082
   
 spring:
-  # application: 
-  #   name: user-service  
-  # This section used to test #
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
@@ -21,7 +18,7 @@ spring:
     driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME}
   jpa:
     hibernate:
-      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO} # Used to test - update
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
     defer-datasource-initialization: true
     show-sql: true
     properties:
@@ -43,7 +40,7 @@ spring:
       client:  
         registration:
           google:  
-            client-id: 
+            client-id:
             client-secret:
             scope: # The permission that you want to access
               - openid
@@ -59,17 +56,10 @@ logging:
           descriptor:
             sql:
               BasicBinder: TRACE
-  
-  # data:
-  #   redis:
-  #       host: localhost
-  #       port: 6379
-
-
 app:
   jwt:
     secret: SessionTokenCreatedBySecret22222222222222222222222222222222222222
     expiration-ms: 7200000
     cookie-name: SESSION_TOKEN
   oauth2:
-    redirect-uri: http://localhost:3000 # Url of frontend
+    redirect-uri: http://localhost:3000

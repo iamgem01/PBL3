@@ -11,6 +11,8 @@ import com.aeternus.user_service.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder; // Cần thêm import này
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder; // Và cái nà
 
 import java.util.List;
 import java.util.Set;
@@ -23,6 +25,76 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final DeviceRepository deviceRepository;
+
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    @Override
+    @Transactional
+    public void setNotePassword(UUID userId, String password) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        if(user.getNotePassword() != null) {
+            throw new IllegalStateException("Note password already set");
+        }
+        String hashedPassword = passwordEncoder.encode(password);
+        user.setNotePassword(hashedPassword);
+        userRepository.save(user);
+    }
+
+    @Override 
+    @Transactional
+    public void changeNotePassword(UUID userId, String currentPassword, String newPassword) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        if(user.getNotePassword() == null) {
+            throw new IllegalStateException("No note password set");
+        }
+        if(!passwordEncoder.matches(currentPassword, user.getNotePassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        String hashedNewPassword = passwordEncoder.encode(newPassword);
+        user.setNotePassword(hashedNewPassword);
+        userRepository.save(user);  
+    }
+
+    @Override 
+    @Transactional
+    public void removeNotePassword(UUID userId, String currentPassword) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        if(user.getNotePassword() == null) {
+            throw new IllegalStateException("No note password set");
+        }
+        if(!passwordEncoder.matches(currentPassword, user.getNotePassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        user.setNotePassword(null);
+        userRepository.save(user);  
+    }
+
+    @Override
+    @Transactional(readOnly = true) 
+    public boolean hasNotePassword(UUID userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        return user.getNotePassword() != null;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean verifyNotePassword(UUID userId, String password) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        if(user.getNotePassword() == null) {
+            throw new IllegalStateException("No note password set");
+        }
+        return passwordEncoder.matches(password, user.getNotePassword());
+    }
+
+    private User getUserById(UUID userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+    }
 
     @Override
     @Transactional(readOnly = true)

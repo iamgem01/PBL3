@@ -29,8 +29,8 @@ public class User {
     @Column(name = "username", nullable = true, unique = false, length = 255)
     private String username;
 
-    @Column(name = "password", nullable = true, unique = false, length = 255)
-    private String password;
+    @Column(name = "note_password", nullable = true, unique = false, length = 255)
+    private String notePassword;
 
     @Column(name = "created_at", nullable = true, unique = false)
     private LocalDateTime created_at;
