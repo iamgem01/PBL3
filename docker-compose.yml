@@ -195,6 +195,8 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: create # Used to update schema database automatively
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
       SPRING_PROFILES_ACTIVE: dev
+      GOOGLE_CLIENT_ID: 
+      GOOGLE_CLIENT_SECRET: 
       # VAULT_DEV_ROOT_TOKEN_ID: mydevtoken
     networks:
       - my-network
