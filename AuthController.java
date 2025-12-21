@@ -3,9 +3,9 @@ package com.aeternus.user_service.controller;
 
 import com.aeternus.user_service.dto.UserProfileDto;
 import com.aeternus.user_service.model.Device;
-import com.aeternus.user_service.repository.DeviceRepository;
 import com.aeternus.user_service.security.JwtTokenProvider;
 import com.aeternus.user_service.service.UserService;
+import com.aeternus.user_service.repository.*;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -38,7 +38,7 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
         // 1. Tìm token trong cookie
-        String token = getTokenFromRequest(request);
+        String token = getTokenFromCookie(request);
         
         if (token != null) {
             // 2. Vô hiệu hoá token trong CSDL (bảng Device)
@@ -50,16 +50,31 @@ public class AuthController {
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
         cookie.setPath("/");
-        cookie.setMaxAge(10000); // Xoá ngay lập tức
+        cookie.setMaxAge(0); 
+        cookie.setAttribute("SameSite", "Lax");
         response.addCookie(cookie);
         
         return ResponseEntity.ok().build();
     }
 
+    private String getTokenFromCookie(HttpServletRequest request) {
+        if(request.getCookies() == null) {
+            return null;
+        }
+        return Stream.of(request.getCookies())
+                    .filter(cookie -> cookie.getName().equals(jwtCookieName))
+                    .map(Cookie::getValue)
+                    .findFirst()
+                    .orElse(null);
+    }
+
     @GetMapping("/validate")
     public ResponseEntity<Void> validateToken(HttpServletRequest request) {
-        String token = getTokenFromRequest(request);
+        System.out.println("DEBUG: Entering validateToken controller..."); // Log kiểm tra
+        String token = getTokenFromCookie(request);
         if(token == null) {
+            System.out.println("DEBUG: Session token is null (Client hasn't sent token)"); // Log kiểm tra
+
             return ResponseEntity.status(401).build();
         }
         Device device = deviceRepository.findBySessionToken(token)
@@ -68,32 +83,42 @@ public class AuthController {
         // 1. Ưu tiên kiểm tra trong DB (để hỗ trợ logout/thu hồi token)
         if(device != null) {
             if(device.isActive()) {
+                System.out.println("DEBUG: Device active and valid"); // Log kiểm tra
                 // Trả về UserId để Gateway biết
                 return ResponseEntity.ok()
-                        // .header("X-User-Id", device.getUser().getUserId().toString())
+                        .header("X-User-Id", device.getUser().getUserId().toString())
                         .build();
             } else {
+                System.out.println("DEBUG: Device inactive"); // Log kiểm tra
                 return ResponseEntity.status(401).build();
             }
         }
 
         // 2. Fallback: Nếu không thấy trong DB, kiểm tra chữ ký JWT hợp lệ là cho qua
         if (jwtTokenProvider.validateToken(token)) {
+            System.out.println("DEBUG: Session token is valid"); // Log kiểm tra
             String userId = jwtTokenProvider.getUserId(token);
             return ResponseEntity.ok()
-                    // .header("X-User-Id", userId)
+                    .header("X-User-Id", userId)
                     .build();
         }
+        System.out.println("DEBUG: Session token is invalid"); // Log kiểm tra
         
         return ResponseEntity.status(401).build();
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserProfileDto> getCurrentUser(Principal principal, HttpServletRequest request) {
+    // public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
+    //     String token = getTokenFromCookie(request);
+    //     if (token == null || !jwtTokenProvider.validateToken(token)) {
+    //         return ResponseEntity.status(401).build();
+    //     }
+    //     // Trả về userId để frontend sử dụng (bạn có thể mở rộng để gọi userService lấy full profile)
+    //     return ResponseEntity.ok(java.util.Map.of("userId", jwtTokenProvider.getUserId(token)));
+    // }
+    public ResponseEntity<UserProfileDto> getCurrentUser(Principal principal) {
         UUID userId = UUID.fromString(principal.getName());
         UserProfileDto userProfile = userService.getCurrentUserProfile(userId);
-        String token = getTokenFromRequest(request);
-        userProfile.setAccessToken(token);
         return ResponseEntity.ok(userProfile);
     }
 
@@ -102,30 +127,5 @@ public class AuthController {
         UUID userId = UUID.fromString(principal.getName());
         userService.updateTheme(userId, theme);
         return ResponseEntity.ok().build();
-    }
-
-    // private String getTokenFromCookie(HttpServletRequest request) {
-    //     if(request.getCookies() == null) {
-    //         return null;
-    //     }
-    //     return Stream.of(request.getCookies())
-    //                 .filter(cookie -> cookie.getName().equals(jwtCookieName))
-    //                 .map(Cookie::getValue)
-    //                 .findFirst()
-    //                 .orElse(null);
-    // }
-    private String getTokenFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if(bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-        if(request.getCookies() != null) {
-            return Stream.of(request.getCookies())
-                        .filter(cookie -> cookie.getName().equals(jwtCookieName))
-                        .map(Cookie::getValue)
-                        .findFirst()
-                        .orElse(null);
-        }
-        return null;
     }
 }

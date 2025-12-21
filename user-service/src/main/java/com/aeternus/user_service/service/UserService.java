@@ -18,4 +18,5 @@ public interface UserService {
     void removeNotePassword(UUID userId, String currentPassword);   
     boolean hasNotePassword(UUID userId);
     boolean verifyNotePassword(UUID userId, String password);
+    public void updateTheme(UUID userId, String theme);
 }

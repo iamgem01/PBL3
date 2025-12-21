@@ -34,7 +34,8 @@ services:
           # Cookie can be returned by backend
           # Cors fails when have credential
           preflight_continue: true
-          credentials: true # accept httpOnly cookie 
+          credentials: true # accept httpOnly cookie  
+
     routes:
     - name: notes-resource
       paths:
@@ -154,6 +155,7 @@ services:
           max_age: 3600
           preflight_continue: true
           credentials: true
+
     routes:
       - name: ai-resource
         paths:
@@ -195,16 +197,19 @@ services:
           max_age: 3600
           preflight_continue: true
           credentials: true
+
       - name: request-transformer  
         config:
           add:
             headers:
               - X-Forwarded-For:$remote_addr 
+              - X-Forwarded-For:$remote_addr
     routes:
       
       - name: collab-notes-shared
         paths:
           - /api/notes/shared
+          - /api/notes/shareds
         methods: [GET, OPTIONS]
         strip_path: false
         preserve_host: false
@@ -289,6 +294,7 @@ services:
           max_age: 3600
           preflight_continue: true
           credentials: true
+
     routes:
       - name: event-list
         paths:
@@ -346,6 +352,7 @@ services:
           max_age: 3600
           preflight_continue: true
           credentials: true
+
     routes:
       - name: notification-resource
         paths:
@@ -356,3 +363,88 @@ services:
         protocols: [http, https]
 
       
+consumers:
+  - username: api-user
+    jwt_secrets:
+      - key: Aeternus
+        secret: SessionTokenCreatedBySecret22222222222222222222222222222222222222
+        algorithm: HS256
+
+plugins:
+  - name:  rate-limiting
+    config:
+      second: 100
+      minute: 1000
+      hour: 10000
+      policy: redis
+      fault_tolerant: false
+      hide_client_headers: false
+      limit_by: ip
+      redis:
+        host: redis
+        port: 6379
+        password: xinchaocacban
+  - name: pre-function
+    config:
+      access:
+        - |
+          local path = ngx.var.uri
+          -- Whitelist: Bỏ qua kiểm tra token cho các trang Login và OAuth2
+          if path == "/login" or path == "/api/users" or path == "/oauth2/authorization/google" or path == "/login/oauth2/code/google" then
+            return
+          end
+
+          local http = require "resty.http"
+          if ngx.req.get_method() == "OPTIONS" then
+            return
+          end
+
+          local httpc = http.new()
+          
+          -- 1. Thử lấy từ Header Authorization
+          local auth_header = ngx.req.get_headers()["Authorization"]
+          local token = nil
+          
+          if auth_header and string.find(auth_header, "Bearer ") then
+            token = auth_header -- Giữ nguyên cả chuỗi "Bearer ..."
+          else 
+            -- 2. Fallback: Thử lấy từ Cookie
+            -- Chỉ cho phép dùng cookie tại endpoint /api/auth/me (xác nhận phiên)
+            if path == "/api/auth/me" then
+                local cookie_val = ngx.var["cookie_SESSION_TOKEN"]
+                if cookie_val then
+                   token = "Bearer " .. cookie_val
+                end
+            end
+          end
+
+          if not token then 
+            ngx.status = 401
+            ngx.say("{\"message\":\"Unauthenticated\"}")
+            ngx.exit(401)
+          end 
+
+          local res, err = httpc:request_uri("http://user-service:8082/api/auth/validate", {
+            method = "GET",
+            headers = {
+              ["Authorization"] = token
+            }
+          })
+
+          if not res then
+            ngx.log(ngx.ERR, "DEBUG: Failed to call user-service: " .. (err or "unknown"))
+            ngx.status = 500
+            ngx.exit(500)
+          end
+
+          if res.status == 302 then
+            ngx.log(ngx.ERR, "DEBUG: Spring Security is blocking access! (302 Redirect detected). Please add '/api/auth/validate' to permitAll() in SecurityConfig.")
+            ngx.status = 401
+            ngx.exit(401)
+          end
+
+          if res.status ~= 200 then
+            ngx.log(ngx.ERR, "DEBUG: user-service returned status: " .. res.status)
+            ngx.status = 401
+            ngx.exit(401)
+          end

@@ -90,7 +90,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         // Send Cookie to client
         Cookie cookie = new Cookie(jwtCookieName, jwtToken);
         cookie.setHttpOnly(true);
-        cookie.setSecure(true);  // Because we only send http request
+        cookie.setSecure(false);  // Because we only send http request
         cookie.setPath("/");
         cookie.setMaxAge(-1); // Only exist in the current session
         cookie.setAttribute("SameSite", "None");

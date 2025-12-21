@@ -356,6 +356,7 @@ services:
         KONG_ADMIN_ERROR_LOG: /dev/stderr
         KONG_ADMIN_LISTEN: "0.0.0.0:8001, 0.0.0.0:8444 ssl" # Kong open Admin API (used to configure) on the port 8001 (HTTP) and port 8444 (HTTPS) inside the container
         KONG_PROXY_LISTEN: "0.0.0.0:8000, 0.0.0.0:8443 ssl" # Kong open Proxy (used to proxy the main traffic) on the port 8000 (HTTP) and port 8443 (HTTPS) inside the container
+        KONG_UNTRUSTED_LUA: "on"
     ports:  
         - "8000:8000/tcp" # Map host's port 8000 to container's port 8000 (HTTP Proxy)
         - "8443:8443/tcp" # Map host's port 8443 to container's port 8443 (HTTPs Proxy)
@@ -412,6 +413,19 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass xinchaocacban
+    networks:
+      - my-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.3 

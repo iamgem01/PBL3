@@ -41,7 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
                                     FilterChain filterChain) throws ServletException, IOException {
         
-        String token = getTokenFromCookie(request);
+        String token = getTokenFromRequest(request);
         System.out.println("Cookie was received: " + token);
 
         if (token != null) {
@@ -90,6 +90,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     // private boolean isTokenActiveInDatabase(String token) {
     //     return deviceRepository.findBySessionTokenAndIsActive(token, true).isPresent();
     // }
+
+    private String getTokenFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return getTokenFromCookie(request);
+    }
 
     private String getTokenFromCookie(HttpServletRequest request) {
         if (request.getCookies() == null) {

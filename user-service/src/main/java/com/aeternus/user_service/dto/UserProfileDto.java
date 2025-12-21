@@ -13,5 +13,8 @@ public class UserProfileDto {
     private String email; // Chỉ lấy email string
     private LocalDateTime createdAt;
     private Set<String> roles; // Chỉ lấy tên roles
+    private String theme;
+    private String accessToken;
+    private String avatar;
 
 }

@@ -5,6 +5,7 @@ import com.aeternus.user_service.dto.DeviceDto;
 import com.aeternus.user_service.dto.UserProfileDto;
 import com.aeternus.user_service.exception.ResourceNotFoundException;
 import com.aeternus.user_service.model.Device;
+import com.aeternus.user_service.model.Email;
 import com.aeternus.user_service.model.User;
 import com.aeternus.user_service.repository.DeviceRepository;
 import com.aeternus.user_service.repository.UserRepository;
@@ -13,7 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder; // Cần thêm import này
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder; // Và cái nà
-
+import com.nimbusds.jwt.JWTParser;
+import java.text.ParseException;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -128,6 +130,14 @@ public class UserServiceImpl implements UserService {
         deviceRepository.save(device);
     }
     
+    @Override
+    @Transactional
+    public void updateTheme(UUID userId, String theme) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        user.setTheme(theme);
+        userRepository.save(user);
+    }
 
     private UserProfileDto mapToUserProfileDto(User user) {
         UserProfileDto dto = new UserProfileDto();
@@ -138,13 +148,23 @@ public class UserServiceImpl implements UserService {
         if (user.getEmail() != null) {
             dto.setEmail(user.getEmail().getEmail());
         }
+        Email email = user.getEmail();
+        if(email != null && email.getIdToken() != null && !email.getIdToken().isEmpty()) {
+            try {
+                String picture = (String) JWTParser.parse(email.getIdToken())
+                                        .getJWTClaimsSet().getClaim("picture");
+                dto.setAvatar(picture);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
 
+        dto.setTheme(user.getTheme());
         // Sử dụng query custom để lấy chỉ roleName, không load toàn bộ User_Role
         Set<String> roles = user.getUserRoles().stream()
             .map(userRole -> userRole.getRole().getRoleName())
             .collect(Collectors.toSet());
         dto.setRoles(roles);
-
         return dto;
     }
     
