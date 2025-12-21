@@ -104,7 +104,7 @@ services:
           - /oauth2/authorization/google
         methods: [GET, OPTIONS]
         strip_path: false
-        preserve_host: false
+        preserve_host: true
         protocols: [http, https]
       
       - name: login-resource
@@ -112,7 +112,7 @@ services:
           - /login
         methods: [GET, OPTIONS]
         strip_path: false
-        preserve_host: false
+        preserve_host: true
         protocols: [http, https]
       - name: user-resource
         paths:
@@ -120,7 +120,7 @@ services:
           - /api/auth
         methods: [GET, POST, OPTIONS]
         strip_path: false
-        preserve_host: false
+        preserve_host: true
         protocols: [http, https]
 
     # AI Service #
@@ -389,8 +389,9 @@ plugins:
       access:
         - |
           local path = ngx.var.uri
-          -- Whitelist: Bỏ qua kiểm tra token cho các trang Login và OAuth2
-          if path == "/login" or path == "/api/users" or path == "/oauth2/authorization/google" or path == "/login/oauth2/code/google" then
+          -- Whitelist: Bỏ qua kiểm tra token cho các trang Login, OAuth2, và Signup
+          -- Sử dụng string.find để khớp prefix, tránh lỗi khi có query params (ví dụ: /login/oauth2/code/google?code=...)
+          if string.find(path, "/login") == 1 or string.find(path, "/oauth2/") == 1 or path == "/api/users" or string.find(path, "/error") == 1 then
             return
           end
 
@@ -410,10 +411,12 @@ plugins:
           else 
             -- 2. Fallback: Thử lấy từ Cookie
             -- Chỉ cho phép dùng cookie tại endpoint /api/auth/me (xác nhận phiên)
-            if path == "/api/auth/me" then
-                local cookie_val = ngx.var["cookie_SESSION_TOKEN"]
+            if path == "/api/auth/me" or path == "/api/users/me" then
+                local cookie_val = ngx.var["cookie_SESSION_TOKEN"] or ngx.var["cookie_session_token"]
                 if cookie_val then
                    token = "Bearer " .. cookie_val
+                else
+                   ngx.log(ngx.ERR, "DEBUG: Cookie not found. Path: " .. path .. " | All Cookies: " .. (ngx.var.http_cookie or "nil"))
                 end
             end
           end

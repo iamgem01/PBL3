@@ -28,14 +28,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(request -> 
-                new org.springframework.web.cors.CorsConfiguration().applyPermitDefaultValues()))
+            .cors(cors -> cors.disable()) // Tắt CORS của Spring để tránh xung đột với Kong
             .csrf(csrf -> csrf.disable()) 
             .sessionManagement(session -> 
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/oauth2/**", "/login/oauth2/code/google", "/error/**").permitAll() 
+                .requestMatchers("/api/auth/me", "/api/auth/validate", "/oauth2/**", "/login/oauth2/code/google", "/error/**").permitAll() 
                 .requestMatchers("/api/**", "/admin/**").authenticated()
                 .anyRequest().authenticated()
             )

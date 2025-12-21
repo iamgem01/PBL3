@@ -93,7 +93,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         cookie.setSecure(false);  // Because we only send http request
         cookie.setPath("/");
         cookie.setMaxAge(-1); // Only exist in the current session
-        cookie.setAttribute("SameSite", "None");
+        cookie.setAttribute("SameSite", "Lax");
         response.addCookie(cookie);
         getRedirectStrategy().sendRedirect(request, response, frontendRedirectUri); // Change to api gateway url
     }
