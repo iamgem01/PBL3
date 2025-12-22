@@ -19,9 +19,14 @@ public class NoteController {
     private final NoteService noteService;
 
     @PostMapping
-    public ResponseEntity<NoteResponse> createNote(
+    public ResponseEntity<?> createNote(
             @RequestBody NoteRequest request,
             @RequestHeader(value = "X-User-Id", required = true) String userId) {
+        // Security validation: reject if userId is null or empty
+        if (userId == null || userId.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("User authentication required");
+        }
         try {
             System.out.println("Received create note request: " + request);
             NoteResponse response = noteService.createNote(request, userId);
@@ -66,8 +71,13 @@ public class NoteController {
     }
 
     @GetMapping
-    public ResponseEntity<List<NoteResponse>> getAllNotes(
+    public ResponseEntity<?> getAllNotes(
             @RequestHeader(value = "X-User-Id", required = true) String userId) {
+        // Security validation: reject if userId is null or empty
+        if (userId == null || userId.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("User authentication required");
+        }
         System.out.println("🌐 [CONTROLLER] Received request for user: " + userId);
         List<NoteResponse> notes = noteService.getAllNotesByUser(userId);
         System.out.println("📤 [CONTROLLER] Returning " + notes.size() + " notes for user: " + userId);
@@ -99,9 +109,14 @@ public class NoteController {
 
     // danh dau quan trong
     @PostMapping("/{id}/important")
-    public ResponseEntity<NoteResponse> markAsImportant(
+    public ResponseEntity<?> markAsImportant(
             @PathVariable String id,
             @RequestHeader(value = "X-User-Id", required = true) String userId) {
+        // Security validation: reject if userId is null or empty
+        if (userId == null || userId.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("User authentication required");
+        }
         try {
             NoteResponse response = noteService.markAsImportant(id, userId);
             return ResponseEntity.ok(response);
@@ -112,9 +127,14 @@ public class NoteController {
 
     // bo danh dau quan trong
     @DeleteMapping("/{id}/important")
-    public ResponseEntity<NoteResponse> removeAsImportant(
+    public ResponseEntity<?> removeAsImportant(
             @PathVariable String id,
             @RequestHeader(value = "X-User-Id", required = true) String userId) {
+        // Security validation: reject if userId is null or empty
+        if (userId == null || userId.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("User authentication required");
+        }
         try {
             NoteResponse response = noteService.removeAsImportant(id, userId);
             return ResponseEntity.ok(response);
@@ -125,8 +145,13 @@ public class NoteController {
 
     // lay danh sach quan trong
     @GetMapping("/important")
-    public ResponseEntity<List<NoteResponse>> getImportantNotes(
+    public ResponseEntity<?> getImportantNotes(
             @RequestHeader(value = "X-User-Id", required = true) String userId) {
+        // Security validation: reject if userId is null or empty
+        if (userId == null || userId.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("User authentication required");
+        }
         try {
             List<NoteResponse> importantNotes = noteService.getImportantNotes(userId);
             return ResponseEntity.ok(importantNotes);
