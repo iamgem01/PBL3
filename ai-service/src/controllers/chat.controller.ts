@@ -54,60 +54,84 @@ const processSession = async (
   let finalFiles = files;
 
   // 🔥 VALIDATION: Đảm bảo userId hợp lệ
-  const validUserId = userId && userId !== "anonymous" ? userId : `anon-${Date.now()}`;
+  const validUserId =
+    userId && userId !== "anonymous" ? userId : `anon-${Date.now()}`;
 
   if (sessionId) {
     try {
       // 🔍 Kiểm tra session có tồn tại không
       const session = await SessionService.getSession(sessionId, validUserId);
-      
+
       if (session) {
-        console.log(`✅ Found existing session: ${sessionId} for user: ${validUserId}`);
-        
-        // 🔥 QUAN TRỌNG: LUÔN ƯU TIÊN CONTEXT TỪ SESSION TRƯỚC
-        if (session.context) {
-          finalContext = session.context;
-          console.log(`📖 Using existing context from session: ${finalContext.length} chars`);
-        } 
-        
-        // 🔥 Nếu có context mới VÀ session chưa có context -> thêm mới
-        else if (context && context.trim().length > 0) {
+        console.log(
+          `✅ Found existing session: ${sessionId} for user: ${validUserId}`
+        );
+
+        // 🔥 FIX: Allow context override - prioritize NEW context from request
+        // If user provides new context → update session with new context
+        // If no new context → fallback to existing session context
+        if (context && context.trim().length > 0) {
+          // User wants to change context
           await SessionService.updateContext(sessionId, context, validUserId);
           finalContext = context;
-          console.log(`📝 Added new context to existing session: ${context.length} chars`);
+          console.log(
+            `🔄 Updated session context (${context.length} chars) - context override allowed`
+          );
+        } else if (session.context) {
+          // No new context provided, use existing from session
+          finalContext = session.context;
+          console.log(
+            `📖 Using existing context from session: ${finalContext.length} chars`
+          );
         }
 
-        // 🔥 QUAN TRỌNG: LUÔN ƯU TIÊN FILES TỪ SESSION TRƯỚC
-        const sessionFiles = await SessionService.getFiles(sessionId, validUserId);
-        if (sessionFiles.length > 0) {
-          finalFiles = sessionFiles.map((file) => ({
-            ...file,
-            buffer: file.content,
-            originalname: file.fileName,
-            mimetype: file.mimeType,
-            size: file.size,
-            fieldname: "files",
-          })) as unknown as Express.Multer.File[];
-          console.log(`📚 Using ${finalFiles.length} existing files from session`);
-        } 
-        
-        // 🔥 Nếu có files mới VÀ session chưa có files -> thêm mới
-        else if (files && files.length > 0) {
+        // 🔥 Similarly for files: prioritize NEW files if provided
+        if (files && files.length > 0) {
+          // User uploads new files → replace old files
           await SessionService.addFiles(sessionId, files, validUserId);
           finalFiles = files;
-          console.log(`📎 Added ${files.length} new files to existing session`);
+          console.log(
+            `🔄 Added ${files.length} new files to session - files can be updated`
+          );
+        } else {
+          // No new files, check for existing files in session
+          const sessionFiles = await SessionService.getFiles(
+            sessionId,
+            validUserId
+          );
+          if (sessionFiles.length > 0) {
+            finalFiles = sessionFiles.map((file) => ({
+              ...file,
+              buffer: file.content,
+              originalname: file.fileName,
+              mimetype: file.mimeType,
+              size: file.size,
+              fieldname: "files",
+            })) as unknown as Express.Multer.File[];
+            console.log(
+              `📚 Using ${finalFiles.length} existing files from session`
+            );
+          }
         }
-        
+
         // Update lastAccessed
         await SessionService.updateLastAccessed(sessionId, validUserId);
-        
       } else {
         // Session ID không tồn tại hoặc không thuộc về user -> Tạo mới
-        console.log(`⚠️ Session ${sessionId} not found or access denied, creating new session for user: ${validUserId}`);
-        finalSessionId = await SessionService.createSession(validUserId, action);
-        
+        console.log(
+          `⚠️ Session ${sessionId} not found or access denied, creating new session for user: ${validUserId}`
+        );
+        finalSessionId = await SessionService.createSession(
+          validUserId,
+          action
+        );
+
         if (context && context.trim().length > 0) {
-          await SessionService.updateContext(finalSessionId, context, validUserId);
+          await SessionService.updateContext(
+            finalSessionId,
+            context,
+            validUserId
+          );
           finalContext = context;
         }
         if (files && files.length > 0) {
@@ -126,7 +150,7 @@ const processSession = async (
     // 🆕 Không có sessionId -> Tạo session mới
     console.log(`🆕 Creating new session for user: ${validUserId}`);
     finalSessionId = await SessionService.createSession(validUserId, action);
-    
+
     if (context && context.trim().length > 0) {
       await SessionService.updateContext(finalSessionId, context, validUserId);
       finalContext = context;
@@ -143,7 +167,7 @@ const processSession = async (
     sessionId: finalSessionId!,
     context: finalContext,
     files: finalFiles || [],
-    userId: validUserId
+    userId: validUserId,
   };
 };
 
@@ -166,8 +190,16 @@ class ChatController {
 
       const files = req.files as Express.Multer.File[];
 
-      console.log(`📨 [Request] SessionId: ${sessionId || 'NEW'} | Action: ${action} | User: ${userId}`);
-      console.log(`📊 [Request] HasContext: ${!!context} | HasFiles: ${files?.length || 0}`);
+      console.log(
+        `📨 [Request] SessionId: ${
+          sessionId || "NEW"
+        } | Action: ${action} | User: ${userId}`
+      );
+      console.log(
+        `📊 [Request] HasContext: ${!!context} | HasFiles: ${
+          files?.length || 0
+        }`
+      );
       console.log(`💬 [Message] Length: ${message?.length || 0} chars`);
 
       // 🔥 Xử lý session - LUÔN sử dụng context/files từ session nếu có
@@ -175,13 +207,17 @@ class ChatController {
         sessionId: finalSessionId,
         context: finalContext,
         files: finalFiles,
-        userId: finalUserId
+        userId: finalUserId,
       } = await processSession(sessionId, context, files, userId, action);
 
       const fileData = processUploadedFiles(finalFiles);
 
       console.log(`🎯 [Processing] FinalSessionId: ${finalSessionId}`);
-      console.log(`📚 [Processing] Using Context: ${!!finalContext} (${finalContext?.length || 0} chars) | Using Files: ${fileData?.length || 0}`);
+      console.log(
+        `📚 [Processing] Using Context: ${!!finalContext} (${
+          finalContext?.length || 0
+        } chars) | Using Files: ${fileData?.length || 0}`
+      );
       console.log(`👤 [User] Final UserId: ${finalUserId}`);
 
       let response: string;
@@ -219,16 +255,21 @@ class ChatController {
           response = await geminiService.chat(
             message,
             finalContext, // 🔥 Đây có thể là context từ session cũ
-            fileData,     // 🔥 Đây có thể là files từ session cũ
+            fileData, // 🔥 Đây có thể là files từ session cũ
             preferences
           );
           break;
       }
 
-      console.log(`✅ [Response] Success | SessionId: ${finalSessionId} | ResponseLength: ${response.length}`);
+      console.log(
+        `✅ [Response] Success | SessionId: ${finalSessionId} | ResponseLength: ${response.length}`
+      );
 
       // 🔥 Lấy session summary để trả về metadata
-      const sessionSummary = await SessionService.getSessionSummary(finalSessionId, finalUserId);
+      const sessionSummary = await SessionService.getSessionSummary(
+        finalSessionId,
+        finalUserId
+      );
 
       res.json({
         status: "success",
@@ -243,8 +284,8 @@ class ChatController {
             hasFiles: !!fileData && fileData.length > 0,
             filesCount: fileData?.length || 0,
             userId: finalUserId,
-            sessionSummary: sessionSummary
-          }
+            sessionSummary: sessionSummary,
+          },
         },
       });
     } catch (error) {
@@ -262,7 +303,9 @@ class ChatController {
     try {
       const { text, maxLength, preferences } = req.body;
 
-      console.log(`📄 [Summarize] Length: ${text?.length} chars | MaxLength: ${maxLength}`);
+      console.log(
+        `📄 [Summarize] Length: ${text?.length} chars | MaxLength: ${maxLength}`
+      );
 
       const summary = await geminiService.summarize(
         text,
@@ -332,7 +375,9 @@ class ChatController {
     try {
       const { text, style, preferences } = req.body;
 
-      console.log(`✏️ [Improve] Style: ${style} | Length: ${text?.length} chars`);
+      console.log(
+        `✏️ [Improve] Style: ${style} | Length: ${text?.length} chars`
+      );
 
       const improved = await geminiService.improveWriting(
         text,
@@ -358,7 +403,9 @@ class ChatController {
     try {
       const { text, targetLanguage, preferences } = req.body;
 
-      console.log(`🌍 [Translate] Target: ${targetLanguage} | Length: ${text?.length} chars`);
+      console.log(
+        `🌍 [Translate] Target: ${targetLanguage} | Length: ${text?.length} chars`
+      );
 
       const translated = await geminiService.translate(
         text,
@@ -392,9 +439,16 @@ class ChatController {
         });
       }
 
-      console.log(`🔍 [Get Session] SessionId: ${sessionId} | UserId: ${userId || 'not provided'}`);
+      console.log(
+        `🔍 [Get Session] SessionId: ${sessionId} | UserId: ${
+          userId || "not provided"
+        }`
+      );
 
-      const session = await SessionService.getSession(sessionId, userId as string);
+      const session = await SessionService.getSession(
+        sessionId,
+        userId as string
+      );
       if (!session) {
         return res.status(404).json({
           status: "error",
@@ -411,7 +465,7 @@ class ChatController {
             fileName: f.fileName,
             mimeType: f.mimeType,
             size: f.size,
-            uploadedAt: session.createdAt
+            uploadedAt: session.createdAt,
           })),
           lastAccessed: session.lastAccessed,
           metadata: session.metadata,
@@ -419,8 +473,11 @@ class ChatController {
             hasContext: !!session.context,
             contextLength: session.context?.length || 0,
             filesCount: session.files.length,
-            totalFilesSize: session.files.reduce((sum, file) => sum + file.size, 0)
-          }
+            totalFilesSize: session.files.reduce(
+              (sum, file) => sum + file.size,
+              0
+            ),
+          },
         },
       });
     } catch (error) {
@@ -446,9 +503,15 @@ class ChatController {
         });
       }
 
-      console.log(`📝 [Update Context] SessionId: ${sessionId} | ContextLength: ${context.length}`);
+      console.log(
+        `📝 [Update Context] SessionId: ${sessionId} | ContextLength: ${context.length}`
+      );
 
-      const result = await SessionService.updateContext(sessionId, context, userId);
+      const result = await SessionService.updateContext(
+        sessionId,
+        context,
+        userId
+      );
 
       if (!result) {
         return res.status(404).json({
@@ -462,7 +525,7 @@ class ChatController {
         data: {
           sessionId: result.sessionId,
           context: result.context,
-          updatedAt: result.updatedAt
+          updatedAt: result.updatedAt,
         },
       });
     } catch (error) {
@@ -490,7 +553,7 @@ class ChatController {
 
       console.log(`🗑️ [Clear Context] SessionId: ${sessionId}`);
 
-      const result = await SessionService.updateContext(sessionId, '', userId);
+      const result = await SessionService.updateContext(sessionId, "", userId);
 
       if (!result) {
         return res.status(404).json({
@@ -503,7 +566,7 @@ class ChatController {
         status: "success",
         data: {
           sessionId: result.sessionId,
-          message: "Context cleared successfully"
+          message: "Context cleared successfully",
         },
       });
     } catch (error) {
