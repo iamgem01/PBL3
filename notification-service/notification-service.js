@@ -119,7 +119,36 @@ app.get("/api/notifications/:id", getUserId, async (req, res) => {
 // Create notification (internal use or from other services)
 app.post("/api/notifications", async (req, res) => {
   try {
-    const notification = new Notification(req.body);
+    // 🔥 CRITICAL FIX: Validate userId exists (from header OR body)
+    // For server-to-server calls: X-User-Id header should be provided
+    // For legacy calls: userId in body is accepted but logged as warning
+    const userIdFromHeader = req.headers["x-user-id"];
+    const userIdFromBody = req.body.userId;
+
+    if (!userIdFromHeader && !userIdFromBody) {
+      console.error("❌ [Notification] Missing userId in both header and body");
+      return res.status(400).json({
+        error: "User ID required",
+        message: "Provide X-User-Id header or userId in request body",
+      });
+    }
+
+    // Prefer header over body for security
+    const userId = userIdFromHeader || userIdFromBody;
+
+    if (!userIdFromHeader && userIdFromBody) {
+      console.warn(
+        `⚠️ [Notification] Legacy call detected - userId only in body. Please add X-User-Id header.`
+      );
+    }
+
+    // Ensure notification has userId set correctly
+    const notificationData = {
+      ...req.body,
+      userId: userId, // Override with validated userId
+    };
+
+    const notification = new Notification(notificationData);
     await notification.save();
 
     console.log(
