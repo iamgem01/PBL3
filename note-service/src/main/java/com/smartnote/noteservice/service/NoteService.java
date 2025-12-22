@@ -61,6 +61,19 @@ public class NoteService {
             throw new RuntimeException("Cannot update note in trash");
         }
 
+        // 🔒 CRITICAL FIX: Prevent updates to shared notes via Note Service
+        // Shared notes MUST be edited through Collab Service for real-time sync
+        if (note.getShares() != null && !note.getShares().isEmpty()) {
+            System.err.println("❌ REJECTED: Cannot update shared note via Note Service");
+            System.err.println("   Note ID: " + id);
+            System.err.println("   Shares: " + note.getShares().size() + " collaborators");
+            System.err.println("   → Must edit through Collab Service (DocumentPage)");
+            throw new RuntimeException(
+                "This note is shared with collaborators. " +
+                "Please edit it through the collaborative editor to ensure real-time sync."
+            );
+        }
+
         NoteHistory history = new NoteHistory(note);
         noteHistoryRepository.save(history);
 

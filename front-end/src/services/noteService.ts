@@ -140,8 +140,22 @@ export const createNote = async (noteData: any) => {
 
 /**
  * Cập nhật một ghi chú.
+ * 
+ * ⚠️ IMPORTANT: Nếu note đã được share (có collaboration),
+ * thì KHÔNG được update qua Note Service nữa.
+ * Phải update qua Collab Service để đảm bảo Yjs sync real-time.
  */
 export const updateNote = async (id: string, noteData: any) => {
+  // 🔒 CRITICAL: Check if note is shared before updating
+  // Shared notes MUST be edited through CollaborativeEditor only
+  if (noteData.shares && noteData.shares.length > 0) {
+    console.warn('⚠️ Cannot update shared note via Note Service');
+    console.warn('→ Shared notes must be edited through Collab Service (DocumentPage)');
+    throw new Error(
+      'This note is shared. Please edit it through the Document page to sync with collaborators.'
+    );
+  }
+
   const response = await fetch(`${NOTE_SERVICE_URL}/api/notes/${id}`, {
     method: 'PUT',
     headers: {

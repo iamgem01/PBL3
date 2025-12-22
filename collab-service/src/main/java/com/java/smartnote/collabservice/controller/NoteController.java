@@ -207,4 +207,56 @@ public class NoteController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
+
+    /**
+     * 🔥 UPDATE NOTE CONTENT - Endpoint cho shared notes
+     * Frontend sẽ gọi endpoint này thay vì Note Service khi note đã shared
+     */
+    @PutMapping("/api/notes/{noteId}")
+    public ResponseEntity<?> updateNote(
+            @PathVariable String noteId,
+            @RequestBody Map<String, Object> updates) {
+        try {
+            System.out.println("========================================");
+            System.out.println("📝 UPDATE NOTE REQUEST (Collab Service)");
+            System.out.println("========================================");
+            System.out.println("Note ID: " + noteId);
+            System.out.println("Updates: " + updates);
+
+            Note note = noteService.getNoteById(noteId);
+            if (note == null) {
+                System.err.println("❌ Note not found: " + noteId);
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Note not found");
+                error.put("noteId", noteId);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+            }
+
+            // Update content if provided
+            if (updates.containsKey("content")) {
+                String newContent = (String) updates.get("content");
+                noteService.updateNoteContent(noteId, newContent);
+                System.out.println("✅ Content updated: " + newContent.length() + " chars");
+            }
+
+            // Get updated note
+            Note updatedNote = noteService.getNoteById(noteId);
+            
+            System.out.println("✅ UPDATE SUCCESSFUL");
+            System.out.println("========================================");
+
+            return ResponseEntity.ok(updatedNote);
+
+        } catch (Exception e) {
+            System.err.println("❌ UPDATE FAILED: " + e.getMessage());
+            e.printStackTrace();
+            System.err.println("========================================");
+
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to update note");
+            error.put("message", e.getMessage());
+            error.put("noteId", noteId);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
 }
