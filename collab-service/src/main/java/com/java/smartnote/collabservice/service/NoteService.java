@@ -130,9 +130,37 @@ public class NoteService {
                     System.err.println("❌ Failed to sync note from note-service");
                     throw new RuntimeException("Note not found in note-service: " + noteId);
                 }
+
+                System.out.println("✅ Note synced from note-service successfully");
+                System.out.println("   - Title: " + note.getTitle());
+                System.out.println(
+                        "   - Content length: " + (note.getContent() != null ? note.getContent().length() : 0));
+
             } else {
                 System.out.println("✅ Note found in collab-service DB");
                 System.out.println("Current shares: " + note.getShares());
+
+                // 🔥 CRITICAL FIX: Re-sync content from note-service to ensure we have latest
+                // version
+                // This prevents content loss when enabling collaboration
+                System.out.println("🔄 Re-syncing content from note-service to ensure consistency...");
+                Note freshNote = syncNoteFromNoteService(noteId);
+
+                if (freshNote != null && freshNote.getContent() != null) {
+                    String oldContent = note.getContent();
+                    String newContent = freshNote.getContent();
+
+                    // Update with latest content from note-service
+                    note.setContent(newContent);
+                    note.setTitle(freshNote.getTitle());
+                    note.setUpdatedAt(freshNote.getUpdatedAt());
+
+                    System.out.println("✅ Content updated from note-service");
+                    System.out.println("   - Old content length: " + (oldContent != null ? oldContent.length() : 0));
+                    System.out.println("   - New content length: " + (newContent != null ? newContent.length() : 0));
+                } else {
+                    System.out.println("⚠️ Could not re-sync, using existing content");
+                }
             }
 
             // Bước 2: Cập nhật shares

@@ -160,37 +160,59 @@ export const CollaborativeEditor = memo(
             initialContent?.length || 0
           );
           console.log("📝 Editor HTML length:", editor.getHTML().length);
-
-          // ⚠️ CRITICAL FIX: When enabling collaboration, Yjs doc is empty
-          // and syncs TO editor, clearing content. We need to restore it.
           if (isShared && doc && initialContent) {
             try {
               const xmlFragment = doc.getXmlFragment("default");
-              console.log("📊 Yjs fragment length:", xmlFragment.length);
+              const yjsIsEmpty = xmlFragment.length === 0;
+              const hasInitialContent = initialContent.trim().length > 0;
 
-              // If Yjs doc is empty but we have initialContent, populate the editor
-              // which will automatically sync TO Yjs
-              if (xmlFragment.length === 0 && initialContent.trim()) {
+              console.log("📊 Yjs state check:", {
+                yjsFragmentLength: xmlFragment.length,
+                hasInitialContent,
+                initialContentLength: initialContent.length,
+              });
+
+              if (yjsIsEmpty && hasInitialContent) {
                 console.log(
-                  "📝 Yjs is empty - setting content from database to preserve it"
+                  "🔥 PREVENTING CONTENT LOSS: Populating empty Yjs with database content"
                 );
 
-                // Use setTimeout to ensure Collaboration extension is fully initialized
                 setTimeout(() => {
                   if (editor && !editor.isDestroyed) {
                     editor.commands.setContent(initialContent, false);
                     console.log(
-                      "✅ Content restored to editor and synced to Yjs"
+                      "✅ [Strategy 1] Content set in editor → will sync to Yjs"
                     );
                   }
-                }, 100);
+                }, 50);
+
+                // Strategy 2: Also set directly in Yjs as backup
+                setTimeout(() => {
+                  try {
+                    if (doc && editor && !editor.isDestroyed) {
+                      // Verify content was synced
+                      const currentFragment = doc.getXmlFragment("default");
+                      if (currentFragment.length === 0) {
+                        console.warn("⚠️ Strategy 1 failed, trying Strategy 2");
+                        editor.commands.setContent(initialContent, true);
+                        console.log("✅ [Strategy 2] Forced content update");
+                      } else {
+                        console.log("✅ Content successfully synced to Yjs");
+                      }
+                    }
+                  } catch (e) {
+                    console.error("❌ Strategy 2 error:", e);
+                  }
+                }, 200);
               } else if (xmlFragment.length > 0) {
                 console.log(
-                  "ℹ️ Yjs already has content, using it (from IndexedDB or WebSocket)"
+                  "ℹ️ Yjs already has content (from IndexedDB/WebSocket), using it"
                 );
+              } else if (!hasInitialContent) {
+                console.log("ℹ️ No initial content to preserve");
               }
             } catch (error) {
-              console.error("❌ Error preserving content:", error);
+              console.error("❌ Error in content preservation logic:", error);
             }
           }
 
