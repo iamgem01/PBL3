@@ -25,9 +25,9 @@ public class NoteService {
         if (userId == null || userId.trim().isEmpty()) {
             throw new IllegalArgumentException("User ID cannot be null or empty");
         }
-        
+
         System.out.println("📝 Creating note for userId: " + userId);
-        
+
         Note note = new Note();
         note.setFolderId(request.getFolderId());
         note.setTitle(request.getTitle());
@@ -39,10 +39,10 @@ public class NoteService {
         note.setVersion(1);
         note.setTags(request.getTags());
         note.setIsImportant(request.getIsImportant() != null ? request.getIsImportant() : false);
-        note.setIsDeleted(false); 
+        note.setIsDeleted(false);
 
         Note savedNote = noteRepository.save(note);
-        
+
         System.out.println("✅ Note created with ID: " + savedNote.getId() + " for user: " + userId);
         return convertToResponse(savedNote);
     }
@@ -56,7 +56,7 @@ public class NoteService {
     public NoteResponse updateNote(String id, NoteRequest request) {
         Note note = noteRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Note not found with id: " + id));
-        
+
         if (note.getIsDeleted()) {
             throw new RuntimeException("Cannot update note in trash");
         }
@@ -69,9 +69,8 @@ public class NoteService {
             System.err.println("   Shares: " + note.getShares().size() + " collaborators");
             System.err.println("   → Must edit through Collab Service (DocumentPage)");
             throw new RuntimeException(
-                "This note is shared with collaborators. " +
-                "Please edit it through the collaborative editor to ensure real-time sync."
-            );
+                    "This note is shared with collaborators. " +
+                            "Please edit it through the collaborative editor to ensure real-time sync.");
         }
 
         NoteHistory history = new NoteHistory(note);
@@ -101,11 +100,11 @@ public class NoteService {
     public void deleteNote(String id) {
         Note note = noteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Note not found with id: " + id));
-        
+
         if (note.getIsDeleted()) {
             throw new RuntimeException("Note is already in trash");
         }
-        
+
         note.setIsDeleted(true);
         note.setDeletedAt(LocalDateTime.now());
         noteRepository.save(note);
@@ -115,24 +114,26 @@ public class NoteService {
         System.out.println("🔍 [DEBUG] Getting notes for userId: " + userId);
         System.out.println("🔍 [DEBUG] UserId type: " + (userId != null ? userId.getClass().getSimpleName() : "null"));
         System.out.println("🔍 [DEBUG] UserId length: " + (userId != null ? userId.length() : 0));
-        
+
         List<Note> notes = noteRepository.findByCreatedByAndIsDeletedFalse(userId);
         System.out.println("📊 [DEBUG] Found " + notes.size() + " notes for user " + userId);
-        
+
         // Log chi tiết từng note để debug
         for (int i = 0; i < notes.size(); i++) {
             Note note = notes.get(i);
-            System.out.println("📝 [DEBUG] Note " + (i+1) + ":");
+            System.out.println("📝 [DEBUG] Note " + (i + 1) + ":");
             System.out.println("   ID: " + note.getId());
             System.out.println("   CreatedBy: '" + note.getCreatedBy() + "'");
-            System.out.println("   CreatedBy type: " + (note.getCreatedBy() != null ? note.getCreatedBy().getClass().getSimpleName() : "null"));
-            System.out.println("   CreatedBy length: " + (note.getCreatedBy() != null ? note.getCreatedBy().length() : 0));
+            System.out.println("   CreatedBy type: "
+                    + (note.getCreatedBy() != null ? note.getCreatedBy().getClass().getSimpleName() : "null"));
+            System.out.println(
+                    "   CreatedBy length: " + (note.getCreatedBy() != null ? note.getCreatedBy().length() : 0));
             System.out.println("   Title: " + note.getTitle());
             if (note.getCreatedBy() != null) {
                 System.out.println("   Match check: " + note.getCreatedBy().equals(userId));
             }
         }
-        
+
         return notes.stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
@@ -201,7 +202,7 @@ public class NoteService {
         currentNote.setShares(historyVersion.getShares());
         currentNote.setMetadata(historyVersion.getMetadata());
         currentNote.setIsImportant(historyVersion.getIsImportant());
-        
+
         currentNote.setVersion(currentNote.getVersion() + 1);
         currentNote.setUpdatedAt(LocalDateTime.now());
 
@@ -212,14 +213,14 @@ public class NoteService {
     public NoteResponse markAsImportant(String noteId, String userId) {
         Note note = noteRepository.findByIdAndIsDeletedFalse(noteId)
                 .orElseThrow(() -> new RuntimeException("Note not found with id: " + noteId));
-        
+
         if (!note.getCreatedBy().equals(userId)) {
             throw new RuntimeException("Unauthorized to modify this note");
         }
-        
+
         note.setIsImportant(true);
         note.setUpdatedAt(LocalDateTime.now());
-        
+
         Note updatedNote = noteRepository.save(note);
         return convertToResponse(updatedNote);
     }
@@ -227,20 +228,20 @@ public class NoteService {
     public NoteResponse removeAsImportant(String noteId, String userId) {
         Note note = noteRepository.findByIdAndIsDeletedFalse(noteId)
                 .orElseThrow(() -> new RuntimeException("Note not found with id: " + noteId));
-        
+
         if (!note.getCreatedBy().equals(userId)) {
             throw new RuntimeException("Unauthorized to modify this note");
         }
-        
+
         note.setIsImportant(false);
         note.setUpdatedAt(LocalDateTime.now());
-        
+
         Note updatedNote = noteRepository.save(note);
         return convertToResponse(updatedNote);
     }
 
     public List<NoteResponse> getImportantNotes(String userId) {
-    
+
         return noteRepository.findByIsImportantTrueAndCreatedByAndIsDeletedFalse(userId).stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
@@ -263,8 +264,8 @@ public class NoteService {
         response.setVersion(note.getVersion());
         response.setTags(note.getTags());
         response.setIsImportant(note.getIsImportant());
-        response.setIsDeleted(note.getIsDeleted()); 
-        response.setDeletedAt(note.getDeletedAt()); 
+        response.setIsDeleted(note.getIsDeleted());
+        response.setDeletedAt(note.getDeletedAt());
         return response;
     }
 }

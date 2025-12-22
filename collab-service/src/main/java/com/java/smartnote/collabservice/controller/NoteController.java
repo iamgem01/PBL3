@@ -241,7 +241,7 @@ public class NoteController {
 
             // Get updated note
             Note updatedNote = noteService.getNoteById(noteId);
-            
+
             System.out.println("✅ UPDATE SUCCESSFUL");
             System.out.println("========================================");
 

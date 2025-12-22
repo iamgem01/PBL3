@@ -78,29 +78,32 @@ export const useDocumentState = () => {
         // 🔥 CRITICAL FIX: Route updates correctly based on sharing status
         // - Shared notes → update via Collab Service (for Yjs sync)
         // - Non-shared notes → update via Note Service (standard update)
-        
+
         const isShared = note.shares && note.shares.length > 0;
-        
+
         if (isShared) {
-          console.log('📤 Updating shared note via Collab Service');
+          console.log("📤 Updating shared note via Collab Service");
           // Update via Collab Service to ensure Yjs sync
-          const response = await fetch(`${COLLAB_SERVICE_URL}/api/notes/${id}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-              content: newContent,
-              updatedAt: new Date().toISOString(),
-            }),
-          });
-          
+          const response = await fetch(
+            `${COLLAB_SERVICE_URL}/api/notes/${id}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+              body: JSON.stringify({
+                content: newContent,
+                updatedAt: new Date().toISOString(),
+              }),
+            }
+          );
+
           if (!response.ok) {
-            throw new Error('Failed to update shared note');
+            throw new Error("Failed to update shared note");
           }
         } else {
-          console.log('📝 Updating non-shared note via Note Service');
+          console.log("📝 Updating non-shared note via Note Service");
           // Standard update for non-shared notes
           await updateNote(id, {
             ...note,
