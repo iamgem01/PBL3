@@ -76,11 +76,9 @@ export default function DocumentPage() {
         setIsShared(false);
         alert("✅ Document unshared successfully! All collaborators removed.");
       } else {
-        // ⚠️ CRITICAL: Save current content BEFORE enabling collaboration
-        // This prevents content loss when Yjs document is initialized
         const currentContent = note.content;
         console.log(
-          "💾 Saving content before enabling collaboration:",
+          "💾 Content preservation check:",
           currentContent?.substring(0, 100)
         );
 

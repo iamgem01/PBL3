@@ -1,0 +1,86 @@
+services:
+  # User Service
+  - type: web
+    name: pbl3-user-service
+    runtime: node
+    buildCommand: cd user-service && npm install
+    startCommand: cd user-service && node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+
+  # Calendar Service
+  - type: web
+    name: pbl3-calendar-service
+    runtime: node
+    buildCommand: cd calendar-service && npm install && npm run build
+    startCommand: cd calendar-service && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5003
+      - key: MONGODB_URI
+        sync: false
+
+  # AI Service
+  - type: web
+    name: pbl3-ai-service
+    runtime: node
+    buildCommand: cd ai-service && npm install && npm run build
+    startCommand: cd ai-service && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+
+  # Notification Service
+  - type: web
+    name: pbl3-notification-service
+    runtime: node
+    buildCommand: cd notification-service && npm install
+    startCommand: cd notification-service && node notification-service.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5004
+      - key: MONGODB_URI
+        sync: false
+
+  # Note Service (Java)
+  - type: web
+    name: pbl3-note-service
+    runtime: docker
+    dockerfilePath: ./note-service/Dockerfile
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
+      - key: MONGODB_URI
+        sync: false
+
+  # Collab Service (Java)
+  - type: web
+    name: pbl3-collab-service
+    runtime: docker
+    dockerfilePath: ./collab-service/Dockerfile
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
+      - key: MONGODB_URI
+        sync: false

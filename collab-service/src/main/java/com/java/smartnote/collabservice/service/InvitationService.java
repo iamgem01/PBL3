@@ -5,6 +5,9 @@ import com.java.smartnote.collabservice.model.Invitation.InvitationStatus;
 import com.java.smartnote.collabservice.repository.InvitationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -62,7 +65,14 @@ public class InvitationService {
                     "metadata", Map.of("inviterName", inviterName),
                     "actions", java.util.List.of(action));
 
-            ResponseEntity<Map> response = restTemplate.postForEntity(url, notification, Map.class);
+            // 🔥 FIX: Add X-User-Id header for server-to-server communication
+            // This ensures notification service can validate the request properly
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("X-User-Id", userId);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(notification, headers);
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {
                 System.out.println("✅ Notification created successfully");

@@ -96,32 +96,42 @@ class ReminderService {
       const locationInfo = event.location ? ` tại ${event.location}` : "";
 
       // Create notification via notification-service
-      await axios.post(`${NOTIFICATION_SERVICE_URL}/api/notifications`, {
-        userId: event.userId,
-        type: "CALENDAR_REMINDER",
-        title: "🔔 Sự kiện sắp diễn ra",
-        message: `"${event.title}" sẽ bắt đầu lúc ${startTimeStr}${locationInfo}`,
-        priority: "high",
-        relatedId: event.eventId,
-        relatedType: "event",
-        metadata: {
-          eventTitle: event.title,
-          startDate: event.startDate,
-          location: event.location,
-          reminderType: "15min",
+      // 🔥 FIX: Add X-User-Id header for server-to-server communication
+      await axios.post(
+        `${NOTIFICATION_SERVICE_URL}/api/notifications`,
+        {
+          userId: event.userId,
+          type: "CALENDAR_REMINDER",
+          title: "🔔 Sự kiện sắp diễn ra",
+          message: `"${event.title}" sẽ bắt đầu lúc ${startTimeStr}${locationInfo}`,
+          priority: "high",
+          relatedId: event.eventId,
+          relatedType: "event",
+          metadata: {
+            eventTitle: event.title,
+            startDate: event.startDate,
+            location: event.location,
+            reminderType: "15min",
+          },
+          actions: [
+            {
+              label: "Xem chi tiết",
+              url: `/calendar?event=${event.eventId}`,
+              primary: true,
+            },
+            {
+              label: "Đóng",
+              action: "dismiss",
+            },
+          ],
         },
-        actions: [
-          {
-            label: "Xem chi tiết",
-            url: `/calendar?event=${event.eventId}`,
-            primary: true,
+        {
+          headers: {
+            "X-User-Id": event.userId,
+            "Content-Type": "application/json",
           },
-          {
-            label: "Đóng",
-            action: "dismiss",
-          },
-        ],
-      });
+        }
+      );
 
       // Mark as notified
       this.notifiedEvents.add(notificationKey);
