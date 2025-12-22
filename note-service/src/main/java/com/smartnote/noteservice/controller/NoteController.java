@@ -21,7 +21,7 @@ public class NoteController {
     @PostMapping
     public ResponseEntity<NoteResponse> createNote(
             @RequestBody NoteRequest request,
-            @RequestHeader(value = "X-User-Id", defaultValue = "user_001") String userId) {
+            @RequestHeader(value = "X-User-Id", required = true) String userId) {
         try {
             System.out.println("Received create note request: " + request);
             NoteResponse response = noteService.createNote(request, userId);
@@ -38,7 +38,7 @@ public class NoteController {
         try {
             NoteResponse response = noteService.getNoteById(id);
             return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {                                                                                                                          
+        } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
@@ -67,14 +67,12 @@ public class NoteController {
 
     @GetMapping
     public ResponseEntity<List<NoteResponse>> getAllNotes(
-            @RequestHeader(value = "X-User-Id", defaultValue = "user_001") String userId) {
+            @RequestHeader(value = "X-User-Id", required = true) String userId) {
         System.out.println("🌐 [CONTROLLER] Received request for user: " + userId);
         List<NoteResponse> notes = noteService.getAllNotesByUser(userId);
         System.out.println("📤 [CONTROLLER] Returning " + notes.size() + " notes for user: " + userId);
         return ResponseEntity.ok(notes);
     }
-    
-    
 
     @PostMapping("/{id}/restore/{historyId}")
     public ResponseEntity<NoteResponse> restoreNote(
@@ -84,11 +82,11 @@ public class NoteController {
             NoteResponse restoredNote = noteService.restoreNoteFromHistory(id, historyId);
             return ResponseEntity.ok(restoredNote);
         } catch (RuntimeException e) {
-           
+
             return ResponseEntity.notFound().build();
         }
     }
-    
+
     @GetMapping("/{id}/history")
     public ResponseEntity<List<NoteHistory>> getNoteHistory(@PathVariable String id) {
         try {
@@ -98,11 +96,12 @@ public class NoteController {
             return ResponseEntity.notFound().build();
         }
     }
-//danh dau quan trong
-     @PostMapping("/{id}/important")
+
+    // danh dau quan trong
+    @PostMapping("/{id}/important")
     public ResponseEntity<NoteResponse> markAsImportant(
             @PathVariable String id,
-            @RequestHeader(value = "X-User-Id", defaultValue = "user_001") String userId) {
+            @RequestHeader(value = "X-User-Id", required = true) String userId) {
         try {
             NoteResponse response = noteService.markAsImportant(id, userId);
             return ResponseEntity.ok(response);
@@ -110,11 +109,12 @@ public class NoteController {
             return ResponseEntity.notFound().build();
         }
     }
-//bo danh dau quan trong
+
+    // bo danh dau quan trong
     @DeleteMapping("/{id}/important")
     public ResponseEntity<NoteResponse> removeAsImportant(
             @PathVariable String id,
-            @RequestHeader(value = "X-User-Id", defaultValue = "user_001") String userId) {
+            @RequestHeader(value = "X-User-Id", required = true) String userId) {
         try {
             NoteResponse response = noteService.removeAsImportant(id, userId);
             return ResponseEntity.ok(response);
@@ -122,10 +122,11 @@ public class NoteController {
             return ResponseEntity.notFound().build();
         }
     }
-//lay danh sach quan trong
+
+    // lay danh sach quan trong
     @GetMapping("/important")
     public ResponseEntity<List<NoteResponse>> getImportantNotes(
-            @RequestHeader(value = "X-User-Id", defaultValue = "user_001") String userId) {
+            @RequestHeader(value = "X-User-Id", required = true) String userId) {
         try {
             List<NoteResponse> importantNotes = noteService.getImportantNotes(userId);
             return ResponseEntity.ok(importantNotes);
