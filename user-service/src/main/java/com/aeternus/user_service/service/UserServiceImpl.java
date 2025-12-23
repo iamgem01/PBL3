@@ -142,7 +142,7 @@ public class UserServiceImpl implements UserService {
     private UserProfileDto mapToUserProfileDto(User user) {
         UserProfileDto dto = new UserProfileDto();
         dto.setUserId(user.getUserId());
-        dto.setUsername(user.getUsername());
+        dto.setName(user.getUsername());
         dto.setCreatedAt(user.getCreated_at());
         
         if (user.getEmail() != null) {

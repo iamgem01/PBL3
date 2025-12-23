@@ -110,11 +110,11 @@ function SessionRestoreModal({
 
         <div className="text-center">
           <h3 className="text-base font-medium text-gray-900 mb-1">
-            Welcome back, {user.username}!
+            Welcome back, {user.name}!
           </h3>
 
           <p className="text-xs text-gray-600 mb-6 leading-relaxed">
-            Continue with <strong>{user.username}</strong>?
+            Continue with <strong>{user.name}</strong>?
           </p>
 
           <div className="flex flex-col gap-2">

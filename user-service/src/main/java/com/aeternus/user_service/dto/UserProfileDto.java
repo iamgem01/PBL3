@@ -9,7 +9,7 @@ import java.util.UUID;
 @Data
 public class UserProfileDto {
     private UUID userId;
-    private String username;
+    private String name;
     private String email; // Chỉ lấy email string
     private LocalDateTime createdAt;
     private Set<String> roles; // Chỉ lấy tên roles
