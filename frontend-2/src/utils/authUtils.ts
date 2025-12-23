@@ -55,11 +55,13 @@ export const getAuthHeaders = (): HeadersInit => {
 };
 
 export const verifyAuth = async (): Promise<User | null> => {
+    console.log("Called from authUtils 222");
     try {
         const response = await fetch(`${API_GATEWAY_URL}/api/auth/me`, {
             credentials: 'include',
             headers: getAuthHeaders() as Record<string, string>, // Gửi token nếu có trong sessionStorage
         });
+        console.log("Complete");
 
         if (response.ok) {
             const user = await response.json();

@@ -167,7 +167,6 @@ services:
     ports:
       - "3001:3001"
     environment:
-    
       GEMINI_API_KEY: AIzaSyDHKeKXDLTThc04ruoyyR3pwH6iDEo3yPw
       MONGODB_URI: mongodb://mongodb:27017/ai-service
     networks:
@@ -282,36 +281,19 @@ services:
       # - discovery-server
       # - config-server
 
-# secrets:
-#   git_pat:
-#     external: true
-#   encrypt_key_secret: #
-#     external: true
-#   github_ssh_private_key_secret: #
-#     external: true
-#   github_ssh_passphrase_secret: 
-#     external: true
-#   # github_ssh_host_key_algorithm:
-#   #     external: true
-#   github_ssh_host_key_secret: #
-#     external: true
-  
-
   kong-database:
     image: postgres:15
-    restart: on-failure # Auto start when stopped (exit with code != 0)
+    restart: on-failure
     container_name: kong-database
     ports:
         - "5433:5432"
     environment:
-            # POSTGRES_ROOT_PASSWORD: kong_root_password
             POSTGRES_DB: kong
             POSTGRES_USER: kong_user
             POSTGRES_PASSWORD: kong_password
         # MYSQL_UID: 999
         # MYSQL_GID: 999
     volumes:
-        # - ./data/mysql:/var/lib/mysql:z
         - kong-postgre-data:/var/lib/postgresql/data
     healthcheck:
         test: ["CMD-SHELL", "pg_isready -U kong_user -d kong"]
@@ -327,8 +309,7 @@ services:
     container_name: kong-migrations
     command: kong migrations bootstrap
     environment:
-        KONG_DATABASE: postgres # Indicate that it will use mysql
-        # KONG_DB_ADAPTER: mysql # No problem 
+        KONG_DATABASE: postgres 
         KONG_PG_HOST: kong-database # Specify the host name of the container mysql
         # Used to connect to the database
         KONG_PG_USER: kong_user 

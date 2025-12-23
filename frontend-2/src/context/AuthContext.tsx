@@ -1,11 +1,13 @@
 // contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { verifyAuth, logout as utilLogout, type User as AuthUser } from '../utils/authUtils'; // Hợp nhất logic gọi API
 
 interface User {
   id: string;
   email: string;
   name: string;
   avatar?: string;
+  theme?: 'light' | 'dark'; // Thêm theme vào đây
   role: 'user' | 'admin' | 'moderator';
   permissions: string[];
 }
@@ -20,14 +22,12 @@ interface AuthContextType {
   hasRole: (role: string | string[]) => boolean;
   hasPermission: (permission: string) => boolean;
 }
-
+// Không cần gọi API trực tiếp ở đây nữa, sẽ dùng authUtils
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const BACKEND = import.meta.env.VITE_USER_SERVICE_URL || 'http://localhost:5000';
 
   // Check authentication status on mount
   useEffect(() => {
@@ -35,41 +35,46 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const checkAuth = async () => {
+    console.log("call verifyAuth from auth Context");
     try {
-      const response = await fetch(`${BACKEND}/api/auth/me`, {
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-        localStorage.setItem('user', JSON.stringify(data.user));
+      // Sử dụng hàm xác thực tập trung từ authUtils
+      const userFromAuth: AuthUser | null = await verifyAuth();
+      
+      if (userFromAuth) {
+        // TODO: Cần hợp nhất kiểu dữ liệu 'User' giữa các file.
+        // Tạm thời chuyển đổi để phù hợp với interface của AuthContext.
+        const adaptedUser: User = {
+          id: userFromAuth.userId,
+          name: userFromAuth.username,
+          email: userFromAuth.email,
+          avatar: userFromAuth.avatar,
+          theme: userFromAuth.theme, // Lấy theme từ API
+          role: 'user', // Giả định role, cần được trả về từ API
+          permissions: [], // Giả định permissions, cần được trả về từ API
+        };
+        setUser(adaptedUser);
       } else {
         setUser(null);
-        localStorage.removeItem('user');
       }
     } catch (error) {
       console.error('Check auth error:', error);
       setUser(null);
-      localStorage.removeItem('user');
     } finally {
       setIsLoading(false);
     }
   };
 
   const login = () => {
-    window.location.href = `${BACKEND}/api/auth/google`;
+    // Chuyển hướng đến endpoint OAuth2 của API Gateway (sử dụng đường dẫn tương đối)
+    window.location.href = `/oauth2/authorization/google`;
   };
 
   const logout = async () => {
     try {
-      await fetch(`${BACKEND}/api/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-      
+      // Gọi hàm logout tập trung và không reload trang
+      await utilLogout(false);
       setUser(null);
-      localStorage.removeItem('user');
+      // Chuyển hướng về trang login sau khi đăng xuất thành công
       window.location.href = '/login';
     } catch (error) {
       console.error('Logout error:', error);

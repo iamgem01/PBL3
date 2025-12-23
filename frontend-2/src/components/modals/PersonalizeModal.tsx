@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { X, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Plus, ChevronLeft, ChevronRight, Sun, Moon } from "lucide-react";
 import emojiList from "../../types/emoList";
 import type { UserPreferences } from "../../services/api";
+import { UserContext } from "@/App";
+import { updateUserTheme } from "@/services/userService";
 
 interface PersonalizeModalProps {
     isOpen: boolean;
@@ -19,18 +21,32 @@ const PersonalizeModal: React.FC<PersonalizeModalProps> = ({
     const [userName, setUserName] = useState("");
     const [selectedEmojiIndex, setSelectedEmojiIndex] = useState(5); // Index của Duck
     const [preferences, setPreferences] = useState<UserPreferences>(currentPreferences);
+    const user = React.useContext(UserContext);
+    const [theme, setTheme] = useState(user?.theme || "light");
 
     // Cập nhật state khi currentPreferences thay đổi
     useEffect(() => {
         setPreferences(currentPreferences);
-    }, [currentPreferences]);
+        if (user?.theme) {
+            setTheme(user.theme);
+        }
+    }, [currentPreferences, user]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Gọi API cập nhật theme nếu có thay đổi
+        if (user && theme !== user.theme) {
+            await updateUserTheme(theme);
+            // Reload trang để áp dụng theme mới ngay lập tức (do ThemeProvider cần reset)
+            window.location.reload();
+        }
+
         console.log({
             userName,
             selectedEmoji: emojiList[selectedEmojiIndex]?.emoji,
-            preferences
+            preferences,
+            theme
         });
         
         // Gọi onSave với preferences hiện tại
@@ -123,6 +139,39 @@ const PersonalizeModal: React.FC<PersonalizeModalProps> = ({
                             placeholder="What should AI call you?"
                             className="px-3 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center font-inter w-64"
                         />
+                    </div>
+
+                    {/* Theme Selection */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Interface Theme
+                        </label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setTheme('light')}
+                                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-all ${
+                                    theme === 'light' 
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500' 
+                                    : 'border-gray-200 hover:bg-gray-50'
+                                }`}
+                            >
+                                <Sun size={18} />
+                                Light Mode
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setTheme('dark')}
+                                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-all ${
+                                    theme === 'dark' 
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500' 
+                                    : 'border-gray-200 hover:bg-gray-50'
+                                }`}
+                            >
+                                <Moon size={18} />
+                                Dark Mode
+                            </button>
+                        </div>
                     </div>
 
                     {/* Preferences Section */}
@@ -225,6 +274,7 @@ const PersonalizeModal: React.FC<PersonalizeModalProps> = ({
                                 setUserName("");
                                 setSelectedEmojiIndex(5); // Reset về Duck
                                 setPreferences(currentPreferences); // Reset về preferences ban đầu
+                                setTheme(user?.theme || "light");
                             }}
                             className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                         >

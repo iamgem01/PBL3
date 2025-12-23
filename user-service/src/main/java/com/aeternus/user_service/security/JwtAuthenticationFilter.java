@@ -72,13 +72,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(auth);
                     
                 } else {
-                    logger.warn("JWT was valid, but no active device session found (user logged out?).");
+                    System.out.println("JWT was valid, but no active device session found (user logged out?).");
                 }
             } else {
-                logger.warn("Invalid JWT token received.");
+                System.out.println("Invalid JWT token received.");
             }
         } else {
-            logger.debug("No JWT cookie found, proceeding as anonymous");
+            System.out.println("No JWT cookie found, proceeding as anonymous.");
         }
         System.out.println("Transfer to the second filter");
         // Transfer request to the second filter

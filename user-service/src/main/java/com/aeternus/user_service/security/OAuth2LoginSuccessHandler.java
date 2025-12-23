@@ -95,6 +95,6 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         cookie.setMaxAge(-1); // Only exist in the current session
         cookie.setAttribute("SameSite", "Lax");
         response.addCookie(cookie);
-        getRedirectStrategy().sendRedirect(request, response, frontendRedirectUri); // Change to api gateway url
+        getRedirectStrategy().sendRedirect(request, response, frontendRedirectUri); // Redirect to the frontend URL specified in application.yml
     }
 }

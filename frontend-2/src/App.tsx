@@ -44,11 +44,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       // 1. Ưu tiên lấy từ sessionStorage (để load theme nhanh và có token ngay)
       let user = getCurrentUser();
 
-      // 2. Nếu không có trong session, mới gọi API (check cookie dự phòng)
-      if (!user) {
-        user = await verifyAuth();
-        // Nếu khôi phục được phiên từ cookie, lưu lại vào session để dùng cho các request sau
-        if (user) saveUserSession(user);
+      // 2. Luôn gọi API để đồng bộ dữ liệu mới nhất (Theme, Settings...) từ server
+      // Ngay cả khi có session, ta vẫn cần đảm bảo dữ liệu không bị cũ (stale)
+      const freshUser = await verifyAuth();
+      if (freshUser) {
+        user = freshUser;
+        saveUserSession(user);
       }
 
       if (user) {
@@ -77,35 +78,57 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   ) : null;
 }
 
-// Modal hỏi người dùng có muốn tiếp tục phiên đăng nhập cũ không
-function SessionRestoreModal({ user, onContinue, onSwitch }: { user: User, onContinue: () => void, onSwitch: () => void }) {
+function SessionRestoreModal({ 
+  user, 
+  onContinue, 
+  onSwitch 
+}: { 
+  user: User & { avatarUrl: string }, 
+  onContinue: () => void, 
+  onSwitch: () => void 
+}) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4 transform transition-all scale-100">
-        <div className="text-center">
-          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
-            <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+    <div className="fixed top-24 right-4 z-50">
+      <div className="bg-slate-300 rounded-lg shadow-xl border border-gray-200 p-4 w-72 max-w-[90vw]">
+        <div className="flex justify-center -mt-10 mb-4">
+          <div className="relative">
+            <img
+              src={user.avatar}
+              className="h-16 w-16 rounded-full object-cover border-4 border-white shadow-md"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+            <div className="hidden flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mx-auto border-4 border-white shadow-md">
+              <svg className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
           </div>
-          <h3 className="text-lg leading-6 font-medium text-gray-900 mb-2">
+        </div>
+
+        <div className="text-center">
+          <h3 className="text-base font-medium text-gray-900 mb-1">
             Welcome back, {user.username}!
           </h3>
-          <p className="text-sm text-gray-500 mb-6">
-            We found an active session for <strong>{user.email}</strong>. Do you want to continue with <strong>{user.username}</strong>?
+
+          <p className="text-xs text-gray-600 mb-6 leading-relaxed">
+            Continue with <strong>{user.username}</strong>?
           </p>
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+
+          <div className="flex flex-col gap-2">
             <button
               onClick={onContinue}
-              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:w-auto sm:text-sm"
+              className="w-full rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
             >
-              Continue as {user.username}
+              OK
             </button>
             <button
               onClick={onSwitch}
-              className="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto sm:text-sm"
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
             >
-              Switch Account
+              Switch account
             </button>
           </div>
         </div>
@@ -153,10 +176,14 @@ function AuthInit() {
     let isMounted = true;
     verifyAuth().then((user) => {
       if (isMounted && user) {
-        console.log("User authenticated, showing prompt...");
-        setDetectedUser(user);
+        // Logic này giờ đây chỉ dành riêng cho việc hiển thị modal "Welcome Back" khi mở tab mới
+        if (!document.referrer && publicPaths.includes(location.pathname)) {
+          console.log("User authenticated (New Tab/Direct), showing prompt...");
+          setDetectedUser(user);
+        }
       }
     });
+    
 
     return () => {
       isMounted = false;
@@ -173,10 +200,14 @@ function AuthInit() {
   const handleSwitch = async () => {
     setDetectedUser(null);
     await logout(false); // Gọi logout nhưng không reload trang (false)
-    navigate("/login"); // Chuyển hướng đến trang đăng nhập
+    
+    // Chuyển hướng trực tiếp đến endpoint Google OAuth của Backend để bắt đầu quy trình đăng nhập
+    window.location.href = "http://localhost:8000/oauth2/authorization/google";
   };
 
-  if (detectedUser) {
+  // Chỉ hiển thị modal khi đang ở các trang public (Login, Signup, Landing)
+  // Điều này ngăn modal hiển thị sai khi đã chuyển sang /home do độ trễ của state
+  if (detectedUser && ["/login", "/signup", "/"].includes(location.pathname)) {
     return <SessionRestoreModal user={detectedUser} onContinue={handleContinue} onSwitch={handleSwitch} />;
   }
 

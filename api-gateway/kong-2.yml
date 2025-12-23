@@ -32,8 +32,8 @@ services:
             - Set-Cookie
           max_age: 3600
           # Cookie can be returned by backend
-          # Cors fails when have credential
-          preflight_continue: true
+          # preflight_continue: false -> Kong handles OPTIONS requests and doesn't forward them.
+          preflight_continue: false
           credentials: true # accept httpOnly cookie  
 
     routes:
@@ -96,8 +96,8 @@ services:
           exposed_headers:
             - Set-Cookie
           max_age: 3600
-          preflight_continue: true
-          credentials: true
+          preflight_continue: false
+          credentials: true # This was duplicated, removed one.
     routes:
       - name: auth-resource
         paths: 
@@ -153,7 +153,7 @@ services:
           exposed_headers:
             - Set-Cookie
           max_age: 3600
-          preflight_continue: true
+          preflight_continue: false
           credentials: true
 
     routes:
@@ -195,7 +195,7 @@ services:
           exposed_headers: 
             - Set-Cookie
           max_age: 3600
-          preflight_continue: true
+          preflight_continue: false
           credentials: true
 
       - name: request-transformer  
@@ -292,7 +292,7 @@ services:
           exposed_headers:
             - Set-Cookie
           max_age: 3600
-          preflight_continue: true
+          preflight_continue: false
           credentials: true
 
     routes:
@@ -350,7 +350,7 @@ services:
           exposed_headers:
             - Set-Cookie
           max_age: 3600
-          preflight_continue: true
+          preflight_continue: false
           credentials: true
 
     routes:
@@ -414,7 +414,11 @@ plugins:
             if path == "/api/auth/me" or path == "/api/users/me" then
                 local cookie_val = ngx.var["cookie_SESSION_TOKEN"] or ngx.var["cookie_session_token"]
                 if cookie_val then
-                   token = "Bearer " .. cookie_val
+                   -- Loại bỏ prefix "Bearer " nếu đã tồn tại trong cookie để tránh bị double
+                   local clean_cookie = string.gsub(cookie_val, "^Bearer%s+", "")
+                   token = "Bearer " .. clean_cookie
+                   ngx.log(ngx.INFO, "DEBUG: token=" .. token)
+                   
                 else
                    ngx.log(ngx.ERR, "DEBUG: Cookie not found. Path: " .. path .. " | All Cookies: " .. (ngx.var.http_cookie or "nil"))
                 end
@@ -425,6 +429,8 @@ plugins:
             ngx.status = 401
             ngx.say("{\"message\":\"Unauthenticated\"}")
             ngx.exit(401)
+          else 
+            ngx.log(ngx.INFO, "DEBUG: token=" .. token)
           end 
 
           local res, err = httpc:request_uri("http://user-service:8082/api/auth/validate", {
@@ -451,3 +457,6 @@ plugins:
             ngx.status = 401
             ngx.exit(401)
           end
+
+          -- If validation is successful, add the Authorization header to the request for the upstream service.
+          ngx.req.set_header("Authorization", token)

@@ -3,25 +3,17 @@ package com.aeternus.user_service.controller;
 
 // Get the user's information, see devices,...
 import com.aeternus.user_service.dto.*;
-import com.aeternus.user_service.security.JwtTokenProvider;
 import com.aeternus.user_service.service.UserService;
-import com.aeternus.user_service.service.UserServiceImpl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
- 
-import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.http.HttpStatus;
 
 import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Value; 
-import java.util.stream.Stream; 
-import jakarta.servlet.http.Cookie; 
 
 
 @RestController
@@ -30,21 +22,6 @@ import jakarta.servlet.http.Cookie;
 public class UserController {
 
     private final UserService userService;
-    //private final JwtTokenProvider jwtTokenProvider; // Để lấy
-    
-    // @Value("${app.jwt.cookie-name}")
-    // private String jwtCookieName;
-
-    // Helper để lấy UUID từ request
-    // private UUID getUserIdFromRequest(HttpServletRequest request) {
-    //     String token = Stream.of(request.getCookies())
-    //             .filter(cookie -> cookie.getName().equals(jwtCookieName))
-    //             .map(Cookie::getValue)
-    //             .findFirst()
-    //             .orElseThrow(() -> new IllegalArgumentException("No token found"));
-    //     String userId = jwtTokenProvider.getUserId(token);
-    //     return UUID.fromString(userId);
-    // }
 
     @GetMapping("/me")
     public ResponseEntity<UserProfileDto> getCurrentUser(Principal principal) {
@@ -75,21 +52,21 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("note-password/change") 
+    @PutMapping("/note-password/change")
     public ResponseEntity<Void> changeNotePassword(@RequestBody NotePasswordRequest request, Principal principal) {
         UUID userId = UUID.fromString(principal.getName());
         userService.changeNotePassword(userId, request.getCurrentPassword(), request.getPassword());
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("note-password/remove")
+    @PostMapping("/note-password/remove")
     public ResponseEntity<Void> removeNotePassword(@RequestBody NotePasswordRequest request, Principal principal) {
         UUID userId = UUID.fromString(principal.getName());
         userService.removeNotePassword(userId, request.getCurrentPassword());
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("note-password/verify")
+    @PostMapping("/note-password/verify")
     public ResponseEntity<Boolean> verifyNotePassword(@RequestBody NotePasswordVerifyRequest request, Principal principal) {
         UUID userId = UUID.fromString(principal.getName());
         boolean isValid = userService.verifyNotePassword(userId, request.getPassword());
@@ -98,5 +75,11 @@ public class UserController {
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(false);
         }
+    }
+    @PostMapping("/theme")
+    public ResponseEntity<Void> updateTheme(@RequestParam String theme, Principal principal) {
+        UUID userId = UUID.fromString(principal.getName());
+        userService.updateTheme(userId, theme);
+        return ResponseEntity.ok().build();
     }
 }

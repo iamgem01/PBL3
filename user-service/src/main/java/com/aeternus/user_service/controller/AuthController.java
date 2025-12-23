@@ -90,19 +90,20 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<UserProfileDto> getCurrentUser(Principal principal, HttpServletRequest request) {
+        System.out.println("Receive request after logging");
         UUID userId = UUID.fromString(principal.getName());
         UserProfileDto userProfile = userService.getCurrentUserProfile(userId);
         String token = getTokenFromRequest(request);
+        if(token != null) {
+            System.out.println("token " + token);
+        } else {
+            System.out.println("token null");
+        }
         userProfile.setAccessToken(token);
         return ResponseEntity.ok(userProfile);
     }
 
-    @PostMapping("/theme")
-    public ResponseEntity<Void> updateTheme(@RequestParam String theme, Principal principal) {
-        UUID userId = UUID.fromString(principal.getName());
-        userService.updateTheme(userId, theme);
-        return ResponseEntity.ok().build();
-    }
+   
 
     // private String getTokenFromCookie(HttpServletRequest request) {
     //     if(request.getCookies() == null) {
