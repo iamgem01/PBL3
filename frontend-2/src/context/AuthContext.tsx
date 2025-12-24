@@ -1,6 +1,6 @@
 // contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { verifyAuth, logout as utilLogout, type User as AuthUser } from '../utils/authUtils'; // Hợp nhất logic gọi API
+import { verifyAuth, logout as utilLogout, updateUserTheme as utilUpdateTheme, type User as AuthUser, getCurrentUser, saveUserSession, clearUserSession } from '../utils/authUtils'; // Hợp nhất logic gọi API
 
 interface User {
   id: string;
@@ -21,13 +21,29 @@ interface AuthContextType {
   checkAuth: () => Promise<void>;
   hasRole: (role: string | string[]) => boolean;
   hasPermission: (permission: string) => boolean;
+  updateTheme: (theme: 'light' | 'dark') => Promise<void>; // Thêm hàm updateTheme
 }
 // Không cần gọi API trực tiếp ở đây nữa, sẽ dùng authUtils
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // 1. Khởi tạo state từ sessionStorage để tránh flash loading/login khi reload
+  const [user, setUser] = useState<User | null>(() => {
+    const sessionUser = getCurrentUser();
+    if (sessionUser) {
+      return {
+        id: sessionUser.userId,
+        name: sessionUser.name,
+        email: sessionUser.email,
+        avatar: sessionUser.avatar,
+        theme: (sessionUser.theme as 'light' | 'dark') || 'light',
+        role: 'user',
+        permissions: [],
+      };
+    }
+    return null;
+  });
+  const [isLoading, setIsLoading] = useState(!user);
 
   // Check authentication status on mount
   useEffect(() => {
@@ -41,24 +57,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const userFromAuth: AuthUser | null = await verifyAuth();
       
       if (userFromAuth) {
+        // 2. Lưu lại vào sessionStorage để đồng bộ cho các lần reload sau
+        saveUserSession(userFromAuth);
+
         // TODO: Cần hợp nhất kiểu dữ liệu 'User' giữa các file.
         // Tạm thời chuyển đổi để phù hợp với interface của AuthContext.
         const adaptedUser: User = {
           id: userFromAuth.userId,
-          name: userFromAuth.username,
+          name: userFromAuth.name,
           email: userFromAuth.email,
           avatar: userFromAuth.avatar,
-          theme: userFromAuth.theme, // Lấy theme từ API
+          theme: (userFromAuth.theme as 'light' | 'dark') || 'light', // Lấy theme từ API, fallback light
           role: 'user', // Giả định role, cần được trả về từ API
           permissions: [], // Giả định permissions, cần được trả về từ API
         };
         setUser(adaptedUser);
       } else {
         setUser(null);
+        clearUserSession();
       }
     } catch (error) {
       console.error('Check auth error:', error);
       setUser(null);
+      clearUserSession();
     } finally {
       setIsLoading(false);
     }
@@ -96,6 +117,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return user.permissions.includes(permission);
   };
 
+  const updateTheme = async (newTheme: 'light' | 'dark') => {
+    if (user) {
+      // 1. Cập nhật State React ngay lập tức để UI phản hồi nhanh (Optimistic update)
+      setUser({ ...user, theme: newTheme });
+      
+      // 2. Gọi Utils để cập nhật API và SessionStorage
+      await utilUpdateTheme(newTheme);
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
@@ -105,6 +136,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     checkAuth,
     hasRole,
     hasPermission,
+    updateTheme,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

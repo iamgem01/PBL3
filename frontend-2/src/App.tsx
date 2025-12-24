@@ -11,8 +11,9 @@ import ChatPage from "./pages/AI/ChatPage";
 import SearchPage from "@/pages/SearchPage/SearchPage";
 import NotFoundPage from "@/pages/NotFound/NotFoundPage";
 import NotePage from "@/pages/NotePage/NotePage";
-import { verifyAuth, logout, saveUserSession, getCurrentUser, type User } from "./utils/authUtils";
-import { ThemeProvider } from "@/providers/ThemeProvider";
+import { verifyAuth, logout, saveUserSession, getCurrentUser, type User, } from "./utils/authUtils";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 
 // console.log("debugger");
 
@@ -33,49 +34,23 @@ function LoadingScreen() {
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [isChecking, setIsChecking] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
+  // Redirect if not authenticated after loading is complete
   useEffect(() => {
-    const check = async () => {
-      
-      // 1. Ưu tiên lấy từ sessionStorage (để load theme nhanh và có token ngay)
-      let user = getCurrentUser();
+    if (!isLoading && !isAuthenticated) {
+      console.log("Redirecting to login from ProtectedRoute...");
+      navigate("/login", { replace: true }); // Thêm dòng này để chuyển hướng
+    }
+  }, [isLoading, isAuthenticated, navigate]);
 
-      // 2. Luôn gọi API để đồng bộ dữ liệu mới nhất (Theme, Settings...) từ server
-      // Ngay cả khi có session, ta vẫn cần đảm bảo dữ liệu không bị cũ (stale)
-      const freshUser = await verifyAuth();
-      if (freshUser) {
-        user = freshUser;
-        saveUserSession(user);
-      }
-
-      if (user) {
-        setIsAuthenticated(true);
-        setCurrentUser(user);
-      } else {
-        setIsAuthenticated(false);
-        // Lưu lại đường dẫn hiện tại để redirect sau khi login (nếu cần)
-        navigate("/login", { replace: true });
-      }
-      setIsChecking(false);
-    };
-    check();
-  }, [navigate]);
-
-  if (isChecking) {
+  if (isLoading) {
     return <LoadingScreen />;
   }
 
-  return isAuthenticated && currentUser ? (
-    <UserContext.Provider value={currentUser}>
-      <ThemeProvider isAuthenticated={true} userId={currentUser.userId} key={currentUser.userId} defaultTheme={currentUser.theme || "light"}>
-        {children}
-      </ThemeProvider>
-    </UserContext.Provider>
-  ) : null;
+  // Render children only if authenticated
+  return isAuthenticated ? <>{children}</> : null;
 }
 
 function SessionRestoreModal({ 
@@ -217,33 +192,33 @@ function AuthInit() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthInit />
-      <ThemeProvider isAuthenticated={false}>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignUpPage />} />
-      </Routes>
-      </ThemeProvider>
+    <AuthProvider>
+      <BrowserRouter>
+        <ThemeProvider>
+          <AuthInit />
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignUpPage />} />
 
-      <Routes>
-        {/* Protected routes */}
-        <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-        <Route path="/ai" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
-        <Route path="/notes/new" element={<ProtectedRoute><NotePage /></ProtectedRoute>} />
-        <Route path="/notes/:id" element={<ProtectedRoute><DocumentPage /></ProtectedRoute>} />
-        <Route path="/search" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
-        
-        {/* Placeholder routes */}
-        <Route path="/notifications" element={<ProtectedRoute><div>Notifications</div></ProtectedRoute>} />
-        <Route path="/new-note" element={<ProtectedRoute><div>Create Note</div></ProtectedRoute>} />
+            {/* Protected routes */}
+            <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+            <Route path="/ai" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+            <Route path="/notes/new" element={<ProtectedRoute><NotePage /></ProtectedRoute>} />
+            <Route path="/notes/:id" element={<ProtectedRoute><DocumentPage /></ProtectedRoute>} />
+            <Route path="/search" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
+            
+            {/* Placeholder routes */}
+            <Route path="/notifications" element={<ProtectedRoute><div>Notifications</div></ProtectedRoute>} />
+            <Route path="/new-note" element={<ProtectedRoute><div>Create Note</div></ProtectedRoute>} />
 
-        {/* 404 */}
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </BrowserRouter>
+            {/* 404 */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </ThemeProvider>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

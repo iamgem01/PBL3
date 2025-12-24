@@ -27,6 +27,7 @@ services:
             - Content-Type
             - Authorization
             - Origin
+            - X-User-Id
           # Ensure that frontend can't read cookie if options don't return the right header
           exposed_headers: 
             - Set-Cookie
@@ -92,6 +93,7 @@ services:
             - Content-Type
             - Authorization
             - Origin
+            - X-User-Id
           credentials: true
           exposed_headers:
             - Set-Cookie
@@ -149,6 +151,7 @@ services:
             - Content-Type
             - Authorization
             - Origin
+            - X-User-Id
           credentials: true
           exposed_headers:
             - Set-Cookie

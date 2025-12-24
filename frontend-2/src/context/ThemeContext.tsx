@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
+import { AuthContext } from './AuthContext';
+import { updateUserTheme, updateSessionTheme, getCurrentUser } from '../utils/authUtils';
+
 type Theme = 'light' | 'dark';
 
 interface ThemeContextType {
@@ -11,25 +14,40 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
+  const authContext = useContext(AuthContext);
+  const isAuthenticated = authContext?.isAuthenticated ?? false;
+  const user = authContext?.user;
+
   // Initialize theme from localStorage or system preference
   const [theme, setThemeState] = useState<Theme>(() => {
-    // Check localStorage first
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light' || savedTheme === 'dark') {
-      return savedTheme;
+
+    if (isAuthenticated && user?.theme) {
+      return user.theme;
+    }
+
+    const sessionUser = getCurrentUser();
+    if (sessionUser?.theme) {
+      return sessionUser.theme as Theme;
     }
     
-    // Fall back to system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-    
-    return 'light';
+    return 'light'; 
   });
+
+  useEffect(() => {
+    if (isAuthenticated && user?.theme && user.theme !== theme) {
+      setThemeState(user.theme);
+    }
+  }, [user, isAuthenticated, theme]);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
-    localStorage.setItem('theme', newTheme);
+
+    if(isAuthenticated) {
+
+      authContext?.updateTheme(newTheme);
+    } else {
+      localStorage.setItem('theme', newTheme);
+    }
   };
 
   const toggleTheme = () => {
@@ -75,14 +93,15 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     
     const handleChange = (e: MediaQueryListEvent) => {
       // Only update if no theme is saved in localStorage
-      if (!localStorage.getItem('theme')) {
+      // Chỉ cập nhật nếu người dùng chưa đăng nhập và chưa tự chọn theme
+      if (!isAuthenticated && !localStorage.getItem('theme')) {
         setThemeState(e.matches ? 'dark' : 'light');
       }
     };
     
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+  }, [isAuthenticated]);
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>

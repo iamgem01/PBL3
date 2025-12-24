@@ -5,7 +5,7 @@ export interface User {
     email: string;
     name: string; 
     avatar?: string;
-    roles: string[];  
+    roles: string;  
     createdAt?: string;
     theme?: "dark" | "light";
     accessToken?: string;
@@ -16,7 +16,11 @@ const API_GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhos
 
 export const getCurrentUser = (): User | null => {
     const userStr = sessionStorage.getItem('user');
-    if (userStr) return JSON.parse(userStr);
+    if (userStr) {
+        const user = JSON.parse(userStr);
+        if(!user.theme) user.theme = 'light';
+        return user;
+    }
     return null;
 };
 
@@ -66,6 +70,10 @@ export const verifyAuth = async (): Promise<User | null> => {
         if (response.ok) {
             const user = await response.json();
             // KHÔNG auto-save token ở đây nữa. 
+            if (!user.theme) {
+                const sessionUser = getCurrentUser();
+                user.theme = sessionUser?.theme || 'light'; // Ưu tiên giữ theme cũ từ session nếu server trả về null
+            }
             // Việc save sẽ do AuthInit (SessionRestoreModal) hoặc Login page quyết định.
             return user;
         } else {
@@ -103,12 +111,15 @@ export const getUserInitials = (name: string): string => {
     return name.substring(0, 2).toUpperCase();
 };
 
-export const updateUserTheme = async (theme: String): Promise<void> => {
+export const updateUserTheme = async (theme: string): Promise<void> => {
     try {
         await fetch(`${API_GATEWAY_URL}/api/auth/theme?theme=${theme}`, {
             method: 'POST',
-            credentials: 'include'
+            credentials: 'include',
+            headers: getAuthHeaders() as Record<string, string>
         });
+        // Cập nhật ngay lập tức vào session storage để UI phản hồi
+        updateSessionTheme(theme as "dark" | "light");
     } catch (error) {
         console.error('Error updating theme:', error);
     }

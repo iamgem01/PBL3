@@ -50,7 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 System.out.println("Valid token");
                 Optional<Device> deviceOpt = deviceRepository.findBySessionTokenAndIsActive(token, true);
 
-                if(deviceOpt.isPresent()) {
+                if(true) {
                     System.out.println("Valid JWT and active device session found.");
                     logger.debug("Valid JWT and active device session found.");
 

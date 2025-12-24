@@ -131,8 +131,8 @@ export function UserMenu({ collapsed = false }: UserMenuProps) {
                 <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
                     <div className="flex items-center gap-1">
-                        <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${getRoleBadgeColor(user.role)}`}>
-                            {user.role}
+                        <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${getRoleBadgeColor(user.roles)}`}>
+                            {user.roles}
                         </span>
                     </div>
                 </div>
@@ -171,8 +171,8 @@ export function UserMenu({ collapsed = false }: UserMenuProps) {
                         
                         {/* Role badge */}
                         <div className="flex items-center justify-between">
-                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
-                                {getRoleDisplayName(user.role)}
+                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(user.roles)}`}>
+                                {getRoleDisplayName(user.roles)}
                             </span>
                             <Settings 
                                 size={16} 
@@ -186,7 +186,7 @@ export function UserMenu({ collapsed = false }: UserMenuProps) {
                         
                         {/* Plan info */}
                         <div className="mt-2 text-gray-500 text-xs bg-gray-50 px-2 py-1 rounded">
-                            {getPlanInfo(user.role)}
+                            {getPlanInfo(user.roles)}
                         </div>
                     </div>
                     

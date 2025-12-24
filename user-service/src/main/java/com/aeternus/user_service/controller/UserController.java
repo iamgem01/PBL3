@@ -76,10 +76,5 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(false);
         }
     }
-    @PostMapping("/theme")
-    public ResponseEntity<Void> updateTheme(@RequestParam String theme, Principal principal) {
-        UUID userId = UUID.fromString(principal.getName());
-        userService.updateTheme(userId, theme);
-        return ResponseEntity.ok().build();
-    }
+    
 }

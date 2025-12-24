@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { X, Plus, ChevronLeft, ChevronRight, Sun, Moon } from "lucide-react";
 import emojiList from "../../types/emoList";
 import type { UserPreferences } from "../../services/api";
-import { UserContext } from "@/App";
-import { updateUserTheme } from "@/services/userService";
+import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface PersonalizeModalProps {
     isOpen: boolean;
@@ -21,25 +21,24 @@ const PersonalizeModal: React.FC<PersonalizeModalProps> = ({
     const [userName, setUserName] = useState("");
     const [selectedEmojiIndex, setSelectedEmojiIndex] = useState(5); // Index của Duck
     const [preferences, setPreferences] = useState<UserPreferences>(currentPreferences);
-    const user = React.useContext(UserContext);
-    const [theme, setTheme] = useState(user?.theme || "light");
+    const { user } = useAuth();
+    
+    // Sử dụng ThemeProvider để lấy theme hiện tại và hàm set theme global
+    const { theme: currentGlobalTheme, setTheme: setGlobalTheme } = useTheme();
+    const [theme, setTheme] = useState(currentGlobalTheme);
 
     // Cập nhật state khi currentPreferences thay đổi
     useEffect(() => {
         setPreferences(currentPreferences);
-        if (user?.theme) {
-            setTheme(user.theme);
-        }
-    }, [currentPreferences, user]);
+        setTheme(currentGlobalTheme);
+    }, [currentPreferences, currentGlobalTheme]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        // Gọi API cập nhật theme nếu có thay đổi
-        if (user && theme !== user.theme) {
-            await updateUserTheme(theme);
-            // Reload trang để áp dụng theme mới ngay lập tức (do ThemeProvider cần reset)
-            window.location.reload();
+        // Cập nhật theme global. ThemeProvider sẽ tự động gọi API.
+        if (theme !== currentGlobalTheme) {
+            setGlobalTheme(theme as "light" | "dark");
         }
 
         console.log({
@@ -274,7 +273,7 @@ const PersonalizeModal: React.FC<PersonalizeModalProps> = ({
                                 setUserName("");
                                 setSelectedEmojiIndex(5); // Reset về Duck
                                 setPreferences(currentPreferences); // Reset về preferences ban đầu
-                                setTheme(user?.theme || "light");
+                                setTheme(currentGlobalTheme);
                             }}
                             className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                         >

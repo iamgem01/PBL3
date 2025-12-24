@@ -103,6 +103,13 @@ public class AuthController {
         return ResponseEntity.ok(userProfile);
     }
 
+    @PostMapping("/theme")
+    public ResponseEntity<Void> updateTheme(@RequestParam String theme, Principal principal) {
+        UUID userId = UUID.fromString(principal.getName());
+        userService.updateTheme(userId, theme);
+        return ResponseEntity.ok().build();
+    }
+
    
 
     // private String getTokenFromCookie(HttpServletRequest request) {
