@@ -1,5 +1,6 @@
 import type { Item } from "../types/Item";
 import { recentlyVisited, upcomingEvents } from "./mockData";
+import { getAuthHeaders } from '@/utils/authUtils';
 
 export async function fetchItemsByCategory(category: string): Promise<Item[]> {
   return new Promise((resolve) => {
@@ -165,7 +166,10 @@ async function fetchAPI<T>(
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
-  const headers: HeadersInit = { ...options.headers};
+  const headers: HeadersInit = { 
+    ...getAuthHeaders(),
+    ...options.headers
+  };
 
   if(!(options.body instanceof FormData)) {
     (headers as any)["Content-Type"] = "application/json";
@@ -260,11 +264,19 @@ export const apiService = {
       filesCount: request.files?.length || 0
     });
 
+    // Lấy headers xác thực nhưng PHẢI xóa Content-Type
+    // để trình duyệt tự động set multipart/form-data kèm boundary
+    const headers = { ...getAuthHeaders() } as Record<string, string>;
+    if (headers['Content-Type']) {
+      delete headers['Content-Type'];
+    }
+
     try {
       const response = await fetch(url, {
         method: 'POST',
         body: formData,
         credentials: 'include',
+        headers: headers,
       });
 
       let data;
@@ -306,6 +318,7 @@ export const apiService = {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         credentials: 'include',
       });
@@ -341,6 +354,7 @@ export const apiService = {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          ...getAuthHeaders(),
         },
       });
 
@@ -502,6 +516,7 @@ export const userApi = {
     const response = await fetch(`${USER_SERVICE_URL}/api/users/me`, {
       method: 'GET',
       credentials: 'include', // BẮT BUỘC: Gửi cookie SESSION_TOKEN
+      headers: { ...getAuthHeaders() },
     });
     
     if (!response.ok) {

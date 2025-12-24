@@ -56,8 +56,8 @@ export class GeminiService {
     private lastResetTime: number = Date.now();
     
     // Chiến lược Model (Dual-Core)
-    private readonly fastModel = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
-    private readonly smartModel = process.env.GEMINI_MODEL_SMART || 'gemini-1.5-pro';
+    private readonly fastModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+    private readonly smartModel = process.env.GEMINI_MODEL_SMART || 'gemini-2.5-pro';
 
     constructor() {
         // Khởi tạo config ban đầu
@@ -114,7 +114,7 @@ export class GeminiService {
 
             } catch (error: any) {
                 if (isQuotaError(error)) {
-                    console.warn(`⚠ Quota Exceeded [${operationName}] Key #${this.currentConfigIndex}. Switching...`);
+                    console.warn(`⚠ Quota Exceeded [${operationName}] Key #${this.currentConfigIndex}. Error: ${error.message}. Switching...`);
                     this.failedConfigs.add(this.currentConfigIndex);
                     this.currentConfigIndex = (this.currentConfigIndex + 1) % this.modelConfigs.length;
                     

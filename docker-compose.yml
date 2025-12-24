@@ -167,8 +167,11 @@ services:
     ports:
       - "3001:3001"
     environment:
-      GEMINI_API_KEY: AIzaSyDHKeKXDLTThc04ruoyyR3pwH6iDEo3yPw
-      MONGODB_URI: mongodb://mongodb:27017/ai-service
+      GEMINI_API_KEY: AIzaSyCpLe_YvbHMKSfcH7DhyuQyhjLvvhDlvQ0
+      GEMINI_MODEL: gemini-2.5-flash
+      MONGODB_URI: mongodb://root:aeternusPass2026@mongodb:27017/ai-service?authSource=admin
+      MONGODB_USERNAME: root
+      MONGODB_PASSWORD: aeternusPass2026
     networks:
       - my-network
     deploy:
@@ -195,7 +198,7 @@ services:
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
       SPRING_PROFILES_ACTIVE: dev
       GOOGLE_CLIENT_ID: 
-      GOOGLE_CLIENT_SECRET:
+      GOOGLE_CLIENT_SECRET: 
       # VAULT_DEV_ROOT_TOKEN_ID: mydevtoken
     networks:
       - my-network

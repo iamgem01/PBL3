@@ -164,7 +164,7 @@ services:
         paths:
           - /api/chat
         methods: [POST, GET, OPTIONS]
-        strip_path: true
+        strip_path: false
         preserve_host: false
         protocols: [http, https]
 
