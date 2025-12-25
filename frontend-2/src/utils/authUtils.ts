@@ -36,12 +36,15 @@ export const hasRole = (roleName: string): boolean => {
 };
 
 // Helper để lấy Header chứa Token từ sessionStorage
-export const getAuthHeaders = (): HeadersInit => {
+export const getAuthHeaders = (contentType: string | null = 'application/json'): HeadersInit => {
     const token = sessionStorage.getItem('token');
     const userStr = sessionStorage.getItem('user');
-    const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-    };
+    const headers: Record<string, string> = {};
+
+    if (contentType) {
+        headers['Content-Type'] = contentType;
+    }
+
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
     }
@@ -86,18 +89,21 @@ export const verifyAuth = async (): Promise<User | null> => {
     }
 };
 
-export const logout = async (check: boolean): Promise<void> => {
-    if(check) {return; }
+export const logout = async (shouldRedirect: boolean = true): Promise<void> => {
     try {
         await fetch(`${API_GATEWAY_URL}/api/auth/logout`, {
             method: 'POST',
             credentials: 'include',
+            headers: getAuthHeaders() as Record<string, string>,
         });
     } catch (error) {
         console.error('Logout error:', error);
     } finally {
+        // Xóa sessionStorage ngay lập tức để đảm bảo sạch sẽ
         clearUserSession();
-        window.location.href = '/';
+        if (shouldRedirect) {
+            window.location.href = '/';
+        }
     }
 };
 

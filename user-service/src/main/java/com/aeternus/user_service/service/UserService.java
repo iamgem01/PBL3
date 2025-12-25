@@ -2,6 +2,7 @@
 package com.aeternus.user_service.service;
 
 import com.aeternus.user_service.dto.DeviceDto;
+import com.aeternus.user_service.dto.LoginSessionDto;
 import com.aeternus.user_service.dto.UserProfileDto;
 import java.util.List;
 import java.util.UUID;
@@ -19,4 +20,5 @@ public interface UserService {
     boolean hasNotePassword(UUID userId);
     boolean verifyNotePassword(UUID userId, String password);
     public void updateTheme(UUID userId, String theme);
+    public List<LoginSessionDto> getLoginHistory(UUID userId);
 }

@@ -1,24 +1,24 @@
+import { getAuthHeaders } from "@/utils/authUtils";
+import { handleResponse, USER_SERVICE_URL } from './utils';
+
 /**
  * Service xử lý các tác vụ liên quan đến User
  */
 
+export interface LoginSession {
+    id: string;
+    device: string;
+    browser: string;
+    lastActive: string;
+    current: boolean;
+}
+
 export const updateUserTheme = async (theme: string): Promise<void> => {
     try {
-        // Lấy token từ sessionStorage (key thường là 'jwt_token' hoặc 'token' tùy vào cách bạn lưu lúc login)
-        // Giả sử key là 'jwt_token' dựa trên ngữ cảnh yêu cầu trước đó
-        const token = sessionStorage.getItem('jwt_token');
-        
-        if (!token) {
-            console.warn("Không tìm thấy JWT token trong sessionStorage để cập nhật theme.");
-            return;
-        }
-
-        const response = await fetch(`/api/users/theme?theme=${theme}`, {
+        const response = await fetch(`${USER_SERVICE_URL}/api/users/theme?theme=${theme}`, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
+            headers: getAuthHeaders(),
+            credentials: 'include'
         });
 
         if (!response.ok) {
@@ -30,5 +30,21 @@ export const updateUserTheme = async (theme: string): Promise<void> => {
     } catch (error) {
         console.error("Lỗi service updateUserTheme:", error);
         throw error;
+    }
+};
+
+export const getLoginHistory = async (): Promise<LoginSession[]> => {
+    try {
+        const response = await fetch(`${USER_SERVICE_URL}/api/users/login-history`, {
+            method: 'GET',
+            headers: getAuthHeaders(),
+            credentials: 'include',
+        });
+
+        if (!response.ok) return [];
+        return await response.json();
+    } catch (error) {
+        console.error("Error fetching login history:", error);
+        return [];
     }
 };

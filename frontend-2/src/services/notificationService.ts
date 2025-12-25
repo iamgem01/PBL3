@@ -1,4 +1,5 @@
 import { handleResponse } from "./utils";
+import { getAuthHeaders } from "@/utils/authUtils";
 import type {
   Notification,
   NotificationFilters,
@@ -10,30 +11,12 @@ const NOTIFICATION_SERVICE_URL =
   import.meta.env.VITE_NOTIFICATION_SERVICE_URL || "http://localhost:5004";
 
 /**
- * Get user ID from localStorage
- */
-const getUserId = (): string => {
-  try {
-    const userData = localStorage.getItem("user");
-    if (!userData) throw new Error("User not authenticated");
-    const user = JSON.parse(userData);
-    if (!user.id) throw new Error("User ID not found");
-    return user.id;
-  } catch (error) {
-    console.error("❌ [Notification] Error getting user ID:", error);
-    throw error;
-  }
-};
-
-/**
  * Get all notifications
  */
 export const getAllNotifications = async (
   filters?: NotificationFilters & { limit?: number; skip?: number }
 ): Promise<Notification[]> => {
   try {
-    const userId = getUserId();
-
     const queryParams = new URLSearchParams();
     if (filters?.type?.length)
       queryParams.append("type", filters.type.join(","));
@@ -52,10 +35,7 @@ export const getAllNotifications = async (
 
     const response = await fetch(url, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "X-User-Id": userId,
-      },
+      headers: getAuthHeaders(),
       credentials: "include",
     });
 
@@ -83,8 +63,6 @@ export const getAllNotifications = async (
  */
 export const getUnreadCount = async (): Promise<number> => {
   try {
-    const userId = getUserId();
-
     // Use AbortController with timeout to fail fast
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
@@ -93,10 +71,7 @@ export const getUnreadCount = async (): Promise<number> => {
       `${NOTIFICATION_SERVICE_URL}/api/notifications/unread-count`,
       {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": userId,
-        },
+        headers: getAuthHeaders(),
         credentials: "include",
         signal: controller.signal,
       }
@@ -116,16 +91,11 @@ export const getUnreadCount = async (): Promise<number> => {
  */
 export const getNotificationStats = async (): Promise<NotificationStats> => {
   try {
-    const userId = getUserId();
-
     const response = await fetch(
       `${NOTIFICATION_SERVICE_URL}/api/notifications/stats`,
       {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": userId,
-        },
+        headers: getAuthHeaders(),
         credentials: "include",
       }
     );
@@ -142,18 +112,13 @@ export const getNotificationStats = async (): Promise<NotificationStats> => {
  */
 export const markAsRead = async (id: string): Promise<Notification> => {
   try {
-    const userId = getUserId();
-
     console.log("📖 [Notification] Marking as read:", id);
 
     const response = await fetch(
       `${NOTIFICATION_SERVICE_URL}/api/notifications/${id}/read`,
       {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": userId,
-        },
+        headers: getAuthHeaders(),
         credentials: "include",
       }
     );
@@ -172,18 +137,13 @@ export const markAsRead = async (id: string): Promise<Notification> => {
  */
 export const markAllAsRead = async (): Promise<void> => {
   try {
-    const userId = getUserId();
-
     console.log("📖 [Notification] Marking all as read");
 
     const response = await fetch(
       `${NOTIFICATION_SERVICE_URL}/api/notifications/mark-all-read`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": userId,
-        },
+        headers: getAuthHeaders(),
         credentials: "include",
       }
     );
@@ -201,18 +161,13 @@ export const markAllAsRead = async (): Promise<void> => {
  */
 export const archiveNotification = async (id: string): Promise<void> => {
   try {
-    const userId = getUserId();
-
     console.log("🗑️ [Notification] Archiving:", id);
 
     const response = await fetch(
       `${NOTIFICATION_SERVICE_URL}/api/notifications/${id}`,
       {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": userId,
-        },
+        headers: getAuthHeaders(),
         credentials: "include",
       }
     );
@@ -238,9 +193,7 @@ export const createNotification = async (
       `${NOTIFICATION_SERVICE_URL}/api/notifications`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: getAuthHeaders(),
         credentials: "include",
         body: JSON.stringify(input),
       }

@@ -85,6 +85,18 @@ export const sessionOperationSchema = z.object({
 export const validate = (schema: z.ZodSchema) => {
     return (req: Request, res: Response, next: NextFunction) => {
         try {
+            // 🔥 FIX: Khi upload file (multipart/form-data), các field object (như preferences) 
+            // sẽ bị chuyển thành JSON string. Cần parse lại trước khi validate.
+            if (req.headers['content-type']?.includes('multipart/form-data')) {
+                if (req.body.preferences && typeof req.body.preferences === 'string') {
+                    try {
+                        req.body.preferences = JSON.parse(req.body.preferences);
+                    } catch (e) {
+                        // Ignore parse error, let Zod handle validation
+                    }
+                }
+            }
+
             // Parse và validate
             const validated = schema.parse(req.body);
             
@@ -105,7 +117,7 @@ export const validate = (schema: z.ZodSchema) => {
 
                 return res.status(400).json({
                     status: 'error',
-                    message: 'Dữ liệu đầu vào không hợp lệ',
+                    message: 'Dữ liệu đầu vào quá ngắn',
                     errors,
                     hint: 'Vui lòng kiểm tra lại dữ liệu gửi lên'
                 });

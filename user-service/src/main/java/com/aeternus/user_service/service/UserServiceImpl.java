@@ -2,6 +2,7 @@
 package com.aeternus.user_service.service;
 
 import com.aeternus.user_service.dto.DeviceDto;
+import com.aeternus.user_service.dto.LoginSessionDto;
 import com.aeternus.user_service.dto.UserProfileDto;
 import com.aeternus.user_service.exception.ResourceNotFoundException;
 import com.aeternus.user_service.model.Device;
@@ -123,6 +124,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void logoutFromDevice(String jwtToken) {
+        if (jwtToken != null && jwtToken.startsWith("Bearer ")) {
+            jwtToken = jwtToken.substring(7);
+        }
+
         Device device = deviceRepository.findBySessionToken(jwtToken)
                 .orElseThrow(() -> new ResourceNotFoundException("Device session not found"));
         
@@ -137,6 +142,28 @@ public class UserServiceImpl implements UserService {
             .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
         user.setTheme(theme);
         userRepository.save(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LoginSessionDto> getLoginHistory(UUID userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new ResourceNotFoundException("User not found with id: " + userId);
+        }
+
+        List<Device> devices = deviceRepository.findByUser_UserId(userId);
+
+        return devices.stream()
+                .sorted((d1, d2) -> d2.getLastActiveTime().compareTo(d1.getLastActiveTime()))
+                .limit(3)
+                .map(device -> new LoginSessionDto(
+                        device.getDeviceId().toString(),
+                        device.getDeviceName() != null ? device.getDeviceName() : "Unknown Device",
+                        "Web", 
+                        device.getLastActiveTime(),
+                        device.isActive()
+                ))
+                .collect(Collectors.toList());
     }
 
     private UserProfileDto mapToUserProfileDto(User user) {

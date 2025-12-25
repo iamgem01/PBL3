@@ -173,10 +173,10 @@ const ChatPage: React.FC = () => {
     try {
       console.log('🚀 Sending to API...');
 
-      // 🔥 SMART SENDING LOGIC: Chỉ gửi context/files lần đầu
+      // 🔥 SMART SENDING LOGIC: Luôn gửi context/files nếu người dùng đính kèm
       const hasExistingSession = !!selectedChat?.sessionId;
-      const shouldSendContext = !hasExistingSession && context;
-      const shouldSendFiles = !hasExistingSession && files && files.length > 0;
+      const shouldSendContext = context;
+      const shouldSendFiles = files && files.length > 0;
 
       console.log('📊 Session Analysis:', {
         hasExistingSession,

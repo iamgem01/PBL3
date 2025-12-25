@@ -1,6 +1,9 @@
+import { useState, useEffect } from "react";
 import BaseModal from "./BaseModal";
+import { getCurrentUser } from "@/utils/authUtils";
+import { getLoginHistory, type LoginSession } from "@/services/userService";
 import { useTheme } from "@/context/ThemeContext";
-import { Moon, Sun, Monitor } from "lucide-react";
+import { Moon, Sun, Monitor, Smartphone, Laptop } from "lucide-react";
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -9,6 +12,52 @@ interface SettingsModalProps {
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     const { theme, toggleTheme } = useTheme();
+    const [loginHistory, setLoginHistory] = useState<LoginSession[]>([]);
+    const user = getCurrentUser();
+
+    useEffect(() => {
+        const fetchHistory = async () => {
+            const history = await getLoginHistory();
+            // Sắp xếp theo thời gian mới nhất và lấy 3 cái đầu
+            const sorted = history.sort((a, b) => 
+                new Date(b.lastActive).getTime() - new Date(a.lastActive).getTime()
+            ).slice(0, 3);
+            setLoginHistory(sorted);
+        };
+        fetchHistory();
+    }, []); // Chạy 1 lần khi mount (vào trang/reload)
+
+    const getDeviceIcon = (device: string) => {
+        const d = device.toLowerCase();
+        if (d.includes('mobile') || d.includes('iphone') || d.includes('android')) return <Smartphone className="w-4 h-4 text-purple-600" />;
+        if (d.includes('macbook') || d.includes('laptop')) return <Laptop className="w-4 h-4 text-orange-600" />;
+        return <Monitor className="w-4 h-4 text-blue-600" />;
+    };
+
+    const formatTimeAgo = (dateString: string) => {
+        if (!dateString) return 'Unknown';
+        
+        // Đảm bảo xử lý đúng giờ UTC nếu chuỗi thiếu ký tự timezone (Z)
+        const dateValue = !dateString.endsWith("Z") && !/[+-]\d{2}:\d{2}/.test(dateString)
+            ? `${dateString}Z`
+            : dateString;
+            
+        const date = new Date(dateValue);
+        const now = new Date();
+        const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+        
+        if (diffInSeconds < 60) return 'Just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} mins ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+        return date.toLocaleDateString();
+    };
+
+    const getPlanName = () => {
+        if (!user) return 'Free Plan';
+        if (user.roles.includes('Admin')) return 'Pro Plan';
+        if (user.roles.includes('Admin')) return 'Pro Plan';
+        return 'Free Plan';
+    };
 
     return (
         <BaseModal isOpen={isOpen} onClose={onClose} title="⚙️ Settings" width="w-[520px]">
@@ -79,18 +128,50 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-600 dark:text-gray-400">Email:</span>
-                                <span className="font-medium text-gray-900 dark:text-gray-100">gem@example.com</span>
+                                <span className="font-medium text-gray-900 dark:text-gray-100">{user?.email || 'N/A'}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-600 dark:text-gray-400">Plan:</span>
                                 <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">
-                                    Premium
+                                    {getPlanName()}
                                 </span>
                             </div>
                         </div>
-                        <button className="mt-3 w-full text-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition">
+                        {/* <button className="mt-3 w-full text-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition">
                             Manage account →
-                        </button>
+                        </button> */}
+                    </div>
+                </section>
+
+                {/* Security Section */}
+                <section>
+                    <h3 className="font-semibold mb-3 text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                        <span className="text-lg">🛡️</span>
+                        Security
+                    </h3>
+                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Recent Login Activity</div>
+                        <div className="space-y-4">
+                            {loginHistory.length > 0 ? (
+                                loginHistory.map((session) => (
+                                    <div key={session.id} className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-sm">
+                                                {getDeviceIcon(session.device)}
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-gray-700 dark:text-gray-300">{session.device}</p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                    {session.browser} • {session.current ? 'Active now' : formatTimeAgo(session.lastActive)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-xs text-gray-500 text-center py-2">No recent activity found.</p>
+                            )}
+                        </div>
                     </div>
                 </section>
 

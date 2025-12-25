@@ -1,14 +1,13 @@
 import { handleResponse, NOTE_SERVICE_URL } from './utils';
+import { getAuthHeaders } from '@/utils/authUtils';
 
 /**
  * Chuyển item vào thùng rác.
  */
-export const moveToTrash = async (id: string, itemType: 'NOTE' | 'FOLDER', userId: string = 'user_001') => {
+export const moveToTrash = async (id: string, itemType: 'NOTE' | 'FOLDER', userId?: string) => {
   const response = await fetch(`${NOTE_SERVICE_URL}/api/trash/move/${id}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: getAuthHeaders(),
     credentials: 'include',
     body: JSON.stringify({ itemType, userId }),
   });
@@ -22,9 +21,7 @@ export const moveToTrash = async (id: string, itemType: 'NOTE' | 'FOLDER', userI
 export const restoreFromTrash = async (itemId: string) => {
   const response = await fetch(`${NOTE_SERVICE_URL}/api/trash/restore/${itemId}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: getAuthHeaders(),
     credentials: 'include',
   });
 
@@ -37,9 +34,7 @@ export const restoreFromTrash = async (itemId: string) => {
 export const permanentDelete = async (itemId: string) => {
   const response = await fetch(`${NOTE_SERVICE_URL}/api/trash/${itemId}`, {
     method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: getAuthHeaders(),
     credentials: 'include',
   });
 
@@ -49,12 +44,14 @@ export const permanentDelete = async (itemId: string) => {
 /**
  * Lấy danh sách items trong thùng rác.
  */
-export const getTrashItems = async (userId: string = 'user_001') => {
-    const response = await fetch(`${NOTE_SERVICE_URL}/api/trash?userId=${userId}`, {
+export const getTrashItems = async (userId?: string) => {
+    const url = userId 
+      ? `${NOTE_SERVICE_URL}/api/trash?userId=${userId}` 
+      : `${NOTE_SERVICE_URL}/api/trash`;
+
+    const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       credentials: 'include',
     });
   

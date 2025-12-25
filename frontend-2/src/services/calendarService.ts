@@ -1,4 +1,5 @@
 import { handleResponse } from './utils';
+import { getAuthHeaders } from '@/utils/authUtils';
 import type { 
   CalendarEvent, 
   CreateEventInput, 
@@ -9,29 +10,10 @@ import type {
 const CALENDAR_SERVICE_URL = import.meta.env.VITE_CALENDAR_SERVICE_URL || 'http://localhost:8000';
 
 /**
- * Get user ID from localStorage
- */
-const getUserId = (): string => {
-  try {
-    const userData = localStorage.getItem('user');
-    if (!userData) throw new Error('User not authenticated');
-    const user = JSON.parse(userData);
-    if (!user.id) throw new Error('User ID not found');
-    console.log('📅 [Calendar] Using user ID:', user.id);
-    return user.id;
-  } catch (error) {
-    console.error('❌ [Calendar] Error getting user ID:', error);
-    throw error;
-  }
-};
-
-/**
  * Get all events for the current user
  */
 export const getAllEvents = async (filters?: CalendarFilters): Promise<CalendarEvent[]> => {
   try {
-    const userId = getUserId();
-    
     const queryParams = new URLSearchParams();
     if (filters?.startDate) queryParams.append('startDate', filters.startDate);
     if (filters?.endDate) queryParams.append('endDate', filters.endDate);
@@ -44,10 +26,7 @@ export const getAllEvents = async (filters?: CalendarFilters): Promise<CalendarE
     
     const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': userId,
-      },
+      headers: getAuthHeaders(),
       credentials: 'include',
     });
 
@@ -70,16 +49,11 @@ export const getAllEvents = async (filters?: CalendarFilters): Promise<CalendarE
  */
 export const getEventById = async (id: string): Promise<CalendarEvent> => {
   try {
-    const userId = getUserId();
-    
     console.log('📅 [Calendar] Fetching event:', id);
     
     const response = await fetch(`${CALENDAR_SERVICE_URL}/api/events/${id}`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': userId,
-      },
+      headers: getAuthHeaders(),
       credentials: 'include',
     });
 
@@ -95,16 +69,11 @@ export const getEventById = async (id: string): Promise<CalendarEvent> => {
  */
 export const createEvent = async (eventData: CreateEventInput): Promise<CalendarEvent> => {
   try {
-    const userId = getUserId();
-    
     console.log('📅 [Calendar] Creating event:', eventData);
     
     const response = await fetch(`${CALENDAR_SERVICE_URL}/api/events`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': userId,
-      },
+      headers: getAuthHeaders(),
       credentials: 'include',
       body: JSON.stringify(eventData),
     });
@@ -123,16 +92,11 @@ export const createEvent = async (eventData: CreateEventInput): Promise<Calendar
  */
 export const updateEvent = async (id: string, eventData: Partial<UpdateEventInput>): Promise<CalendarEvent> => {
   try {
-    const userId = getUserId();
-    
     console.log('📅 [Calendar] Updating event:', id, eventData);
     
     const response = await fetch(`${CALENDAR_SERVICE_URL}/api/events/${id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': userId,
-      },
+      headers: getAuthHeaders(),
       credentials: 'include',
       body: JSON.stringify(eventData),
     });
@@ -149,16 +113,11 @@ export const updateEvent = async (id: string, eventData: Partial<UpdateEventInpu
  */
 export const deleteEvent = async (id: string): Promise<void> => {
   try {
-    const userId = getUserId();
-    
     console.log('📅 [Calendar] Deleting event:', id);
     
     const response = await fetch(`${CALENDAR_SERVICE_URL}/api/events/${id}`, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': userId,
-      },
+      headers: getAuthHeaders(),
       credentials: 'include',
     });
 

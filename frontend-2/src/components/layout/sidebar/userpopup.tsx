@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from 'react-router-dom';
 import { Settings, Plus, LogOut, User, Shield, Users, UserPlus, Crown } from "lucide-react";
 import CreateWorkspaceModal from "@/components/modals/CreateWorkspaceMotal";
 import { getCurrentUser, logout, getUserInitials, hasRole } from '@/utils/authUtils';
+import SettingsModal from "@/components/ui/Settings/SettingModal";
 
 interface UserMenuProps {
     collapsed?: boolean;
@@ -13,13 +15,19 @@ interface UserMenuProps {
 export function UserMenu({ collapsed = false }: UserMenuProps) {
     const [open, setOpen] = useState(false);
     const [openCreate, setOpenCreate] = useState(false);
+    const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     const [menuPosition, setMenuPosition] = useState<"left" | "right">("right");
+    const [mounted, setMounted] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const avatarRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     
     // Get current user from auth utils
     const user = getCurrentUser();
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -49,7 +57,7 @@ export function UserMenu({ collapsed = false }: UserMenuProps) {
     }, [open, collapsed]);
 
     const handleLogout = async () => {
-        await logout();
+        await logout(true); // true = Logout xong thì chuyển hướng về trang chủ
         setOpen(false);
     };
 
@@ -174,13 +182,13 @@ export function UserMenu({ collapsed = false }: UserMenuProps) {
                             <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(user.roles)}`}>
                                 {getRoleDisplayName(user.roles)}
                             </span>
-                            <Settings 
-                                size={16} 
-                                className="text-gray-500 cursor-pointer hover:text-gray-700 transition-colors"
-                                onClick={() => {
-                                    navigate('/settings');
-                                    setOpen(false);
-                                }}
+                            <Settings  
+                                size={16}  
+                                className="text-gray-500 cursor-pointer hover:text-gray-700 transition-colors"  
+                                onClick={() => {  
+                                    setIsSettingsModalOpen(true);  
+                                    setOpen(false);  
+                                }}  
                             />
                         </div>
                         
@@ -215,7 +223,15 @@ export function UserMenu({ collapsed = false }: UserMenuProps) {
                         )}
                         
                         {/* All users: Add another account */}
-                        <button className="w-full text-left hover:bg-gray-100 rounded px-2 py-2 flex items-center gap-2 transition-colors text-gray-700">
+                        <button onClick={async () => {
+                            // false = Logout nhưng KHÔNG chuyển hướng, để dòng dưới tự xử lý
+                            await logout(false);
+                            // Thêm prompt=select_account để buộc Google hiện màn hình chọn tài khoản
+                            window.location.href = "http://localhost:8000/oauth2/authorization/google?prompt=select_account";
+                            setOpen(false);
+                            }}
+                            className="w-full text-left hover:bg-gray-100 rounded px-2 py-2 flex items-center gap-2 transition-colors text-gray-700"
+                        >
                             <UserPlus className="w-4 h-4" />
                             <span className="text-sm">Add another account</span>
                         </button>
@@ -250,15 +266,15 @@ export function UserMenu({ collapsed = false }: UserMenuProps) {
                         </button>
                         
                         {/* Settings */}
-                        <button 
-                            onClick={() => {
-                                navigate('/settings');
-                                setOpen(false);
-                            }}
-                            className="w-full text-left hover:bg-gray-100 rounded px-2 py-2 flex items-center gap-2 transition-colors text-gray-700"
-                        >
-                            <Settings className="w-4 h-4" />
-                            <span className="text-sm">Settings</span>
+                        <button  
+                            onClick={() => {  
+                                setIsSettingsModalOpen(true);  
+                                setOpen(false);  
+                            }}  
+                            className="w-full text-left hover:bg-gray-100 rounded px-2 py-2 flex items-center gap-2 transition-colors text-gray-700"  
+                        >  
+                            <Settings className="w-4 h-4" />  
+                            <span className="text-sm">Settings</span>  
                         </button>
                         
                         {/* Divider */}
@@ -275,7 +291,11 @@ export function UserMenu({ collapsed = false }: UserMenuProps) {
                     </div>
                 </div>
             )}
-
+            
+            {mounted && createPortal(<SettingsModal  
+                isOpen={isSettingsModalOpen}  
+                onClose={() => setIsSettingsModalOpen(false)}  
+            />, document.body)}
             {/* Modal cho workspace */}
             <CreateWorkspaceModal isOpen={openCreate} onClose={() => setOpenCreate(false)}/>
         </div>

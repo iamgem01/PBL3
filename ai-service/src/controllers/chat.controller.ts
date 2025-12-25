@@ -64,20 +64,18 @@ const processSession = async (
       if (session) {
         console.log(`✅ Found existing session: ${sessionId} for user: ${validUserId}`);
         
-        // 🔥 QUAN TRỌNG: LUÔN ƯU TIÊN CONTEXT TỪ SESSION TRƯỚC
-        if (session.context) {
+        // 🔥 CẬP NHẬT: Merge context mới vào session (nếu có) thay vì bỏ qua
+        if (context && context.trim().length > 0) {
+          finalContext = await SessionService.mergeContext(sessionId, context, validUserId);
+        } else if (session.context) {
           finalContext = session.context;
-          console.log(`📖 Using existing context from session: ${finalContext.length} chars`);
-        } 
-        
-        // 🔥 Nếu có context mới VÀ session chưa có context -> thêm mới
-        else if (context && context.trim().length > 0) {
-          await SessionService.updateContext(sessionId, context, validUserId);
-          finalContext = context;
-          console.log(`📝 Added new context to existing session: ${context.length} chars`);
         }
 
-        // 🔥 QUAN TRỌNG: LUÔN ƯU TIÊN FILES TỪ SESSION TRƯỚC
+        // 🔥 CẬP NHẬT: Xử lý Files - Merge files mới và lấy toàn bộ files từ session
+        if (files && files.length > 0) {
+          await SessionService.smartAddFiles(sessionId, files, validUserId);
+        }
+
         const sessionFiles = await SessionService.getFiles(sessionId, validUserId);
         if (sessionFiles.length > 0) {
           finalFiles = sessionFiles.map((file) => ({
@@ -88,14 +86,7 @@ const processSession = async (
             size: file.size,
             fieldname: "files",
           })) as unknown as Express.Multer.File[];
-          console.log(`📚 Using ${finalFiles.length} existing files from session`);
-        } 
-        
-        // 🔥 Nếu có files mới VÀ session chưa có files -> thêm mới
-        else if (files && files.length > 0) {
-          await SessionService.addFiles(sessionId, files, validUserId);
-          finalFiles = files;
-          console.log(`📎 Added ${files.length} new files to existing session`);
+          console.log(`📚 Using ${finalFiles.length} files (merged) from session`);
         }
         
         // Update lastAccessed

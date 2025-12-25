@@ -13,6 +13,16 @@ import {
 import type { Note } from "@/types/note";
 import type { ToolbarPosition } from "./documentTypes";
 
+const normalizeNote = (data: any): Note | null => {
+  if (!data) return null;
+  return {
+    ...data,
+    isImportant: data.isImportant ?? data.is_important ?? false,
+    createdAt: data.createdAt || data.created_at || new Date().toISOString(),
+    updatedAt: data.updatedAt || data.updated_at || new Date().toISOString(),
+  };
+};
+
 export const useDocumentState = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -50,7 +60,7 @@ export const useDocumentState = () => {
           });
           if (res.ok) {
             const data = await handleResponse(res);
-            setNote(data);
+            setNote(normalizeNote(data));
             setIsLoading(false);
             return;
           }
@@ -60,7 +70,7 @@ export const useDocumentState = () => {
 
         // Fallback
         const noteData = await getNoteById(id);
-        setNote(noteData);
+        setNote(normalizeNote(noteData));
       } catch (err: any) {
         setError(err.message || "Failed to load note");
       } finally {
@@ -128,7 +138,7 @@ export const useDocumentState = () => {
       const updatedNote = note.isImportant
         ? await removeAsImportant(id)
         : await markAsImportant(id);
-      setNote(updatedNote);
+      setNote(normalizeNote(updatedNote));
     } catch (error: any) {
       alert(error.message);
     } finally {

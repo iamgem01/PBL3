@@ -38,6 +38,12 @@ public class UserController {
         return ResponseEntity.ok(devices);
     }
 
+    @GetMapping("/login-history")
+    public ResponseEntity<List<LoginSessionDto>> getLoginHistory(Principal principal) {
+        UUID userId = UUID.fromString(principal.getName());
+        return ResponseEntity.ok(userService.getLoginHistory(userId));
+    }
+
     @GetMapping("/note-password/status")
     public ResponseEntity<Boolean> hasNotePassword(Principal principal) {
         UUID userId = UUID.fromString(principal.getName());

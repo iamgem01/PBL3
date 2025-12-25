@@ -183,7 +183,7 @@ function AuthInit() {
     await logout(false); // Gọi logout nhưng không reload trang (false)
     
     // Chuyển hướng trực tiếp đến endpoint Google OAuth của Backend để bắt đầu quy trình đăng nhập
-    window.location.href = "http://localhost:8000/oauth2/authorization/google";
+    window.location.href = "http://localhost:8000/oauth2/authorization/google?prompt=select_account";
   };
 
   // Chỉ hiển thị modal khi đang ở các trang public (Login, Signup, Landing)

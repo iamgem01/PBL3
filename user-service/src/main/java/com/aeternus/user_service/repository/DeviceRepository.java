@@ -14,4 +14,6 @@ public interface DeviceRepository extends JpaRepository<Device, UUID> {
     Optional<Device> findBySessionTokenAndIsActive(String sessionToken, boolean isActive);
     Optional<Device> findBySessionToken(String sessionToken);
     List<Device> findByUserAndIsActive(User user, boolean isActive);
+    List<Device> findByUser(User user);
+    List<Device> findByUser_UserId(UUID userId);
 }

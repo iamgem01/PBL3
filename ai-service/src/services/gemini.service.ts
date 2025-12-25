@@ -141,19 +141,20 @@ export class GeminiService {
 
         // 2. Quy tắc trình bày (Structured Output) - Ép AI format đẹp
         instruction += `QUY TẮC TRÌNH BÀY (BẮT BUỘC):\n`;
-        instruction += `- Trả về HTML thuần túy, KHÔNG có code block () hoặc markdown markers.\n`;
-        instruction += `- Tiêu đề chính dùng <h3>, tiêu đề phụ <h4>.\n`;
-        instruction += `- Các phần tử sát nhau, KHÔNG xuống dòng thừa giữa các phần.\n`;
-        instruction += `- Response ngắn gọn, súc tích, tránh dài dòng.\n`;
-        instruction += `- In đậm dùng <strong>text</strong>.\n`;
-        instruction += `- Danh sách dùng <ul><li>item</li></ul> sát nhau.\n`;
-        instruction += `- Văn bản liên tục dùng <p>, không <br> thừa.\n`;
+        instruction += `- Trả về  văn bản thuần túy, KHÔNG có code block () hoặc markdown markers.\n`;
+        instruction += `- Nếu kết quả có các định dạng khác như mã nguồn, html, ... thì không cần ghi vào.\n`
+        // instruction += `- Tiêu đề chính dùng <h3>, tiêu đề phụ <h4>.\n`;
+        // instruction += `- Các phần tử sát nhau, KHÔNG xuống dòng thừa giữa các phần.\n`;
+        // instruction += `- Response ngắn gọn, súc tích, tránh dài dòng.\n`;
+        // instruction += `- In đậm dùng <strong>text</strong>.\n`;
+        // instruction += `- Danh sách dùng <ul><li>item</li></ul> sát nhau.\n`;
+        // instruction += `- Văn bản liên tục dùng <p>, không <br> thừa.\n`;
         instruction += `- KHÔNG dùng <h1>, <h2>, <code>, <pre>.\n\n`;
         // 3. Rào chắn chống bịa đặt (Anti-Hallucination)
         instruction += `NGUYÊN TẮC TRUNG THỰC:\n`;
-        instruction += `- Chỉ trả lời dựa trên dữ kiện có thật hoặc context được cung cấp.\n`;
-        instruction += `- Nếu không biết hoặc thông tin không đủ, hãy nói "Tôi chưa có đủ thông tin về vấn đề này", đừng cố bịa ra câu trả lời.\n\n`;
-        instruction += `- Nếu không biết hoặc thông tin không đủ, hãy nói "Tôi chưa có đủ thông tin về vấn đề này", đừng cố bịa ra câu trả lời.\n\n`;
+        instruction += `- Trả lời dựa trên dữ kiện có thật. Ưu tiên sử dụng context nếu câu hỏi liên quan đến nó.\n`;
+        // instruction += `- Nếu không biết hoặc thông tin không đủ, hãy nói "Tôi chưa có đủ thông tin về vấn đề này", đừng cố bịa ra câu trả lời.\n\n`;
+        // instruction += `- Nếu không biết hoặc thông tin không đủ, hãy nói "Tôi chưa có đủ thông tin về vấn đề này", đừng cố bịa ra câu trả lời.\n\n`;
         instruction += `ĐỘ DÀI RESPONSE:\n`;
         instruction += `- Giữ response ngắn gọn, tránh dài dòng.\n`;
         instruction += `- Tóm tắt súc tích, đi thẳng vào vấn đề.\n\n`;
@@ -185,19 +186,19 @@ export class GeminiService {
     // ➤ CHAT: Tốc độ cao (Fast Model)
     async chat(message: string, context?: string, files?: FileData[], pref?: UserPreferences): Promise<string> {
         const role = `Bạn là một Trợ lý AI Thông minh, Tận tâm và Hiệu quả.`;
-        const task = `Hỗ trợ người dùng giải quyết vấn đề, trả lời câu hỏi hoặc phân tích dữ liệu đầu vào.`;
+        const task = `Hỗ trợ người dùng giải quyết vấn đề, trả lời câu hỏi hoặc phân tích dữ liệu đầu vào. Kết quả trả về nên là văn bản thuần túy (plain text).`;
         const instruction = this.buildSystemInstruction(role, task, pref);
 
         // Context Injection Technique
         let prompt = `YÊU CẦU CỦA TÔI:\n"${message}"\n\n`;
         
         if (context) {
-            prompt = `THÔNG TIN BỐI CẢNH (CONTEXT - ƯU TIÊN SỬ DỤNG):\n"""\n${context}\n"""\n\n` + prompt;
+            prompt = `THÔNG TIN BỐI CẢNH (CONTEXT):\n"""\n${context}\n"""\n(Chỉ sử dụng thông tin này nếu câu hỏi liên quan đến nó)\n\n` + prompt;
         }
         
         if (files && files.length > 0) {
             const fileNames = files.map(f => f.fileName).join(', ');
-            prompt = `(Tôi có gửi kèm ${files.length} file: ${fileNames}. Hãy phân tích kỹ nội dung của chúng)\n\n` + prompt;
+            prompt = `(File đính kèm: ${files.length} file [${fileNames}]. Chỉ phân tích nội dung file nếu câu hỏi yêu cầu)\n\n` + prompt;
         }
 
         return this.tryWithFallback(async (model) => {
@@ -226,7 +227,7 @@ export class GeminiService {
     // ➤ SUMMARIZE: Phân tích sâu (Smart Model)
     async summarize(text: string, maxLength: number = 300, pref?: UserPreferences): Promise<string> {
         const role = `Bạn là Chuyên gia Phân tích Dữ liệu và Tổng hợp Thông tin cấp cao.`;
-        const task = `Đọc hiểu sâu văn bản, lọc bỏ nhiễu và trích xuất những thông tin giá trị nhất.`;
+        const task = `Đọc hiểu sâu văn bản, lọc bỏ nhiễu và trích xuất những thông tin giá trị nhất. Kết quả trả về nên là văn bản thuần túy (plain text).`;
         const instruction = this.buildSystemInstruction(role, task, pref);
 
         // Chain of Density Prompt
@@ -261,7 +262,7 @@ export class GeminiService {
     // ➤ CREATE NOTE: Cấu trúc hóa tư duy (Smart Model)
     async createNote(text: string, pref?: UserPreferences): Promise<string> {
         const role = `Bạn là Thư ký Chuyên nghiệp và Chuyên gia Quản lý Tri thức (Knowledge Manager).`;
-        const task = `Biến đổi văn bản thô thành hệ thống ghi chú thông minh (Smart Note) có cấu trúc phân cấp, dễ nhớ và dễ tra cứu.`;
+        const task = `Biến đổi văn bản thô thành hệ thống ghi chú thông minh (Smart Note) có cấu trúc phân cấp, dễ nhớ và dễ tra cứu. Kết quả trả về nên là văn bản thuần túy (plain text).`;
         const instruction = this.buildSystemInstruction(role, task, pref);
 
         const prompt = `
@@ -307,7 +308,7 @@ export class GeminiService {
     // ➤ EXPLAIN: Sư phạm & Đơn giản hóa (Smart Model)
     async explain(text: string, pref?: UserPreferences): Promise<string> {
         const role = `Bạn là một Giáo sư uyên bác với khả năng sư phạm tuyệt vời (như Richard Feynman).`;
-        const task = `Giải thích các khái niệm phức tạp trở nên đơn giản, dễ hiểu, sử dụng phép ẩn dụ (analogy) thực tế.`;
+        const task = `Giải thích các khái niệm phức tạp trở nên đơn giản, dễ hiểu, sử dụng phép ẩn dụ (analogy) thực tế. Kết quả trả về nên là văn bản thuần túy (plain text).`;
         const instruction = this.buildSystemInstruction(role, task, pref);
 
         const prompt = `
@@ -335,7 +336,7 @@ export class GeminiService {
     // ➤ IMPROVE WRITING: Biên tập viên (Smart Model)
     async improveWriting(text: string, style: string = 'professional', pref?: UserPreferences): Promise<string> {
         const role = `Bạn là Tổng biên tập (Editor-in-Chief) của một tạp chí danh tiếng.`;
-        const task = `Biên tập lại văn bản, nâng cấp từ vựng, cải thiện cấu trúc câu nhưng giữ nguyên ý nghĩa gốc.`;
+        const task = `Biên tập lại văn bản, nâng cấp từ vựng, cải thiện cấu trúc câu nhưng giữ nguyên ý nghĩa gốc. Kết quả trả về nên là văn bản thuần túy (plain text).`;
         const instruction = this.buildSystemInstruction(role, task, pref);
 
         const prompt = `
@@ -364,7 +365,7 @@ export class GeminiService {
     // ➤ TRANSLATE: Bản địa hóa (Fast Model)
     async translate(text: string, targetLang: string, pref?: UserPreferences): Promise<string> {
         const role = `Bạn là Dịch giả Cao cấp và Chuyên gia Bản địa hóa (Localization Expert).`;
-        const task = `Dịch thuật chính xác, tự nhiên, chuyển tải đúng sắc thái văn hóa và ngữ cảnh. Không dịch từng từ (word-by-word).`;
+        const task = `Dịch thuật chính xác, tự nhiên, chuyển tải đúng sắc thái văn hóa và ngữ cảnh. Không dịch từng từ (word-by-word). Kết quả trả về nên là văn bản thuần túy (plain text).`;
         const instruction = this.buildSystemInstruction(role, task, pref);
 
         const prompt = `

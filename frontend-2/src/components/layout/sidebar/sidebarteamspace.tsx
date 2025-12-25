@@ -37,10 +37,10 @@ export default function SidebarTeamspace({ collapsed }: SidebarTeamspaceProps) {
 
     // Cache key dựa trên user ID để tránh cache conflict
     const getCacheKey = () => {
-        const userData = localStorage.getItem('user');
+        const userData = sessionStorage.getItem('user');
         if (!userData) return 'notes-anonymous';
         const user = JSON.parse(userData);
-        return `notes-${user.id}`;
+        return `notes-${user.userId}`;
     };
 
     // Fetch all notes từ note-service với error handling tốt hơn
@@ -53,12 +53,12 @@ export default function SidebarTeamspace({ collapsed }: SidebarTeamspaceProps) {
                 const notesData = await getAllNotes();
                 
                 // Double-check: Chỉ hiển thị notes của user hiện tại
-                const userData = localStorage.getItem('user');
+                const userData = sessionStorage.getItem('user');
                 if (userData) {
                     const user = JSON.parse(userData);
                     // Backend sử dụng SNAKE_CASE, nên field là created_by
                     const userNotes = notesData.filter((note: any) => 
-                        note.created_by === user.id
+                        (note.created_by || note.createdBy) === (user.userId || user.id)
                     );
                     
                     if (userNotes.length !== notesData.length) {
@@ -66,7 +66,7 @@ export default function SidebarTeamspace({ collapsed }: SidebarTeamspaceProps) {
                     }
                     
                     setNotes(userNotes);
-                    console.log(`✅ Loaded ${userNotes.length} personal notes for user ${user.id}`);
+                    console.log(`✅ Loaded ${userNotes.length} personal notes for user ${user.userId}`);
                 } else {
                     console.error('❌ No user data available');
                     setNotes([]);

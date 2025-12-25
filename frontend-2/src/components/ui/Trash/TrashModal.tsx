@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getTrashItems, restoreFromTrash, permanentDelete } from "@/services";
+import { getCurrentUser } from "@/utils/authUtils";
 
 interface TrashItem {
   id: string;
@@ -45,10 +46,14 @@ export default function TrashModal({ isOpen, onClose }: TrashModalProps) {
     setIsLoading(true);
     setError(null);
     try {
-      const items = await getTrashItems('user_001');
+      const currentUser = getCurrentUser();
+      if (!currentUser) {
+        throw new Error("User not authenticated. Please log in.");
+      }
+      const items = await getTrashItems(currentUser.userId);
       console.log('API Response:', items);
       
-      if (items && Array.isArray(items)) {
+      if (Array.isArray(items)) {
         const mappedItems = items.map(mapApiToTrashItem);
         setTrashItems(mappedItems);
       } else {
