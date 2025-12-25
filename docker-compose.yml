@@ -167,8 +167,8 @@ services:
     ports:
       - "3001:3001"
     environment:
-      GEMINI_API_KEY: AIzaSyCpLe_YvbHMKSfcH7DhyuQyhjLvvhDlvQ0
-      GEMINI_MODEL: gemini-2.5-flash
+      GEMINI_API_KEY: 
+      GEMINI_MODEL: gemini-3-flash-preview
       MONGODB_URI: mongodb://root:aeternusPass2026@mongodb:27017/ai-service?authSource=admin
       MONGODB_USERNAME: root
       MONGODB_PASSWORD: aeternusPass2026

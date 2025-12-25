@@ -14,6 +14,12 @@ import NotePage from "@/pages/NotePage/NotePage";
 import { verifyAuth, logout, saveUserSession, getCurrentUser, type User, } from "./utils/authUtils";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import OnboardingPage from "./pages/Onboarding/page";
+import InvitationAcceptPage from "./pages/InvitationAcceptPage";
+import CalendarPage from "./pages/CalendarPage/CalendarPage";
+import TemplatePage from "./data/template";
+import NotificationsPage from "./pages/NotificationsPage/NotificationsPage";
+import AdminPage from "./pages/Manager/adminpage";
 
 // console.log("debugger");
 
@@ -201,18 +207,79 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignUpPage />} />
-
+            <Route path="/onboarding" element={<OnboardingPage />} />
             {/* Protected routes */}
             <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+            <Route path="/invitation/accept" element={<InvitationAcceptPage />} />
+
             <Route path="/ai" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
             <Route path="/notes/new" element={<ProtectedRoute><NotePage /></ProtectedRoute>} />
             <Route path="/notes/:id" element={<ProtectedRoute><DocumentPage /></ProtectedRoute>} />
             <Route path="/search" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
-            
+            <Route path="/document/:id" element={<ProtectedRoute><DocumentPage /></ProtectedRoute>} />
             {/* Placeholder routes */}
-            <Route path="/notifications" element={<ProtectedRoute><div>Notifications</div></ProtectedRoute>} />
-            <Route path="/new-note" element={<ProtectedRoute><div>Create Note</div></ProtectedRoute>} />
+            {/* <Route path="/notifications" element={<ProtectedRoute><div>Notifications</div></ProtectedRoute>} /> */}
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <div className="min-h-screen flex items-center justify-center">
+                    <h1 className="text-2xl font-bold">
+                      Notifications Page - Coming Soon!
+                    </h1>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/template"
+              element={
+                <ProtectedRoute>
+                  <TemplatePage />
+               </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/calendar"
+              element={
+                <ProtectedRoute>
+                  <CalendarPage />
+                </ProtectedRoute>
+              }
+            />
 
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <NotificationsPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* <Route path="/new-note" element={<ProtectedRoute><div>Create Note</div></ProtectedRoute>} /> */}
+            <Route
+              path="/new-note"
+              element={
+                <ProtectedRoute>
+                  <div className="min-h-screen flex items-center justify-center">
+                    <h1 className="text-2xl font-bold">
+                      Create New Note - Coming Soon!
+                    </h1>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminPage />
+                </ProtectedRoute>
+              }
+            />
+            
             {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>

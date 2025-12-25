@@ -155,7 +155,7 @@ export class TemplateManager {
   static saveToRecent(userId: string, templateId: string): void {
     try {
       const recentKey = `recent_templates_${userId}`;
-      const recent = localStorage.getItem(recentKey);
+      const recent = sessionStorage.getItem(recentKey);
       
       let recentIds: string[] = recent ? JSON.parse(recent) : [];
       
@@ -166,7 +166,7 @@ export class TemplateManager {
       // Keep only last 10
       recentIds = recentIds.slice(0, 10);
       
-      localStorage.setItem(recentKey, JSON.stringify(recentIds));
+      sessionStorage.setItem(recentKey, JSON.stringify(recentIds));
     } catch (error) {
       console.error('Error saving to recent:', error);
     }

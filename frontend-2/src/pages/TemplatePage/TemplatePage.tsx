@@ -37,7 +37,7 @@ export default function TemplatePage() {
 
   // Get recent templates for this user
   const recentTemplates = useMemo(() => {
-    return currentUser ? TemplateManager.getRecentTemplates(currentUser.id, 3) : [];
+    return currentUser ? TemplateManager.getRecentTemplates(currentUser.userId, 3) : [];
   }, [currentUser]);
 
   const handleCreateFromTemplate = async () => {
@@ -45,10 +45,10 @@ export default function TemplatePage() {
 
     setIsCreating(true);
     try {
-      const noteData = TemplateManager.createNoteFromTemplate(selectedTemplate, currentUser.id);
+      const noteData = TemplateManager.createNoteFromTemplate(selectedTemplate, currentUser.userId);
       const newNote = await createNote(noteData);
       
-      TemplateManager.saveToRecent(currentUser.id, selectedTemplate.id);
+      TemplateManager.saveToRecent(currentUser.userId, selectedTemplate.id);
       
       navigate(`/notes/${newNote.id}`);
     } catch (error: any) {

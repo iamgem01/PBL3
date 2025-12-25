@@ -56,8 +56,8 @@ export class GeminiService {
     private lastResetTime: number = Date.now();
     
     // Chiến lược Model (Dual-Core)
-    private readonly fastModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-    private readonly smartModel = process.env.GEMINI_MODEL_SMART || 'gemini-2.5-pro';
+    private readonly fastModel = process.env.GEMINI_MODEL || 'gemini-3-flash-preview';
+    private readonly smartModel = process.env.GEMINI_MODEL_SMART || 'gemini-3-flash-preview';
 
     constructor() {
         // Khởi tạo config ban đầu

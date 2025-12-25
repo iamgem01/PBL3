@@ -67,6 +67,14 @@ services:
       strip_path: false
       preserve_host: false
       protocols: [http, https]
+    - name: templates-resource
+      paths:
+        - /api/templates
+      methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+      strip_path: false
+      preserve_host: false
+      protocols: [http, https]
+
   # User Service 
   - name: user-service
     host: user-service
